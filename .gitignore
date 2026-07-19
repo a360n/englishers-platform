@@ -1,0 +1,17 @@
+# Dependency directories
+node_modules/
+
+# Environment files
+.env
+.env.local
+
+# Operating System files
+.DS_Store
+Thumbs.db
+
+# Generated receipt files
+receipts/student/*.pdf
+receipts/admin/*.pdf
+
+# Student uploaded photos
+public/uploads/
