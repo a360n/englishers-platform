@@ -28,8 +28,8 @@ echo [INFO] Starting Postgres database service check...
 echo [INFO] Starting Node.js server...
 echo.
 
-:: Open browser in 2 seconds
-start /b cmd /c "timeout /t 2 >nul && start http://%LAN_IP%:3000"
+:: Wait for port 3000 to be active before opening the browser (prevents connection refused error)
+start /b cmd /c "for /l %%x in (1,1,30) do (netstat -ano | findstr :3000 >nul && (start http://%LAN_IP%:3000 && exit) || (timeout /t 1 >nul))"
 
 :: Start Node Express server
 node server.js
