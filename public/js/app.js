@@ -88,8 +88,12 @@ function renderUserProfile() {
     const adminGroup = document.getElementById('menu-admin-group');
     const studentGroup = document.getElementById('menu-student-group');
     const testSection = document.getElementById('manager-testing-section');
+    const aliTestingPanel = document.getElementById('ali-testing-panel');
     
     nameEl.textContent = currentUser.username;
+    if (aliTestingPanel) {
+        aliTestingPanel.style.display = (currentUser && currentUser.username === 'ali') ? 'flex' : 'none';
+    }
     
     if (currentUser.role === 'manager') {
         roleEl.textContent = 'المدير العام';
@@ -2437,3 +2441,45 @@ document.addEventListener('keydown', (e) => {
         closeFullscreenImage();
     }
 });
+
+// Testing user 'ali' functions
+async function confirmWipeDatabase() {
+    const confirmed = confirm('⚠️ تحذير مهم جداً!\n\nهل أنت متأكد من رغبتك في تفريغ قاعدة البيانات بالكامل؟\nسيتم مسح كافة سجلات الطلاب والدورات والوصولات المالية فوراً لتهيئة النظام!');
+    if (!confirmed) return;
+
+    try {
+        const res = await fetch('/api/testing/wipe-db', { method: 'POST' });
+        const data = await res.json();
+        if (res.ok) {
+            alert(data.message || 'تم تفريغ كافة البيانات بنجاح.');
+            // Refresh data views
+            fetchCourses();
+            fetchStudents();
+            fetchPayments();
+        } else {
+            alert(data.error || 'فشل تفريغ قاعدة البيانات.');
+        }
+    } catch (err) {
+        console.error(err);
+        alert('حدث خطأ أثناء الاتصال بالسيرفر لتفريغ البيانات.');
+    }
+}
+
+async function triggerSeedMockData() {
+    try {
+        const res = await fetch('/api/testing/seed-mock-data', { method: 'POST' });
+        const data = await res.json();
+        if (res.ok) {
+            alert(data.message || 'تمت عملية حقن 10 طلاب وكورسين ودفعات مالية وهمية بنجاح!');
+            // Refresh data views
+            fetchCourses();
+            fetchStudents();
+            fetchPayments();
+        } else {
+            alert(data.error || 'فشل حقن البيانات الوهمية.');
+        }
+    } catch (err) {
+        console.error(err);
+        alert('حدث خطأ أثناء الاتصال بالسيرفر لحقن البيانات الوهمية.');
+    }
+}

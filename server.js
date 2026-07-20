@@ -1824,6 +1824,168 @@ app.post('/api/test/clear-db', requireAuth, requireRole(['manager']), async (req
     }
 });
 
+// POST: Flush/Wipe all database records (Testing user 'ali' only)
+app.post('/api/testing/wipe-db', requireAuth, async (req, res) => {
+    if (req.session.user.username !== 'ali') {
+        return res.status(403).json({ error: 'عذراً، هذه الخاصية متاحة حصرياً للمستخدم علي (ali) لأغراض التجريب والتفريغ.' });
+    }
+
+    const client = await db.pool.connect();
+    try {
+        await client.query('BEGIN');
+        await client.query('TRUNCATE attendance, course_students, payments, student_custom_dues, course_dates, courses, users, students RESTART IDENTITY CASCADE');
+
+        // Re-insert default system users and testing user 'ali'
+        const managerPasswordHash = await bcrypt.hash('Manager@Englishers2026', 10);
+        const adminPasswordHash = await bcrypt.hash('Admin@Englishers2026', 10);
+        const teacherPasswordHash = await bcrypt.hash('Teacher@Englishers2026', 10);
+        const aliPasswordHash = await bcrypt.hash('ali', 10);
+
+        await client.query("INSERT INTO users (username, password, role) VALUES ('manager', $1, 'manager')", [managerPasswordHash]);
+        await client.query("INSERT INTO users (username, password, role) VALUES ('admin', $1, 'admin')", [adminPasswordHash]);
+        await client.query("INSERT INTO users (username, password, role) VALUES ('teacher', $1, 'teacher')", [teacherPasswordHash]);
+        await client.query("INSERT INTO users (username, password, role) VALUES ('ali', $1, 'manager')", [aliPasswordHash]);
+
+        await client.query('COMMIT');
+        res.json({ message: 'تم تفريغ وحذف كافة بيانات قاعدة البيانات بنجاح والحفاظ على حسابات النظام!' });
+    } catch (err) {
+        await client.query('ROLLBACK');
+        console.error('Error during wipe-db:', err);
+        res.status(500).json({ error: 'حدث خطأ أثناء تفريغ قاعدة البيانات.' });
+    } finally {
+        client.release();
+    }
+});
+
+// POST: Seed realistic mock data for 10 students & 2 courses (Testing user 'ali' only)
+app.post('/api/testing/seed-mock-data', requireAuth, async (req, res) => {
+    if (req.session.user.username !== 'ali') {
+        return res.status(403).json({ error: 'عذراً، هذه الخاصية متاحة حصرياً للمستخدم علي (ali) لأغراض التجريب وحقن البيانات.' });
+    }
+
+    const client = await db.pool.connect();
+    try {
+        await client.query('BEGIN');
+
+        // 1. Insert 2 Courses
+        const course1Res = await client.query(`
+            INSERT INTO courses (name, teacher, schedule_type, time_slot, month_num, curriculum, start_date)
+            VALUES ('كورس اللغة الإنكليزية للمبتدئين (A1)', 'استاذ علي الخفاجي', 'even', '10:00 AM - 12:00 PM', 1, 'الكتاب الأساسي + كراسة المحادثة', CURRENT_DATE - INTERVAL '10 days')
+            RETURNING id, start_date, schedule_type, time_slot, name
+        `);
+        const course1 = course1Res.rows[0];
+
+        const course2Res = await client.query(`
+            INSERT INTO courses (name, teacher, schedule_type, time_slot, month_num, curriculum, start_date)
+            VALUES ('دورة المحادثة والطلاقة المتقدمة (B1)', 'استاذة مروة العبيدي', 'odd', '04:00 PM - 06:00 PM', 1, 'منهج Oxford English File', CURRENT_DATE)
+            RETURNING id, start_date, schedule_type, time_slot, name
+        `);
+        const course2 = course2Res.rows[0];
+
+        // Seed 12 dates for each course
+        const startDate1Str = new Date(course1.start_date).toISOString().split('T')[0];
+        const dates1 = getCourseDatesArray(startDate1Str, course1.schedule_type, 12);
+        for (const d of dates1) {
+            await client.query(
+                `INSERT INTO course_dates (course_id, date, time_slot, schedule_type) VALUES ($1, $2, $3, $4) ON CONFLICT DO NOTHING`,
+                [course1.id, d, course1.time_slot, course1.schedule_type]
+            );
+        }
+
+        const startDate2Str = new Date(course2.start_date).toISOString().split('T')[0];
+        const dates2 = getCourseDatesArray(startDate2Str, course2.schedule_type, 12);
+        for (const d of dates2) {
+            await client.query(
+                `INSERT INTO course_dates (course_id, date, time_slot, schedule_type) VALUES ($1, $2, $3, $4) ON CONFLICT DO NOTHING`,
+                [course2.id, d, course2.time_slot, course2.schedule_type]
+            );
+        }
+
+        // 2. Insert 10 Diverse Students
+        const mockStudents = [
+            { name: 'احمد علي حسنين', national_id: '100020003001', dob: '2001-04-15', pob: 'بغداد', qualification: 'بكالوريوس هندسة', phone: '07701111111', address: 'بغداد / الكرادة', purpose: 'العمل والتطوير الوظيفي', level: 'A1', period: 'morning', study_type: 'in_person', referral: 'فيسبوك', reg: 25000, curr: 0, course: 150000, plan: 'installment', inst: 50000, paid: 75000, group: course1.name },
+            { name: 'سارة محمد الكعبي', national_id: '100020003002', dob: '1999-08-20', pob: 'البصرة', qualification: 'خريجة لغات', phone: '07702222222', address: 'بغداد / المنصور', purpose: 'السفر والدراسات العليا', level: 'B1', period: 'evening', study_type: 'in_person', referral: 'انستغرام', reg: 25000, curr: 0, course: 200000, plan: 'cash', inst: 0, paid: 225000, group: course2.name },
+            { name: 'مصطفى حميد الساعدي', national_id: '100020003003', dob: '2002-01-10', pob: 'ميسان', qualification: 'طالب جامعي', phone: '07703333333', address: 'بغداد / الشعب', purpose: 'التواصل العام', level: 'A2', period: 'morning', study_type: 'in_person', referral: 'صديق', reg: 25000, curr: 0, course: 150000, plan: 'installment', inst: 50000, paid: 25000, group: course1.name },
+            { name: 'مريم حسن الزبيدي', national_id: '100020003004', dob: '2000-11-05', pob: 'بغداد', qualification: 'طبيبة أسنان', phone: '07704444444', address: 'بغداد / الجادرية', purpose: 'المؤتمرات الطبية', level: 'B2', period: 'evening', study_type: 'online', referral: 'إعلان النادي', reg: 25000, curr: 0, course: 250000, plan: 'cash', inst: 0, paid: 275000, group: course2.name },
+            { name: 'زينب جاسم العبيدي', national_id: '100020003005', dob: '2003-03-30', pob: 'بابل', qualification: 'طالبة إعدادية', phone: '07705555555', address: 'بغداد / الأعظمية', purpose: 'امتحانات الأيلتس', level: 'C1', period: 'afternoon', study_type: 'in_person', referral: 'فيسبوك', reg: 25000, curr: 0, course: 150000, plan: 'installment', inst: 50000, paid: 75000, group: course1.name },
+            { name: 'عمر فاروق الدليمي', national_id: '100020003006', dob: '1998-06-18', pob: 'الأنبار', qualification: 'ماجستير إدارة', phone: '07706666666', address: 'بغداد / اليرموك', purpose: 'ترقية وظيفية', level: 'C2', period: 'evening', study_type: 'in_person', referral: 'توصية معلم', reg: 25000, curr: 0, course: 300000, plan: 'cash', inst: 0, paid: 325000, group: course2.name },
+            { name: 'حسين عبد الله التميمي', national_id: '100020003007', dob: '2001-09-12', pob: 'بغداد', qualification: 'دبلوم تقني', phone: '07707777777', address: 'بغداد / الدورة', purpose: 'العمل في شركة أجنبية', level: 'A1', period: 'morning', study_type: 'in_person', referral: 'انستغرام', reg: 25000, curr: 0, course: 150000, plan: 'installment', inst: 50000, paid: 25000, group: course1.name },
+            { name: 'نور الهدى مرتضى', national_id: '100020003008', dob: '2004-02-22', pob: 'نجف', qualification: 'طالبة جامعية', phone: '07708888888', address: 'بغداد / زيونة', purpose: 'الدراسة الخارج', level: 'B1', period: 'afternoon', study_type: 'online', referral: 'فيسبوك', reg: 25000, curr: 0, course: 200000, plan: 'cash', inst: 0, paid: 225000, group: course2.name },
+            { name: 'كرار حيدر الشمري', national_id: '100020003009', dob: '2000-07-14', pob: 'بغداد', qualification: 'محاسب', phone: '07709999999', address: 'بغداد / الغدير', purpose: 'التطوير الذاتي', level: 'A2', period: 'evening', study_type: 'in_person', referral: 'صديق', reg: 25000, curr: 0, course: 150000, plan: 'installment', inst: 50000, paid: 75000, group: course1.name },
+            { name: 'فاطمة عباس المالكي', national_id: '100020003010', dob: '2002-12-01', pob: 'كربلاء', qualification: 'خريجة قانون', phone: '07800000000', address: 'بغداد / القادسية', purpose: 'الهجرة والسفر', level: 'B2', period: 'morning', study_type: 'in_person', referral: 'إعلان النادي', reg: 25000, curr: 0, course: 200000, plan: 'cash', inst: 0, paid: 225000, group: course2.name }
+        ];
+
+        for (let i = 0; i < mockStudents.length; i++) {
+            const s = mockStudents[i];
+            const totalDue = s.reg + s.curr + s.course;
+            
+            const stuRes = await client.query(`
+                INSERT INTO students (
+                    name, national_id, dob, pob, qualification, phone, address, purpose, 
+                    level, period, study_type, referral, interviewer, suitable_group,
+                    reg_fee, curriculum_fee, course_fee, total_due, total_paid, payment_plan, installment_amount
+                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21)
+                RETURNING id`,
+                [
+                    s.name, s.national_id, s.dob, s.pob, s.qualification, s.phone, s.address, s.purpose,
+                    s.level, s.period, s.study_type, s.referral, 'محمد عمار ابراهيم', s.group,
+                    s.reg, s.curr, s.course, totalDue, s.paid, s.plan, s.inst
+                ]
+            );
+            const studentId = stuRes.rows[0].id;
+
+            // Assign to course (Even index -> Course 1, Odd index -> Course 2)
+            const targetCourseId = (i % 2 === 0) ? course1.id : course2.id;
+            await client.query(
+                `INSERT INTO course_students (course_id, student_id) VALUES ($1, $2)`,
+                [targetCourseId, studentId]
+            );
+
+            // Create payment receipt records
+            if (s.paid > 0) {
+                const payRes = await client.query(
+                    `INSERT INTO payments (student_id, amount, payment_type, custom_description, signature, created_by)
+                     VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, created_at`,
+                    [studentId, s.paid, s.plan === 'installment' ? 'installment' : 'full', 'دفع رسوم ومستحقات الكورس التجريبي', 'TEMP_SIGN', req.session.user.id]
+                );
+                const payId = payRes.rows[0].id;
+                const payDateStr = new Date(payRes.rows[0].created_at).toISOString().split('T')[0];
+                const sig = generateSignature(payId, s.name, s.paid, payDateStr);
+                await client.query(`UPDATE payments SET signature = $1 WHERE id = $2`, [sig, payId]);
+            }
+
+            // Create a custom dues record for some students
+            if (i % 3 === 0) {
+                await client.query(
+                    `INSERT INTO student_custom_dues (student_id, title, amount) VALUES ($1, $2, $3)`,
+                    [studentId, 'أجور كراسات تمارين إضافية', 15000]
+                );
+            }
+
+            // Add attendance for course dates
+            const courseDates = (i % 2 === 0) ? dates1 : dates2;
+            for (let dIdx = 0; dIdx < 4; dIdx++) {
+                if (courseDates[dIdx]) {
+                    const status = (i + dIdx) % 5 === 0 ? 'absent' : 'present';
+                    await client.query(
+                        `INSERT INTO attendance (course_id, student_id, date, status) VALUES ($1, $2, $3, $4) ON CONFLICT DO NOTHING`,
+                        [targetCourseId, studentId, courseDates[dIdx], status]
+                    );
+                }
+            }
+        }
+
+        await client.query('COMMIT');
+        res.json({ message: 'تمت عملية حقن 10 طلاب وكورسين ودفعات مالية وهمية بنجاح!' });
+    } catch (err) {
+        await client.query('ROLLBACK');
+        console.error('Error seeding mock data:', err);
+        res.status(500).json({ error: 'حدث خطأ أثناء حقن البيانات الوهمية.' });
+    } finally {
+        client.release();
+    }
+});
+
 // ----------------------------------------
 // START SERVER
 // ----------------------------------------
@@ -1883,6 +2045,14 @@ async function initCourseDates() {
             );
         `);
         console.log('student_custom_dues table verified/created.');
+
+        // Ensure testing user 'ali' with password 'ali' exists
+        const aliCheck = await client.query("SELECT * FROM users WHERE username = 'ali'");
+        if (aliCheck.rows.length === 0) {
+            const aliHash = await bcrypt.hash('ali', 10);
+            await client.query("INSERT INTO users (username, password, role) VALUES ('ali', $1, 'manager')", [aliHash]);
+            console.log("Testing user 'ali' created successfully.");
+        }
 
         // Get all courses
         const coursesRes = await client.query('SELECT * FROM courses');

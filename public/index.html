@@ -230,6 +230,27 @@
                     <!-- Dynamic admin alerts -->
                 </div>
 
+                <!-- Testing Panel Banner (Visible exclusively for user 'ali') -->
+                <div id="ali-testing-panel" style="display: none; margin: 15px 30px 0 30px; padding: 14px 20px; background: linear-gradient(135deg, #fff9e6 0%, #fff3cd 100%); border: 1px solid #ffe8a1; border-radius: var(--border-radius-md); box-shadow: var(--shadow-sm); align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 15px; direction: rtl;">
+                    <div style="display: flex; align-items: center; gap: 12px; color: #856404;">
+                        <div style="width: 36px; height: 36px; border-radius: 50%; background: #ffe8a1; display: flex; align-items: center; justify-content: center; font-size: 18px; color: #856404; flex-shrink: 0;">
+                            <i class="fa-solid fa-flask"></i>
+                        </div>
+                        <div>
+                            <div style="font-weight: 800; font-size: 14px; color: #856404;">لوحة أدوات التجريب والاستعراض السريع (خاصة بالمستخدم ali)</div>
+                            <div style="font-size: 12px; color: #997404;">يمكنك تفريغ وتصفير قاعدة البيانات بالكامل، أو حقن 10 طلاب وكورسين وبيانات مالية تجريبية بنقرة واحدة.</div>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <button type="button" class="btn btn-danger btn-sm" onclick="confirmWipeDatabase()" style="padding: 8px 14px; font-size: 12px; font-weight: bold; border-radius: 8px; box-shadow: 0 2px 6px rgba(220,53,69,0.3);">
+                            <i class="fa-solid fa-trash-can" style="margin-left: 6px;"></i> تفريغ كافة البيانات 🗑️
+                        </button>
+                        <button type="button" class="btn btn-success btn-sm" onclick="triggerSeedMockData()" style="padding: 8px 14px; font-size: 12px; font-weight: bold; border-radius: 8px; box-shadow: 0 2px 6px rgba(40,167,69,0.3);">
+                            <i class="fa-solid fa-vial" style="margin-left: 6px;"></i> حقن بيانات وهمية تجريبية 🧪
+                        </button>
+                    </div>
+                </div>
+
                 <!-- Main Content Area -->
                 <div class="content-body">
                     
