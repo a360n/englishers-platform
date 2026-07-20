@@ -737,9 +737,19 @@ tr:hover td {
     overflow: hidden;
     transform: translateY(20px);
     transition: var(--transition-smooth);
-    max-height: 90vh;
+    max-height: 88vh;
+    max-height: 88dvh;
     display: flex;
     flex-direction: column;
+}
+
+.modal-container > form {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+    margin: 0;
 }
 
 .modal-overlay.active .modal-container {
@@ -754,6 +764,7 @@ tr:hover td {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    flex-shrink: 0;
 }
 
 .modal-title {
@@ -773,7 +784,9 @@ tr:hover td {
 .modal-body {
     padding: 24px;
     overflow-y: auto;
-    flex-grow: 1;
+    flex: 1;
+    min-height: 0;
+    -webkit-overflow-scrolling: touch;
 }
 
 .modal-footer {
@@ -783,6 +796,7 @@ tr:hover td {
     justify-content: flex-end;
     gap: 12px;
     background-color: #F8FAFC;
+    flex-shrink: 0;
 }
 
 /* Verification Banner styling */

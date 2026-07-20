@@ -613,14 +613,14 @@
 
     <!-- Modal: Add/Edit Course -->
     <div id="course-modal" class="modal-overlay">
-        <div class="modal-container">
-            <div class="modal-header">
+        <div class="modal-container" style="max-height: 85vh; display: flex; flex-direction: column; overflow: hidden;">
+            <div class="modal-header" style="flex-shrink: 0;">
                 <div class="modal-title" id="course-modal-title">إضافة دورة جديدة</div>
                 <button class="modal-close" onclick="closeCourseModal()">&times;</button>
             </div>
-            <form id="course-form">
+            <form id="course-form" style="display: flex; flex-direction: column; flex: 1; min-height: 0; overflow: hidden; margin: 0;">
                 <input type="hidden" id="course-modal-id">
-                <div class="modal-body">
+                <div class="modal-body" style="padding: 24px; overflow-y: auto; flex: 1; min-height: 0;">
                     <div class="form-group">
                         <label for="course-name">اسم الكورس</label>
                         <input type="text" id="course-name" placeholder="مثال: General English Level 1" required>
@@ -1099,13 +1099,13 @@
 
     <!-- MODAL: Base Dues Management -->
     <div id="base-dues-modal" class="modal-overlay">
-        <div class="modal-container">
-            <div class="modal-header">
+        <div class="modal-container" style="max-height: 85vh; display: flex; flex-direction: column; overflow: hidden;">
+            <div class="modal-header" style="flex-shrink: 0;">
                 <h3 class="modal-title">تحديد المستحقات الأساسية للطالب</h3>
                 <button class="modal-close" onclick="closeBaseDuesModal()">&times;</button>
             </div>
-            <form id="student-dues-form">
-                <div class="modal-body">
+            <form id="student-dues-form" style="display: flex; flex-direction: column; flex: 1; min-height: 0; overflow: hidden; margin: 0;">
+                <div class="modal-body" style="padding: 24px; overflow-y: auto; flex: 1; min-height: 0;">
                     <input type="hidden" id="dues-student-id">
                     <div class="form-group" style="margin-bottom: 15px;">
                         <label>الطالب: <strong id="base-dues-student-name" style="color: var(--primary-color);"></strong></label>
