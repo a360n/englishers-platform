@@ -1461,8 +1461,8 @@ app.get('/api/payments/:id/download-admin', requireAuth, requireRole(['manager',
     }
 });
 
-// PUT: Modify payment (ONLY Manager can do this!)
-app.put('/api/payments/:id', requireAuth, requireRole(['manager']), async (req, res) => {
+// PUT: Modify payment (ONLY Admin can do this!)
+app.put('/api/payments/:id', requireAuth, requireRole(['admin']), async (req, res) => {
     const paymentId = parseInt(req.params.id);
     const { amount, paymentType, customDescription } = req.body;
 
@@ -1524,7 +1524,7 @@ app.put('/api/payments/:id', requireAuth, requireRole(['manager']), async (req, 
         await generateReceiptPDF(payment, student, adminPDFPath, 'admin');
 
         await client.query('COMMIT');
-        res.json({ message: 'Receipt updated successfully by Manager', paymentId });
+        res.json({ message: 'Receipt updated successfully by Admin', paymentId });
     } catch (err) {
         await client.query('ROLLBACK');
         console.error(err);
@@ -1534,8 +1534,8 @@ app.put('/api/payments/:id', requireAuth, requireRole(['manager']), async (req, 
     }
 });
 
-// DELETE: Delete payment (ONLY Manager can do this!)
-app.delete('/api/payments/:id', requireAuth, requireRole(['manager']), async (req, res) => {
+// DELETE: Delete payment (ONLY Admin can do this!)
+app.delete('/api/payments/:id', requireAuth, requireRole(['admin']), async (req, res) => {
     const paymentId = parseInt(req.params.id);
 
     const client = await db.pool.connect();

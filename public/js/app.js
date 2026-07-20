@@ -960,12 +960,12 @@ function renderPaymentsTable(payments) {
         if (p.payment_type === 'full') typeStr = 'دفع كامل';
         if (p.payment_type === 'custom') typeStr = 'مخصص';
 
-        // Check user role for editing/deletion permission
-        let actionsHtml = `<span style="font-size:12px; color:var(--text-muted);">مغلق (المدير فقط)</span>`;
-        if (currentUser.role === 'manager') {
+        // Check user role for editing/deletion permission (Admin only)
+        let actionsHtml = `<span style="font-size:12px; color:var(--text-muted);">مغلق (المسؤولة الإدارية فقط)</span>`;
+        if (currentUser.role === 'admin') {
             actionsHtml = `
-                <button class="btn btn-secondary btn-sm" onclick="openEditPaymentModal(${p.id})" style="padding:4px 8px; font-size:11px;"><i class="fa-solid fa-edit"></i></button>
-                <button class="btn btn-danger btn-sm" onclick="deletePayment(${p.id})" style="padding:4px 8px; font-size:11px;"><i class="fa-solid fa-trash"></i></button>
+                <button class="btn btn-secondary btn-sm" onclick="openEditPaymentModal(${p.id})" style="padding:4px 8px; font-size:11px;" title="تعديل الوصل"><i class="fa-solid fa-edit"></i></button>
+                <button class="btn btn-danger btn-sm" onclick="deletePayment(${p.id})" style="padding:4px 8px; font-size:11px;" title="حذف الوصل"><i class="fa-solid fa-trash"></i></button>
             `;
         }
 
