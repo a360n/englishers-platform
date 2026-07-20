@@ -1296,16 +1296,35 @@ function renderAttendanceSheet() {
         
         // Render cells for each of the 12 dates
         allAttendanceDates.forEach(date => {
+            const status = currentAttendanceData[date]?.[student.id] || 'none';
+
             if (student.is_frozen) {
-                colsHtml += `
-                    <td>
-                        <button class="attendance-btn" disabled style="opacity: 0.65; cursor: not-allowed; pointer-events: none; background: #e0f2fe; color: #0369a1; border: 1px solid #7dd3fc; font-weight: bold; font-size: 11px;" title="حساب الطالب مجمد، لا يمكن تسجيل حضور أو غياب">
-                            <i class="fa-solid fa-snowflake"></i> مجمد
-                        </button>
-                    </td>
-                `;
+                if (status === 'present') {
+                    colsHtml += `
+                        <td>
+                            <button class="attendance-btn attendance-present" disabled style="opacity: 0.8; cursor: not-allowed; pointer-events: none;" title="حساب الطالب مجمد (سجل سابق مقفل)">
+                                حاضر 🔒
+                            </button>
+                        </td>
+                    `;
+                } else if (status === 'absent') {
+                    colsHtml += `
+                        <td>
+                            <button class="attendance-btn attendance-absent" disabled style="opacity: 0.8; cursor: not-allowed; pointer-events: none;" title="حساب الطالب مجمد (سجل سابق مقفل)">
+                                غائب 🔒
+                            </button>
+                        </td>
+                    `;
+                } else {
+                    colsHtml += `
+                        <td>
+                            <button class="attendance-btn" disabled style="opacity: 0.65; cursor: not-allowed; pointer-events: none; background: #e0f2fe; color: #0369a1; border: 1px solid #7dd3fc; font-weight: bold; font-size: 11px;" title="حساب الطالب مجمد، لا يمكن تسجيل حضور أو غياب">
+                                <i class="fa-solid fa-snowflake"></i> مجمد
+                            </button>
+                        </td>
+                    `;
+                }
             } else {
-                const status = currentAttendanceData[date]?.[student.id] || 'none';
                 let btnClass = 'attendance-none';
                 let btnText = 'غير محدد';
                 
