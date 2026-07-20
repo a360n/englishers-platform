@@ -96,7 +96,10 @@ function renderUserProfile() {
     }
     const quickAddBtn = document.getElementById('admin-quick-add-student-btn');
     if (quickAddBtn) {
-        quickAddBtn.style.display = (currentUser && ['manager', 'admin'].includes(currentUser.role)) ? 'inline-flex' : 'none';
+        const activeTab = document.querySelector('.tab-content:not([style*="display: none"])');
+        const isStudentsTab = activeTab && activeTab.id === 'tab-students';
+        const isManagerOrAdmin = currentUser && ['manager', 'admin'].includes(currentUser.role);
+        quickAddBtn.style.display = (isManagerOrAdmin && isStudentsTab) ? 'inline-flex' : 'none';
     }
     
     if (currentUser.role === 'manager') {
@@ -161,8 +164,14 @@ function switchTab(tabId) {
         }
     });
 
-    // Update Top Navbar Page Title
+    // Update Top Navbar Page Title & Quick Add Student button visibility
     const titleEl = document.getElementById('page-title');
+    const quickAddBtn = document.getElementById('admin-quick-add-student-btn');
+    if (quickAddBtn) {
+        const isManagerOrAdmin = currentUser && ['manager', 'admin'].includes(currentUser.role);
+        quickAddBtn.style.display = (isManagerOrAdmin && tabId === 'tab-students') ? 'inline-flex' : 'none';
+    }
+
     switch (tabId) {
         case 'tab-courses': titleEl.textContent = 'جدول الكورسات والدورات'; break;
         case 'tab-students': titleEl.textContent = 'قائمة وإدارة الطلاب'; break;
