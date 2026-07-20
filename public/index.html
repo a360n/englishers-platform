@@ -461,8 +461,8 @@
                                 style="flex-wrap: wrap; gap: 15px; display: flex; align-items: center; justify-content: space-between;">
                                 <div class="card-table-title">سجل المدفوعات والوصولات الصادرة</div>
                                 <input type="text" id="payment-search-input"
-                                    placeholder="البحث باسم الطالب أو رقم الوصل التسلسلي..."
-                                    style="max-width:350px; padding: 8px 12px; font-size:13px; margin: 0; border: 1px solid var(--border-color); border-radius: var(--border-radius-sm); background: var(--bg-card); color: var(--text-primary);">
+                                    placeholder="بحث باسم الطالب أو الهاتف أو الهوية الوطنية أو رقم الوصل..."
+                                    style="max-width:380px; padding: 8px 12px; font-size:13px; margin: 0; border: 1px solid var(--border-color); border-radius: var(--border-radius-sm); background: var(--bg-card); color: var(--text-primary);">
                             </div>
                             <div class="table-responsive">
                                 <table>
@@ -491,8 +491,9 @@
                     <!-- ========================================== -->
                     <div id="tab-dues" class="tab-content" style="display:none;">
                         <div class="card">
-                            <div class="card-header">
-                                <h3 class="card-title">جدول وموقف المستحقات المالية للطلاب</h3>
+                            <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
+                                <h3 class="card-title" style="margin:0;">جدول وموقف المستحقات المالية للطلاب</h3>
+                                <input type="text" id="dues-search-input" onkeyup="filterAndRenderDues()" placeholder="بحث باسم الطالب أو رقم الهاتف أو الهوية الوطنية..." style="max-width: 320px; padding: 7px 14px; font-size: 13px; margin: 0; border: 1px solid var(--border-color); border-radius: var(--border-radius-sm); background: var(--bg-card); color: var(--text-primary);">
                             </div>
                             <div class="card-body">
                                 <div class="table-responsive">
@@ -904,6 +905,7 @@
                     <form id="assign-student-form" style="display:flex; gap:15px; align-items: flex-end;">
                         <div class="form-group" style="flex-grow:1; margin-bottom:0;">
                             <label for="assign-student-select">اختر من الطلاب المسجلين</label>
+                            <input type="text" id="assign-student-search" onkeyup="filterStudentDropdown('assign-student-search', 'assign-student-select')" placeholder="🔍 تصفية بالاسم أو الهاتف أو الهوية الوطنية..." style="margin-bottom: 6px; padding: 6px 10px; font-size: 12px; border: 1px solid var(--border-color); border-radius: var(--border-radius-sm); background: var(--bg-card); color: var(--text-primary);">
                             <select id="assign-student-select" required>
                                 <!-- Option list of students -->
                             </select>

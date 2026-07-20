@@ -935,23 +935,27 @@ function populateStudentOptions() {
     if (selectCustomDues) selectCustomDues.innerHTML = '<option value="">-- اختر الطالب --</option>';
     
     studentsList.forEach(s => {
-        const optionText = `${s.name} (${s.phone})`;
+        const natIdStr = s.national_id ? ` | هوية: ${s.national_id}` : '';
+        const optionText = `${s.name} (${s.phone}${natIdStr})`;
         
         if (selectPayment) {
             const optPay = document.createElement('option');
             optPay.value = s.id;
             optPay.textContent = optionText;
+            optPay.setAttribute('data-name', s.name || '');
+            optPay.setAttribute('data-phone', s.phone || '');
+            optPay.setAttribute('data-national-id', s.national_id || '');
             selectPayment.appendChild(optPay);
         }
 
         if (selectAssign) {
             const optAssign = document.createElement('option');
             optAssign.value = s.id;
-            if (parseInt(s.active_courses_count || 0) > 0) {
-                optAssign.textContent = `${optionText} - (منسوب لكورس نشط)`;
-            } else {
-                optAssign.textContent = optionText;
-            }
+            const extraStatus = parseInt(s.active_courses_count || 0) > 0 ? ' - (منسوب لكورس نشط)' : '';
+            optAssign.textContent = optionText + extraStatus;
+            optAssign.setAttribute('data-name', s.name || '');
+            optAssign.setAttribute('data-phone', s.phone || '');
+            optAssign.setAttribute('data-national-id', s.national_id || '');
             selectAssign.appendChild(optAssign);
         }
 
@@ -959,6 +963,9 @@ function populateStudentOptions() {
             const optDues = document.createElement('option');
             optDues.value = s.id;
             optDues.textContent = optionText;
+            optDues.setAttribute('data-name', s.name || '');
+            optDues.setAttribute('data-phone', s.phone || '');
+            optDues.setAttribute('data-national-id', s.national_id || '');
             selectDues.appendChild(optDues);
         }
 
@@ -966,7 +973,42 @@ function populateStudentOptions() {
             const optCustomDues = document.createElement('option');
             optCustomDues.value = s.id;
             optCustomDues.textContent = optionText;
+            optCustomDues.setAttribute('data-name', s.name || '');
+            optCustomDues.setAttribute('data-phone', s.phone || '');
+            optCustomDues.setAttribute('data-national-id', s.national_id || '');
             selectCustomDues.appendChild(optCustomDues);
+        }
+    });
+
+    // Re-apply filter if search inputs have values
+    const paySearch = document.getElementById('pay-student-search');
+    if (paySearch && paySearch.value) filterStudentDropdown('pay-student-search', 'pay-student-select');
+
+    const assignSearch = document.getElementById('assign-student-search');
+    if (assignSearch && assignSearch.value) filterStudentDropdown('assign-student-search', 'assign-student-select');
+}
+
+function filterStudentDropdown(inputId, selectId) {
+    const input = document.getElementById(inputId);
+    const select = document.getElementById(selectId);
+    if (!input || !select) return;
+
+    const query = input.value.toLowerCase().trim();
+    const options = select.querySelectorAll('option');
+
+    options.forEach(opt => {
+        if (!opt.value) {
+            opt.style.display = '';
+            return;
+        }
+        const name = (opt.getAttribute('data-name') || opt.textContent).toLowerCase();
+        const phone = opt.getAttribute('data-phone') || '';
+        const natId = opt.getAttribute('data-national-id') || '';
+
+        if (name.includes(query) || phone.includes(query) || natId.includes(query)) {
+            opt.style.display = '';
+        } else {
+            opt.style.display = 'none';
         }
     });
 }
@@ -1926,13 +1968,30 @@ async function fetchStudentAttendance(courseId, studentId) {
     }
 }
 
+function filterAndRenderDues() {
+    const searchInput = document.getElementById('dues-search-input');
+    const query = searchInput ? searchInput.value.toLowerCase().trim() : '';
+
+    let filtered = studentsList;
+    if (query) {
+        filtered = filtered.filter(s => 
+            (s.name && s.name.toLowerCase().includes(query)) ||
+            (s.phone && s.phone.includes(query)) ||
+            (s.national_id && s.national_id.includes(query))
+        );
+    }
+    renderDuesTable(filtered);
+}
+
 // Renders the student financial dues status table
-function renderDuesTable() {
+function renderDuesTable(studentsToRender) {
     const tbody = document.getElementById('dues-table-body');
     if (!tbody) return;
     tbody.innerHTML = '';
 
-    studentsList.forEach(s => {
+    const list = studentsToRender || studentsList;
+
+    list.forEach(s => {
         const regFee = parseFloat(s.reg_fee || 0);
         const currFee = parseFloat(s.curriculum_fee || 0);
         const courseFee = parseFloat(s.course_fee || 0);
@@ -1970,9 +2029,11 @@ function renderDuesTable() {
             warningHtml = `<br><span class="badge badge-info" style="font-size: 10px; padding: 2px 6px; margin-top: 4px; background: rgba(59, 130, 246, 0.1); color: var(--info); display:inline-block;">نظام الدفع: كاش بالكامل</span>`;
         }
 
+        const natIdStr = s.national_id ? `<br><small style="color:var(--text-muted);">هوية: ${s.national_id}</small>` : '';
+
         const row = document.createElement('tr');
         row.innerHTML = `
-            <td><strong>${s.name}</strong><br><small style="color:var(--text-muted);">${s.phone}</small>${warningHtml}</td>
+            <td><strong>${s.name}</strong><br><small style="color:var(--text-muted);">${s.phone}</small>${natIdStr}${warningHtml}</td>
             <td>${(regFee + currFee).toLocaleString()} IQD</td>
             <td>${courseFee.toLocaleString()} IQD</td>
             <td style="font-weight:700;">${totalDue.toLocaleString()} IQD</td>
@@ -2236,7 +2297,8 @@ function filterAndRenderNotifications() {
     if (query) {
         filtered = filtered.filter(a => 
             (a.student.name && a.student.name.toLowerCase().includes(query)) ||
-            (a.student.phone && a.student.phone.includes(query))
+            (a.student.phone && a.student.phone.includes(query)) ||
+            (a.student.national_id && a.student.national_id.includes(query))
         );
     }
 
@@ -2603,7 +2665,9 @@ function filterAndRenderPayments() {
             const serialStr = `r-${p.id}`.toLowerCase();
             const rawIdStr = `${p.id}`;
             const studentName = p.student_name ? p.student_name.toLowerCase() : '';
-            return serialStr.includes(query) || rawIdStr.includes(query) || studentName.includes(query);
+            const studentPhone = p.student_phone || p.phone || '';
+            const studentNatId = p.student_national_id || p.national_id || '';
+            return serialStr.includes(query) || rawIdStr.includes(query) || studentName.includes(query) || studentPhone.includes(query) || studentNatId.includes(query);
         });
     }
 

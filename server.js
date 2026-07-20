@@ -1427,7 +1427,7 @@ app.post('/api/courses/:id/attendance-bulk', requireAuth, requireRole(['manager'
 app.get('/api/payments', requireAuth, requireRole(['manager', 'admin']), async (req, res) => {
     try {
         const result = await db.query(
-            `SELECT p.*, s.name as student_name, s.phone 
+            `SELECT p.*, s.name as student_name, s.phone as student_phone, s.national_id as student_national_id 
              FROM payments p 
              JOIN students s ON p.student_id = s.id 
              ORDER BY p.id DESC`
