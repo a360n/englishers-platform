@@ -549,7 +549,7 @@ app.get('/api/courses/:id/details', requireAuth, async (req, res) => {
         }
 
         const studentsRes = await db.query(
-            `SELECT s.id, s.name, s.phone, s.level 
+            `SELECT s.id, s.name, s.phone, s.level, s.is_frozen 
              FROM students s 
              JOIN course_students cs ON s.id = cs.student_id 
              WHERE cs.course_id = $1`,

@@ -1169,7 +1169,13 @@ async function openCourseDetailsModal(id) {
         }
 
         const course = data.course;
-        courseStudentsList = data.students;
+        courseStudentsList = data.students.map(st => {
+            const mainSt = studentsList.find(s => s.id === st.id);
+            return {
+                ...st,
+                is_frozen: mainSt ? mainSt.is_frozen : st.is_frozen
+            };
+        });
 
         // Render Header details
         document.getElementById('cd-teacher').textContent = course.teacher;
@@ -1293,7 +1299,7 @@ function renderAttendanceSheet() {
             if (student.is_frozen) {
                 colsHtml += `
                     <td>
-                        <button class="attendance-btn" disabled style="opacity: 0.65; cursor: not-allowed; background: #e0f2fe; color: #0369a1; border: 1px solid #7dd3fc; font-weight: bold; font-size: 11px;" title="حساب الطالب مجمد، لا يمكن تسجيل حضور أو غياب">
+                        <button class="attendance-btn" disabled style="opacity: 0.65; cursor: not-allowed; pointer-events: none; background: #e0f2fe; color: #0369a1; border: 1px solid #7dd3fc; font-weight: bold; font-size: 11px;" title="حساب الطالب مجمد، لا يمكن تسجيل حضور أو غياب">
                             <i class="fa-solid fa-snowflake"></i> مجمد
                         </button>
                     </td>
