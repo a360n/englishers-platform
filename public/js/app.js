@@ -176,6 +176,8 @@ function switchTab(tabId) {
         case 'tab-courses': titleEl.textContent = 'جدول الكورسات والدورات'; break;
         case 'tab-students': titleEl.textContent = 'قائمة وإدارة الطلاب'; break;
         case 'tab-payments': titleEl.textContent = 'الوصولات والمعاملات المالية'; break;
+        case 'tab-dues': titleEl.textContent = 'مستحقات وأقساط الطلاب'; break;
+        case 'tab-notifications': titleEl.textContent = 'إشعارات ومواعيد استحقاق الأقساط'; break;
         case 'tab-reports': titleEl.textContent = 'تصدير وحفظ البيانات'; break;
         case 'tab-student-dashboard': titleEl.textContent = 'لوحة معلومات الطالب'; break;
         default: titleEl.textContent = 'لوحة التحكم';
@@ -2049,19 +2051,20 @@ function closePolicyModal() {
     document.getElementById('policy-modal').classList.remove('active');
 }
 
-// Check and render admin/manager monthly installment warnings
+// Standalone Notifications Page Controller
+let allDuesAlerts = [];
+let currentNotifFilter = 'all';
+
 function checkAdminDuesAlerts(students) {
-    const container = document.getElementById('admin-alerts-container');
-    if (!container) return;
-    container.innerHTML = '';
-    
-    // Only show for manager, admin, or teacher
+    const oldContainer = document.getElementById('admin-alerts-container');
+    if (oldContainer) oldContainer.style.display = 'none';
+
+    allDuesAlerts = [];
     if (!['manager', 'admin', 'teacher'].includes(currentUser.role)) {
-        container.style.display = 'none';
+        updateNotificationBadge(0);
         return;
     }
 
-    const alertStudents = [];
     students.forEach(s => {
         if (s.payment_plan === 'installment') {
             const attCount = parseInt(s.attendance_count || 0);
@@ -2074,45 +2077,165 @@ function checkAdminDuesAlerts(students) {
             const expectedPaymentTotal = currentMonthIndex * instAmount;
             
             if (sessionsInCurrentMonth >= 9 && totalPaid < expectedPaymentTotal) {
-                alertStudents.push({
+                const isCritical = sessionsInCurrentMonth >= 11;
+                allDuesAlerts.push({
                     student: s,
                     sessions: sessionsInCurrentMonth,
                     amount: instAmount,
-                    monthNum: currentMonthIndex
+                    monthNum: currentMonthIndex,
+                    isCritical: isCritical
                 });
             }
         }
     });
 
-    if (alertStudents.length > 0) {
-        let alertHtml = `
-            <div style="background: rgba(239, 68, 68, 0.1); border: 1.5px solid var(--danger); border-radius: 12px; padding: 16px 20px; color: var(--text-primary); box-shadow: var(--shadow-sm); animation: fadeIn 0.4s ease; margin-bottom: 25px;">
-                <h4 style="margin: 0 0 10px 0; color: var(--danger); display: flex; align-items: center; gap: 8px; font-size: 15px;">
-                    <i class="fa-solid fa-triangle-exclamation"></i> إشعارات استحقاق الأقساط الشهرية للطلاب (${alertStudents.length})
-                </h4>
-                <ul style="margin: 0; padding-right: 20px; font-size: 13px; line-height: 1.8; text-align: right;">
-        `;
+    updateNotificationBadge(allDuesAlerts.length);
+    renderNotificationStats();
+    filterAndRenderNotifications();
+}
 
-        alertStudents.forEach(item => {
-            const urgencyIcon = item.sessions >= 11 ? '🚨' : '⚠️';
-            const urgencyText = item.sessions >= 11 ? 'قسط متأخر جداً (حرج)' : 'قرب انتهاء الشهر الحالي';
-            alertHtml += `
-                <li style="margin-bottom: 6px; list-style-type: square;">
-                    ${urgencyIcon} الطالب <strong>${item.student.name}</strong> (${item.student.phone}) - أكمل <strong>${item.sessions} محاضرات</strong> من الشهر ${item.monthNum} 
-                    | القسط غير المدفوع: <strong style="color:var(--danger);">${item.amount.toLocaleString()} IQD</strong> 
-                    <span class="badge ${item.sessions >= 11 ? 'badge-danger' : 'badge-warning'}" style="padding: 2px 6px; font-size: 10px; margin-right: 8px; display: inline-block;">${urgencyText} (${item.sessions}/12 محاضرات)</span>
-                </li>
-            `;
-        });
+function updateNotificationBadge(count) {
+    const badge = document.getElementById('notifications-count-badge');
+    if (!badge) return;
+    if (count > 0) {
+        badge.textContent = count;
+        badge.style.display = 'inline-block';
+    } else {
+        badge.style.display = 'none';
+    }
+}
 
-        alertHtml += `
-                </ul>
+function renderNotificationStats() {
+    const criticalCount = allDuesAlerts.filter(a => a.isCritical).length;
+    const upcomingCount = allDuesAlerts.filter(a => !a.isCritical).length;
+    const totalAmount = allDuesAlerts.reduce((sum, a) => sum + a.amount, 0);
+
+    const critEl = document.getElementById('notif-stat-critical');
+    const upcomEl = document.getElementById('notif-stat-upcoming');
+    const totEl = document.getElementById('notif-stat-total-amount');
+
+    if (critEl) critEl.textContent = criticalCount;
+    if (upcomEl) upcomEl.textContent = upcomingCount;
+    if (totEl) totEl.textContent = totalAmount.toLocaleString() + ' IQD';
+}
+
+function setNotifFilter(filterType) {
+    currentNotifFilter = filterType;
+    const buttons = document.querySelectorAll('.btn-notif-filter');
+    buttons.forEach(btn => {
+        btn.classList.remove('active');
+        btn.style.background = 'transparent';
+        btn.style.color = 'var(--text-secondary)';
+        btn.style.fontWeight = 'normal';
+    });
+
+    let activeBtn;
+    if (filterType === 'all') activeBtn = buttons[0];
+    else if (filterType === 'critical') activeBtn = buttons[1];
+    else if (filterType === 'upcoming') activeBtn = buttons[2];
+
+    if (activeBtn) {
+        activeBtn.classList.add('active');
+        activeBtn.style.background = 'var(--primary-color)';
+        activeBtn.style.color = '#fff';
+        activeBtn.style.fontWeight = 'bold';
+    }
+
+    filterAndRenderNotifications();
+}
+
+function filterAndRenderNotifications() {
+    const cardsContainer = document.getElementById('notifications-cards-container');
+    const emptyState = document.getElementById('notifications-empty-state');
+    if (!cardsContainer) return;
+
+    const searchInput = document.getElementById('notif-search-input');
+    const query = searchInput ? searchInput.value.toLowerCase().trim() : '';
+
+    let filtered = allDuesAlerts;
+
+    if (currentNotifFilter === 'critical') {
+        filtered = filtered.filter(a => a.isCritical);
+    } else if (currentNotifFilter === 'upcoming') {
+        filtered = filtered.filter(a => !a.isCritical);
+    }
+
+    if (query) {
+        filtered = filtered.filter(a => 
+            (a.student.name && a.student.name.toLowerCase().includes(query)) ||
+            (a.student.phone && a.student.phone.includes(query))
+        );
+    }
+
+    if (filtered.length === 0) {
+        cardsContainer.innerHTML = '';
+        if (emptyState) emptyState.style.display = 'block';
+        return;
+    }
+
+    if (emptyState) emptyState.style.display = 'none';
+
+    let html = '';
+    filtered.forEach(item => {
+        const s = item.student;
+        const badgeBg = item.isCritical ? 'background: #fee2e2; color: #dc2626; border: 1px solid #fca5a5;' : 'background: #fff3cd; color: #856404; border: 1px solid #ffe8a1;';
+        const urgencyText = item.isCritical ? '🚨 قسط متأخر جداً (حرج)' : '⚠️ قرب انتهاء الشهر الحالي';
+        const courseName = s.current_course_name || s.suitable_group || 'غير محدد';
+        const avatarUrl = s.photo_path || '/images/default_student.png';
+
+        html += `
+            <div style="background: var(--bg-card); border: 1.5px solid ${item.isCritical ? 'var(--danger)' : 'var(--warning)'}; border-radius: var(--border-radius-md); padding: 18px; box-shadow: var(--shadow-sm); display: flex; flex-direction: column; justify-content: space-between; gap: 14px;">
+                <div>
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; margin-bottom: 12px;">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <img src="${avatarUrl}" onerror="this.src='/images/default_student.png'" style="width: 44px; height: 44px; border-radius: 50%; object-fit: cover; border: 2px solid var(--border-color);">
+                            <div>
+                                <h4 style="margin: 0; font-size: 15px; color: var(--text-primary); font-weight: bold;">${s.name}</h4>
+                                <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;"><i class="fa-solid fa-phone" style="margin-left: 4px;"></i>${s.phone}</div>
+                            </div>
+                        </div>
+                        <span style="${badgeBg} font-size: 11px; font-weight: bold; padding: 4px 8px; border-radius: 6px;">${urgencyText}</span>
+                    </div>
+
+                    <div style="background: rgba(0,0,0,0.03); padding: 10px 14px; border-radius: 8px; font-size: 13px; margin-bottom: 10px;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+                            <span style="color: var(--text-secondary);">الكورس الحالي:</span>
+                            <strong style="color: var(--primary-color);">${courseName}</strong>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+                            <span style="color: var(--text-secondary);">تقدم المحاضرات:</span>
+                            <strong>${item.sessions} / 12 محاضرة (الشهر ${item.monthNum})</strong>
+                        </div>
+                        <div style="display: flex; justify-content: space-between;">
+                            <span style="color: var(--text-secondary);">المبلغ المطلوب تسديده:</span>
+                            <strong style="color: var(--danger); font-size: 14px;">${item.amount.toLocaleString()} IQD</strong>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                    <button class="btn btn-primary btn-sm" onclick="openPaymentModalWithStudent(${s.id})" style="flex: 1; font-size: 12px; padding: 6px 10px; display: flex; align-items: center; justify-content: center; gap: 5px;">
+                        <i class="fa-solid fa-plus-circle"></i> تسجيل دفع القسط
+                    </button>
+                    <button class="btn btn-secondary btn-sm" onclick="openStudentDetailsModal(${s.id})" style="font-size: 12px; padding: 6px 10px;" title="عرض الملف">
+                        <i class="fa-solid fa-user"></i>
+                    </button>
+                    <a href="tel:${s.phone}" class="btn btn-outline btn-sm" style="font-size: 12px; padding: 6px 10px; color: var(--success); border-color: var(--success);" title="اتصال بالتلفون">
+                        <i class="fa-solid fa-phone"></i>
+                    </a>
+                </div>
             </div>
         `;
-        container.innerHTML = alertHtml;
-        container.style.display = 'block';
-    } else {
-        container.style.display = 'none';
+    });
+
+    cardsContainer.innerHTML = html;
+}
+
+function openPaymentModalWithStudent(studentId) {
+    switchTab('tab-payments');
+    const select = document.getElementById('pay-student-select');
+    if (select) {
+        select.value = studentId;
     }
 }
 
