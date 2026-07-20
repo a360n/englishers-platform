@@ -2401,3 +2401,35 @@ function formatCurrencyInput(input) {
         input.value = '';
     }
 }
+
+// Fullscreen Image Lightbox Controls
+function openFullscreenImage(imgSrc) {
+    if (!imgSrc) return;
+    const modal = document.getElementById('image-fullscreen-modal');
+    const modalImg = document.getElementById('fullscreen-modal-img');
+    if (modal && modalImg) {
+        modalImg.src = imgSrc;
+        modal.classList.add('active');
+    }
+}
+
+function closeFullscreenImage() {
+    const modal = document.getElementById('image-fullscreen-modal');
+    if (modal) {
+        modal.classList.remove('active');
+    }
+}
+
+function expandCurrentAvatar(imgId) {
+    const img = document.getElementById(imgId);
+    if (img && img.style.display !== 'none' && img.src) {
+        openFullscreenImage(img.src);
+    }
+}
+
+// Close fullscreen image modal on Escape key press
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+        closeFullscreenImage();
+    }
+});
