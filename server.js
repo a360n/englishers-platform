@@ -1844,7 +1844,11 @@ app.post('/api/testing/wipe-db', requireAuth, async (req, res) => {
         await client.query("INSERT INTO users (username, password, role) VALUES ('manager', $1, 'manager')", [managerPasswordHash]);
         await client.query("INSERT INTO users (username, password, role) VALUES ('admin', $1, 'admin')", [adminPasswordHash]);
         await client.query("INSERT INTO users (username, password, role) VALUES ('teacher', $1, 'teacher')", [teacherPasswordHash]);
-        await client.query("INSERT INTO users (username, password, role) VALUES ('ali', $1, 'manager')", [aliPasswordHash]);
+        const newAliRes = await client.query("INSERT INTO users (username, password, role) VALUES ('ali', $1, 'manager') RETURNING id", [aliPasswordHash]);
+
+        if (newAliRes.rows.length > 0) {
+            req.session.user.id = newAliRes.rows[0].id;
+        }
 
         await client.query('COMMIT');
         res.json({ message: 'تم تفريغ وحذف كافة بيانات قاعدة البيانات بنجاح والحفاظ على حسابات النظام!' });
@@ -1866,6 +1870,17 @@ app.post('/api/testing/seed-mock-data', requireAuth, async (req, res) => {
     const client = await db.pool.connect();
     try {
         await client.query('BEGIN');
+
+        // Dynamically resolve creator user ID from DB to avoid session mismatch error
+        const creatorRes = await client.query("SELECT id FROM users WHERE username = $1", [req.session.user.username]);
+        let creatorId = creatorRes.rows.length > 0 ? creatorRes.rows[0].id : null;
+        if (!creatorId) {
+            const fallbackUser = await client.query("SELECT id FROM users ORDER BY id ASC LIMIT 1");
+            creatorId = fallbackUser.rows.length > 0 ? fallbackUser.rows[0].id : null;
+        }
+        if (creatorId) {
+            req.session.user.id = creatorId;
+        }
 
         // 1. Insert 2 Courses
         const course1Res = await client.query(`
@@ -1946,7 +1961,7 @@ app.post('/api/testing/seed-mock-data', requireAuth, async (req, res) => {
                 const payRes = await client.query(
                     `INSERT INTO payments (student_id, amount, payment_type, custom_description, signature, created_by)
                      VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, created_at`,
-                    [studentId, s.paid, s.plan === 'installment' ? 'installment' : 'full', 'دفع رسوم ومستحقات الكورس التجريبي', 'TEMP_SIGN', req.session.user.id]
+                    [studentId, s.paid, s.plan === 'installment' ? 'installment' : 'full', 'دفع رسوم ومستحقات الكورس التجريبي', 'TEMP_SIGN', creatorId]
                 );
                 const payId = payRes.rows[0].id;
                 const payDateStr = new Date(payRes.rows[0].created_at).toISOString().split('T')[0];
