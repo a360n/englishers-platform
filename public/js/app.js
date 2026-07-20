@@ -897,7 +897,11 @@ function populateStudentOptions() {
         if (selectAssign) {
             const optAssign = document.createElement('option');
             optAssign.value = s.id;
-            optAssign.textContent = optionText;
+            if (parseInt(s.active_courses_count || 0) > 0) {
+                optAssign.textContent = `${optionText} - (منسوب لكورس نشط)`;
+            } else {
+                optAssign.textContent = optionText;
+            }
             selectAssign.appendChild(optAssign);
         }
 

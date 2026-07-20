@@ -757,28 +757,52 @@ app.post('/api/courses/:id/dates/:dateStr/postpone', requireAuth, requireRole(['
 });
 
 // POST: Assign a student to a course (Admin & Manager only)
+// POST: Assign student to a course (Admin, Manager & Teacher)
 app.post('/api/courses/:id/students', requireAuth, requireRole(['manager', 'admin', 'teacher']), async (req, res) => {
     const { studentId } = req.body;
-    if (!studentId) return res.status(400).json({ error: 'Student ID is required.' });
+    const courseId = req.params.id;
+    if (!studentId) return res.status(400).json({ error: 'الرجاء تحديد الطالب أولاً.' });
 
     try {
-        // Check if mapping exists
+        // 1. Check if mapping exists in this exact course
         const check = await db.query(
             'SELECT 1 FROM course_students WHERE course_id = $1 AND student_id = $2',
-            [req.params.id, studentId]
+            [courseId, studentId]
         );
         if (check.rows.length > 0) {
-            return res.status(400).json({ error: 'Student already assigned to this course.' });
+            return res.status(400).json({ error: 'الطالب مضاف بالفعل لهذه الدورة التعليمية.' });
+        }
+
+        // 2. Protection Rule: Check if student is currently assigned to ANY OTHER active course (has sessions >= CURRENT_DATE)
+        const activeCourseCheck = await db.query(
+            `SELECT c.id, c.name 
+             FROM course_students cs
+             JOIN courses c ON cs.course_id = c.id
+             WHERE cs.student_id = $1
+               AND cs.course_id != $2
+               AND EXISTS (
+                   SELECT 1 FROM course_dates cd 
+                   WHERE cd.course_id = c.id AND cd.date >= CURRENT_DATE
+               )
+             LIMIT 1`,
+            [studentId, courseId]
+        );
+
+        if (activeCourseCheck.rows.length > 0) {
+            const activeCourse = activeCourseCheck.rows[0];
+            return res.status(400).json({ 
+                error: `عذراً، لا يمكن إضافة الطالب. الطالب منسوب حالياً لكورس نشط وهو (${activeCourse.name}). يجب إزالة الطالب من الكورس الحالي أو انتظار انتهائه أولاً.` 
+            });
         }
 
         await db.query(
             'INSERT INTO course_students (course_id, student_id) VALUES ($1, $2)',
-            [req.params.id, studentId]
+            [courseId, studentId]
         );
-        res.json({ message: 'Student assigned successfully' });
+        res.json({ message: 'تم تنسيب الطالب للكورس بنجاح' });
     } catch (err) {
         console.error(err);
-        res.status(500).json({ error: 'Internal server error' });
+        res.status(500).json({ error: 'حدث خطأ في الخادم الداخلي' });
     }
 });
 
