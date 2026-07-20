@@ -1266,6 +1266,20 @@
                                 <textarea id="eval-notes" placeholder="أية تفاصيل إدارية أخرى حول الطالب..."></textarea>
                             </div>
 
+                            <!-- Freeze Student Switch -->
+                            <div class="form-group" style="margin-bottom: 18px; background: rgba(59, 130, 246, 0.05); border: 1.5px solid var(--border-color); border-radius: 10px; padding: 14px 18px; display: flex; align-items: center; justify-content: space-between; gap: 15px;">
+                                <div>
+                                    <label for="eval-is-frozen" style="font-weight: 700; margin: 0; color: var(--text-primary); cursor: pointer; display: flex; align-items: center; gap: 8px; font-size: 14px;">
+                                        <i class="fa-solid fa-snowflake" style="color: #0284c7; font-size: 16px;"></i> تجميد حساب الطالب (حساب مجمد)
+                                    </label>
+                                    <span style="color: var(--text-muted); display: block; margin-top: 4px; font-size: 12px;">عند تفعيل التجميد، يُميّز صف الطالب في الجداول بقناع أزرق ويُقفل تسجيل الحضور والغياب له.</span>
+                                </div>
+                                <label class="switch" style="flex-shrink: 0;">
+                                    <input type="checkbox" id="eval-is-frozen">
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+
                             <button type="submit" class="btn btn-primary btn-block">تحديث وتثبيت التقييم الإداري <i
                                     class="fa-solid fa-save"></i></button>
                         </form>

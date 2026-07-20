@@ -530,7 +530,8 @@ function setupEventListeners() {
             interviewer: interviewerVal,
             suitable_group: document.getElementById('eval-group').value,
             level: document.getElementById('eval-level').value,
-            notes: document.getElementById('eval-notes').value
+            notes: document.getElementById('eval-notes').value,
+            is_frozen: document.getElementById('eval-is-frozen').checked
         };
 
         try {
@@ -881,6 +882,9 @@ function renderStudentsTable(students) {
 
         const row = document.createElement('tr');
         row.style.cursor = 'pointer';
+        if (s.is_frozen) {
+            row.classList.add('tr-frozen');
+        }
         row.onclick = () => openStudentDetailsModal(s.id);
         
         let balanceHtml = '';
@@ -899,9 +903,13 @@ function renderStudentsTable(students) {
             courseBadgeHtml = `<td><span class="badge badge-warning" style="background:#fff3cd; color:#856404; border:1px solid #ffe8a1; font-weight:700;"><i class="fa-solid fa-clock-rotate-left" style="margin-left:4px;"></i>قائمة الانتظار</span></td>`;
         }
 
+        const frozenBadgeHtml = s.is_frozen 
+            ? `<span class="badge badge-frozen" style="padding: 2px 6px; font-size: 10px; margin-right: 6px;"><i class="fa-solid fa-snowflake"></i> مجمد</span>`
+            : '';
+
         row.innerHTML = `
             <td>S-${s.id}</td>
-            <td><strong>${s.name}</strong></td>
+            <td><strong>${s.name}</strong>${frozenBadgeHtml}</td>
             <td>${s.phone}</td>
             ${courseBadgeHtml}
             <td><span class="badge ${s.study_type === 'in_person' ? 'badge-info' : 'badge-warning'}">${studyTypeStr}</span></td>
@@ -1270,24 +1278,42 @@ function renderAttendanceSheet() {
     const tbody = document.createElement('tbody');
     courseStudentsList.forEach(student => {
         const row = document.createElement('tr');
-        let colsHtml = `<td><strong>${student.name}</strong><br><small style="color:var(--text-muted);">${student.phone}</small></td>`;
+        if (student.is_frozen) {
+            row.classList.add('tr-frozen');
+        }
+
+        const frozenBadge = student.is_frozen 
+            ? `<span class="badge badge-frozen" style="padding:2px 6px; font-size:10px; margin-right:4px;"><i class="fa-solid fa-snowflake"></i> مجمد</span>`
+            : '';
+
+        let colsHtml = `<td><strong>${student.name}</strong>${frozenBadge}<br><small style="color:var(--text-muted);">${student.phone}</small></td>`;
         
         // Render cells for each of the 12 dates
         allAttendanceDates.forEach(date => {
-            const status = currentAttendanceData[date]?.[student.id] || 'none';
-            let btnClass = 'attendance-none';
-            let btnText = 'غير محدد';
-            
-            if (status === 'present') { btnClass = 'attendance-present'; btnText = 'حاضر'; }
-            else if (status === 'absent') { btnClass = 'attendance-absent'; btnText = 'غائب'; }
+            if (student.is_frozen) {
+                colsHtml += `
+                    <td>
+                        <button class="attendance-btn" disabled style="opacity: 0.65; cursor: not-allowed; background: #e0f2fe; color: #0369a1; border: 1px solid #7dd3fc; font-weight: bold; font-size: 11px;" title="حساب الطالب مجمد، لا يمكن تسجيل حضور أو غياب">
+                            <i class="fa-solid fa-snowflake"></i> مجمد
+                        </button>
+                    </td>
+                `;
+            } else {
+                const status = currentAttendanceData[date]?.[student.id] || 'none';
+                let btnClass = 'attendance-none';
+                let btnText = 'غير محدد';
+                
+                if (status === 'present') { btnClass = 'attendance-present'; btnText = 'حاضر'; }
+                else if (status === 'absent') { btnClass = 'attendance-absent'; btnText = 'غائب'; }
 
-            colsHtml += `
-                <td>
-                    <button class="attendance-btn ${btnClass}" onclick="cycleAttendanceState('${date}', ${student.id}, this)">
-                        ${btnText}
-                    </button>
-                </td>
-            `;
+                colsHtml += `
+                    <td>
+                        <button class="attendance-btn ${btnClass}" onclick="cycleAttendanceState('${date}', ${student.id}, this)">
+                            ${btnText}
+                        </button>
+                    </td>
+                `;
+            }
         });
 
         // Delete student from course button
@@ -1306,6 +1332,11 @@ function renderAttendanceSheet() {
 
 // Cycles cell state: present -> absent -> none -> present
 function cycleAttendanceState(dateStr, studentId, btnEl) {
+    const student = courseStudentsList.find(s => s.id === studentId) || studentsList.find(s => s.id === studentId);
+    if (student && student.is_frozen) {
+        alert('عذراً، هذا الطالب حساب مجمد حالياً ولا يمكن تسجيل حضور أو غياب له.');
+        return;
+    }
     if (!currentAttendanceData[dateStr]) currentAttendanceData[dateStr] = {};
     const currentStatus = currentAttendanceData[dateStr][studentId] || 'none';
     let nextStatus = 'present';
@@ -1526,6 +1557,8 @@ async function openStudentDetailsModal(id) {
         }
         document.getElementById('eval-level').value = student.level || 'غير محدد';
         document.getElementById('eval-notes').value = student.notes || '';
+        const frozenEl = document.getElementById('eval-is-frozen');
+        if (frozenEl) frozenEl.checked = !!student.is_frozen;
 
         // Financials Summary in modal
         const due = parseFloat(student.total_due || 0);

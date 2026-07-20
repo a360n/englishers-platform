@@ -1043,7 +1043,7 @@ app.put('/api/students/:id/personal', requireAuth, requireRole(['manager', 'admi
 // PUT: Fill administrative academic details for student (Admin & Manager only)
 app.put('/api/students/:id/admin', requireAuth, requireRole(['manager', 'admin']), async (req, res) => {
     const studentId = parseInt(req.params.id);
-    const { interviewer, suitable_group, level, notes } = req.body;
+    const { interviewer, suitable_group, level, notes, is_frozen } = req.body;
 
     const groupName = suitable_group ? suitable_group.trim() : 'قائمة الانتظار';
 
@@ -1089,15 +1089,17 @@ app.put('/api/students/:id/admin', requireAuth, requireRole(['manager', 'admin']
         }
 
         // 3. Update student record
+        const isFrozenBool = is_frozen === true || is_frozen === 'true';
         const result = await client.query(
             `UPDATE students 
-             SET interviewer = $1, suitable_group = $2, level = $3, notes = $4 
-             WHERE id = $5 RETURNING *`,
+             SET interviewer = $1, suitable_group = $2, level = $3, notes = $4, is_frozen = $5 
+             WHERE id = $6 RETURNING *`,
             [
                 interviewer ? interviewer.trim() : null,
                 groupName,
                 level ? level.trim() : 'غير محدد',
                 notes ? notes.trim() : null,
+                isFrozenBool,
                 studentId
             ]
         );
@@ -1333,6 +1335,12 @@ app.post('/api/courses/:id/attendance', requireAuth, requireRole(['manager', 'ad
         for (const [studentIdStr, status] of Object.entries(attendance)) {
             const studentId = parseInt(studentIdStr);
 
+            // Skip frozen students
+            const stRes = await client.query('SELECT is_frozen FROM students WHERE id = $1', [studentId]);
+            if (stRes.rows.length > 0 && stRes.rows[0].is_frozen) {
+                continue;
+            }
+
             // Upsert attendance
             await client.query(
                 `INSERT INTO attendance (course_id, student_id, date, status) 
@@ -1372,6 +1380,12 @@ app.post('/api/courses/:id/attendance-bulk', requireAuth, requireRole(['manager'
         for (const [date, studentsMap] of Object.entries(attendanceSheet)) {
             for (const [studentIdStr, status] of Object.entries(studentsMap)) {
                 const studentId = parseInt(studentIdStr);
+
+                // Skip frozen students
+                const stRes = await client.query('SELECT is_frozen FROM students WHERE id = $1', [studentId]);
+                if (stRes.rows.length > 0 && stRes.rows[0].is_frozen) {
+                    continue;
+                }
 
                 if (status === 'none') {
                     // Delete attendance record to keep database clean if status is set back to none
@@ -2182,11 +2196,12 @@ function getCourseDatesArray(startDateStr, scheduleType, numDays = 12) {
 async function initCourseDates() {
     const client = await db.pool.connect();
     try {
-        // Verify/add photo_path column in students table
+        // Verify/add photo_path and is_frozen columns in students table
         await client.query(`
             ALTER TABLE students ADD COLUMN IF NOT EXISTS photo_path VARCHAR(555);
+            ALTER TABLE students ADD COLUMN IF NOT EXISTS is_frozen BOOLEAN DEFAULT FALSE;
         `);
-        console.log('students.photo_path column verified/created.');
+        console.log('students.photo_path and is_frozen columns verified/created.');
 
         // Verify course_dates table
         await client.query(`
