@@ -220,7 +220,10 @@
                         </button>
                         <div class="navbar-title" id="page-title">لوحة التحكم</div>
                     </div>
-                    <div class="navbar-actions">
+                    <div class="navbar-actions" style="display: flex; align-items: center; gap: 10px;">
+                        <button type="button" id="admin-quick-add-student-btn" class="btn btn-primary btn-sm" onclick="openAdminRegisterStudentModal()" style="display: none; padding: 6px 14px; font-size: 12px; font-weight: bold; border-radius: 6px; align-items: center; gap: 6px;">
+                            <i class="fa-solid fa-user-plus"></i> إضافة طالب جديد ➕
+                        </button>
                         <div id="lan-ip-banner" class="badge badge-info" style="font-size:12px; padding: 6px 12px;"></div>
                     </div>
                 </div>
@@ -292,7 +295,12 @@
                     <div id="tab-students" class="tab-content" style="display:none;">
                         <div class="card-table-wrapper">
                             <div class="card-table-header" style="flex-wrap: wrap; gap: 15px; display: flex; align-items: center; justify-content: space-between;">
-                                <div class="card-table-title">قائمة الطلاب المسجلين بالمنصة</div>
+                                <div style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
+                                    <div class="card-table-title">قائمة الطلاب المسجلين بالمنصة</div>
+                                    <button type="button" class="btn btn-primary btn-sm" onclick="openAdminRegisterStudentModal()" style="padding: 6px 14px; font-size: 12px; font-weight: bold; border-radius: var(--border-radius-sm); display: flex; align-items: center; gap: 6px;">
+                                        <i class="fa-solid fa-user-plus"></i> إضافة طالب جديد (استمارة التسجيل) ➕
+                                    </button>
+                                </div>
                                 <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap; direction: rtl;">
                                     <!-- Filter segment control -->
                                     <div class="filter-group" style="display:flex; border: 1px solid var(--border-color); border-radius: var(--border-radius-sm); overflow:hidden; background: var(--bg-card);">
@@ -1248,6 +1256,114 @@
                 <i class="fa-solid fa-xmark"></i>
             </button>
             <img id="fullscreen-modal-img" src="" alt="Student Photo" style="max-width: 90vw; max-height: 85vh; border-radius: 12px; object-fit: contain; box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 2px solid rgba(255,255,255,0.2);">
+        </div>
+    </div>
+
+    <!-- Admin Register Student Modal -->
+    <div id="admin-register-student-modal" class="modal-overlay" style="z-index: 2000;">
+        <div class="modal-container" style="max-width: 650px; max-height: 90vh; overflow-y: auto; text-align: right; direction: rtl; border-radius: var(--border-radius-md);">
+            <div class="modal-header">
+                <h3 class="modal-title" style="color: var(--primary-color);">
+                    <i class="fa-solid fa-user-plus" style="margin-left: 8px;"></i> استمارة تسجيل طالب جديد
+                </h3>
+                <button type="button" class="modal-close" onclick="closeAdminRegisterStudentModal()">&times;</button>
+            </div>
+            <div class="modal-body" style="padding: 20px;">
+                <div id="admin-reg-alert-error" class="alert alert-danger" style="display: none; margin-bottom: 15px; font-size: 13px;"></div>
+                <div id="admin-reg-alert-success" class="alert alert-success" style="display: none; margin-bottom: 15px; font-size: 13px;"></div>
+
+                <form id="admin-register-student-form">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                        <div class="form-group" style="margin-bottom: 12px; grid-column: span 2;">
+                            <label style="font-size:12px; font-weight:bold;">الاسم الكامل للزبون *</label>
+                            <input type="text" id="admin-reg-name" required placeholder="أدخل اسم الطالب الرباعي..." style="width:100%; padding: 8px; font-size:13px; border:1px solid var(--border-color); border-radius:var(--border-radius-sm); background:var(--bg-card); color:var(--text-primary);">
+                        </div>
+
+                        <div class="form-group" style="margin-bottom: 12px;">
+                            <label style="font-size:12px; font-weight:bold;">رقم الهوية الوطنية (12 رقماً بالإنكليزية) *</label>
+                            <input type="text" id="admin-reg-national-id" maxlength="12" required placeholder="مثال: 100020003004" style="width:100%; padding: 8px; font-size:13px; border:1px solid var(--border-color); border-radius:var(--border-radius-sm); background:var(--bg-card); color:var(--text-primary);">
+                        </div>
+
+                        <div class="form-group" style="margin-bottom: 12px;">
+                            <label style="font-size:12px; font-weight:bold;">رقم الهاتف *</label>
+                            <input type="text" id="admin-reg-phone" required placeholder="0770XXXXXXX" style="width:100%; padding: 8px; font-size:13px; border:1px solid var(--border-color); border-radius:var(--border-radius-sm); background:var(--bg-card); color:var(--text-primary);">
+                        </div>
+
+                        <div class="form-group" style="margin-bottom: 12px;">
+                            <label style="font-size:12px; font-weight:bold;">تاريخ الميلاد *</label>
+                            <input type="date" id="admin-reg-dob" required style="width:100%; padding: 8px; font-size:13px; border:1px solid var(--border-color); border-radius:var(--border-radius-sm); background:var(--bg-card); color:var(--text-primary);">
+                        </div>
+
+                        <div class="form-group" style="margin-bottom: 12px;">
+                            <label style="font-size:12px; font-weight:bold;">محل الولادة *</label>
+                            <input type="text" id="admin-reg-pob" required placeholder="بغداد / البصرة..." style="width:100%; padding: 8px; font-size:13px; border:1px solid var(--border-color); border-radius:var(--border-radius-sm); background:var(--bg-card); color:var(--text-primary);">
+                        </div>
+
+                        <div class="form-group" style="margin-bottom: 12px;">
+                            <label style="font-size:12px; font-weight:bold;">التحصيل الدراسي *</label>
+                            <input type="text" id="admin-reg-qualification" required placeholder="طالب جامعي / بكالوريوس..." style="width:100%; padding: 8px; font-size:13px; border:1px solid var(--border-color); border-radius:var(--border-radius-sm); background:var(--bg-card); color:var(--text-primary);">
+                        </div>
+
+                        <div class="form-group" style="margin-bottom: 12px; grid-column: span 2;">
+                            <label style="font-size:12px; font-weight:bold;">العنوان بالتفصيل *</label>
+                            <input type="text" id="admin-reg-address" required placeholder="المنطقة / المحلة..." style="width:100%; padding: 8px; font-size:13px; border:1px solid var(--border-color); border-radius:var(--border-radius-sm); background:var(--bg-card); color:var(--text-primary);">
+                        </div>
+
+                        <div class="form-group" style="margin-bottom: 12px; grid-column: span 2;">
+                            <label style="font-size:12px; font-weight:bold;">الغاية من التعلم *</label>
+                            <input type="text" id="admin-reg-purpose" required placeholder="السفر / العمل / امتحانات الأيلتس..." style="width:100%; padding: 8px; font-size:13px; border:1px solid var(--border-color); border-radius:var(--border-radius-sm); background:var(--bg-card); color:var(--text-primary);">
+                        </div>
+
+                        <div class="form-group" style="margin-bottom: 12px;">
+                            <label style="font-size:12px; font-weight:bold;">الفترة المناسبة *</label>
+                            <select id="admin-reg-period" required style="width:100%; padding: 8px; font-size:13px; border:1px solid var(--border-color); border-radius:var(--border-radius-sm); background:var(--bg-card); color:var(--text-primary);">
+                                <option value="morning">صباحي</option>
+                                <option value="afternoon">عصري</option>
+                                <option value="evening">مسائي</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group" style="margin-bottom: 12px;">
+                            <label style="font-size:12px; font-weight:bold;">نوع الدراسة *</label>
+                            <select id="admin-reg-study-type" required style="width:100%; padding: 8px; font-size:13px; border:1px solid var(--border-color); border-radius:var(--border-radius-sm); background:var(--bg-card); color:var(--text-primary);">
+                                <option value="in_person">حضوري</option>
+                                <option value="online">إلكتروني</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group" style="margin-bottom: 12px; grid-column: span 2;">
+                            <label style="font-size:12px; font-weight:bold;">كيف عرف النادي *</label>
+                            <input type="text" id="admin-reg-referral" required placeholder="فيسبوك / انستغرام / صديق..." style="width:100%; padding: 8px; font-size:13px; border:1px solid var(--border-color); border-radius:var(--border-radius-sm); background:var(--bg-card); color:var(--text-primary);">
+                        </div>
+
+                        <div class="form-group" style="margin-bottom: 12px; grid-column: span 2;">
+                            <label style="font-size:12px; font-weight:bold;">صورة الطالب الشخصية (اختياري)</label>
+                            <input type="file" id="admin-reg-photo" accept="image/*" style="width:100%; padding: 6px; font-size:13px; border:1px solid var(--border-color); border-radius:var(--border-radius-sm); background:var(--bg-card); color:var(--text-primary);">
+                        </div>
+
+                        <div style="grid-column: span 2; background: var(--bg-body); padding: 12px; border-radius: 8px; border: 1px solid var(--border-color); margin-top: 5px;">
+                            <h5 style="margin-top:0; margin-bottom: 8px; color: var(--primary-color); font-size: 13px;">بيانات حساب تسجيل دخول الطالب بالمنصة</h5>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                                <div class="form-group">
+                                    <label style="font-size:12px; font-weight:bold;">اسم المستخدم للدخول *</label>
+                                    <input type="text" id="admin-reg-username" required placeholder="مثال: student2026" style="width:100%; padding: 8px; font-size:13px; border:1px solid var(--border-color); border-radius:var(--border-radius-sm); background:var(--bg-card); color:var(--text-primary);">
+                                </div>
+                                <div class="form-group">
+                                    <label style="font-size:12px; font-weight:bold;">كلمة السر للدخول *</label>
+                                    <input type="password" id="admin-reg-password" required placeholder="******" style="width:100%; padding: 8px; font-size:13px; border:1px solid var(--border-color); border-radius:var(--border-radius-sm); background:var(--bg-card); color:var(--text-primary);">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer" style="margin-top: 20px; padding-top: 15px; border-top: 1px solid var(--border-color); display: flex; gap: 10px;">
+                        <button type="submit" class="btn btn-primary" style="flex: 1; padding: 10px; font-size: 14px; font-weight: bold;">
+                            <i class="fa-solid fa-check" style="margin-left: 6px;"></i> إرسال واستكمال التسجيل
+                        </button>
+                        <button type="button" class="btn btn-outline" onclick="closeAdminRegisterStudentModal()" style="flex: 1; padding: 10px; font-size: 14px;">إلغاء</button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 

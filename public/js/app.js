@@ -94,6 +94,10 @@ function renderUserProfile() {
     if (aliTestingPanel) {
         aliTestingPanel.style.display = (currentUser && currentUser.username === 'ali') ? 'flex' : 'none';
     }
+    const quickAddBtn = document.getElementById('admin-quick-add-student-btn');
+    if (quickAddBtn) {
+        quickAddBtn.style.display = (currentUser && ['manager', 'admin'].includes(currentUser.role)) ? 'inline-flex' : 'none';
+    }
     
     if (currentUser.role === 'manager') {
         roleEl.textContent = 'المدير العام';
@@ -2483,3 +2487,81 @@ async function triggerSeedMockData() {
         alert('حدث خطأ أثناء الاتصال بالسيرفر لحقن البيانات الوهمية.');
     }
 }
+
+// Admin / Manager Student Self-Registration Form Modal Controls
+function openAdminRegisterStudentModal() {
+    const modal = document.getElementById('admin-register-student-modal');
+    const form = document.getElementById('admin-register-student-form');
+    const errEl = document.getElementById('admin-reg-alert-error');
+    const succEl = document.getElementById('admin-reg-alert-success');
+    if (form) form.reset();
+    if (errEl) errEl.style.display = 'none';
+    if (succEl) succEl.style.display = 'none';
+    if (modal) modal.classList.add('active');
+}
+
+function closeAdminRegisterStudentModal() {
+    const modal = document.getElementById('admin-register-student-modal');
+    if (modal) modal.classList.remove('active');
+}
+
+// Submit listener for Admin/Manager Student Registration Form
+document.addEventListener('DOMContentLoaded', () => {
+    const adminRegForm = document.getElementById('admin-register-student-form');
+    if (adminRegForm) {
+        adminRegForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const errEl = document.getElementById('admin-reg-alert-error');
+            const succEl = document.getElementById('admin-reg-alert-success');
+            if (errEl) errEl.style.display = 'none';
+            if (succEl) succEl.style.display = 'none';
+
+            const formData = new FormData();
+            formData.append('name', document.getElementById('admin-reg-name').value);
+            formData.append('national_id', document.getElementById('admin-reg-national-id').value);
+            formData.append('dob', document.getElementById('admin-reg-dob').value);
+            formData.append('pob', document.getElementById('admin-reg-pob').value);
+            formData.append('qualification', document.getElementById('admin-reg-qualification').value);
+            formData.append('phone', document.getElementById('admin-reg-phone').value);
+            formData.append('address', document.getElementById('admin-reg-address').value);
+            formData.append('purpose', document.getElementById('admin-reg-purpose').value);
+            formData.append('period', document.getElementById('admin-reg-period').value);
+            formData.append('study_type', document.getElementById('admin-reg-study-type').value);
+            formData.append('referral', document.getElementById('admin-reg-referral').value);
+            formData.append('username', document.getElementById('admin-reg-username').value);
+            formData.append('password', document.getElementById('admin-reg-password').value);
+
+            const photoInput = document.getElementById('admin-reg-photo');
+            if (photoInput && photoInput.files[0]) {
+                formData.append('photo', photoInput.files[0]);
+            }
+
+            try {
+                const res = await fetch('/api/auth/register-student', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await res.json();
+
+                if (res.ok) {
+                    succEl.textContent = 'تم تسجيل الطالب وتوليد حسابه بنجاح!';
+                    succEl.style.display = 'block';
+                    adminRegForm.reset();
+                    
+                    fetchStudents(); // Refresh students list immediately
+                    
+                    setTimeout(() => {
+                        closeAdminRegisterStudentModal();
+                    }, 1800);
+                } else {
+                    errEl.textContent = data.error || 'فشل تسجيل الطالب.';
+                    errEl.style.display = 'block';
+                }
+            } catch (err) {
+                console.error(err);
+                errEl.textContent = 'حدث خطأ أثناء الاتصال بالسيرفر لتسجيل الطالب.';
+                errEl.style.display = 'block';
+            }
+        });
+    }
+});
