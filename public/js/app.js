@@ -424,7 +424,8 @@ function setupEventListeners() {
             if (res.ok) {
                 alert('تم إضافة الطالب بنجاح للدورة.');
                 openCourseDetailsModal(activeCourseId); // Refresh modal view
-                fetchStudents(); // Refresh dues data
+                fetchStudents(); // Refresh dues and current course data
+                fetchCourses();
             } else {
                 alert(data.error || 'فشل التنسيب.');
             }
@@ -526,9 +527,10 @@ function setupEventListeners() {
             const data = await res.json();
 
             if (res.ok) {
-                alert('تم تحديث التقييم والمستحقات بنجاح.');
+                alert('تم تحديث التقييم والمستحقات والتنسيب بنجاح.');
                 closeStudentDetailsModal();
                 fetchStudents();
+                fetchCourses();
             } else {
                 alert(data.error || 'فشل التحديث.');
             }
@@ -875,10 +877,18 @@ function renderStudentsTable(students) {
             balanceHtml = `<td style="color:var(--text-muted); font-weight:700;">0 IQD</td>`;
         }
 
+        let courseBadgeHtml = '';
+        if (s.current_course_name) {
+            courseBadgeHtml = `<td><span class="badge badge-info" style="font-weight:700;"><i class="fa-solid fa-graduation-cap" style="margin-left:4px;"></i>${s.current_course_name}</span></td>`;
+        } else {
+            courseBadgeHtml = `<td><span class="badge badge-warning" style="background:#fff3cd; color:#856404; border:1px solid #ffe8a1; font-weight:700;"><i class="fa-solid fa-clock-rotate-left" style="margin-left:4px;"></i>قائمة الانتظار</span></td>`;
+        }
+
         row.innerHTML = `
             <td>S-${s.id}</td>
             <td><strong>${s.name}</strong></td>
             <td>${s.phone}</td>
+            ${courseBadgeHtml}
             <td><span class="badge ${s.study_type === 'in_person' ? 'badge-info' : 'badge-warning'}">${studyTypeStr}</span></td>
             <td>${regDate}</td>
             <td>${totalDue.toLocaleString()} IQD</td>
@@ -1334,7 +1344,8 @@ async function removeStudentFromCourse(studentId) {
         });
         if (res.ok) {
             openCourseDetailsModal(activeCourseId);
-            fetchStudents(); // Refresh student dues
+            fetchStudents(); // Refresh student dues and current course data
+            fetchCourses();
         } else {
             alert('فشل إزالة الطالب.');
         }
@@ -1485,17 +1496,15 @@ async function openStudentDetailsModal(id) {
 
         const groupSelect = document.getElementById('eval-group');
         if (groupSelect) {
-            const expectedLength = (Array.isArray(coursesList) ? coursesList.length : 0) + 1;
-            while (groupSelect.options.length > expectedLength) {
-                groupSelect.remove(expectedLength);
-            }
-            groupSelect.value = student.suitable_group || '';
-            if (student.suitable_group && groupSelect.selectedIndex === -1) {
+            populateEvalGroupDropdown();
+            const targetGroup = student.current_course_name || student.suitable_group || 'قائمة الانتظار';
+            groupSelect.value = targetGroup;
+            if (groupSelect.selectedIndex === -1) {
                 const opt = document.createElement('option');
-                opt.value = student.suitable_group;
-                opt.textContent = student.suitable_group + ' (كورس قديم/غير نشط)';
+                opt.value = targetGroup;
+                opt.textContent = targetGroup + ' (كورس سابق)';
                 groupSelect.appendChild(opt);
-                groupSelect.value = student.suitable_group;
+                groupSelect.value = targetGroup;
             }
         }
         document.getElementById('eval-level').value = student.level || 'غير محدد';
@@ -2210,10 +2219,13 @@ function populateEvalGroupDropdown() {
     // Save current selected value to restore it
     const currentVal = groupSelect.value;
     
-    // Reset options but keep the first one
-    groupSelect.innerHTML = '<option value="" disabled selected>-- اختر الدورة/الشعبة --</option>';
+    // Reset options and add Waiting List option
+    groupSelect.innerHTML = `
+        <option value="" disabled selected>-- اختر الدورة/الشعبة --</option>
+        <option value="قائمة الانتظار" style="font-weight:bold; color: #856404; background-color: #fff3cd;">📋 قائمة الانتظار (غير منسوب لكورس)</option>
+    `;
     
-    // Append all courses
+    // Append all active courses
     if (Array.isArray(coursesList)) {
         coursesList.forEach(c => {
             const opt = document.createElement('option');
@@ -2224,7 +2236,9 @@ function populateEvalGroupDropdown() {
     }
 
     // Restore selected value if it matches one of the options
-    groupSelect.value = currentVal;
+    if (currentVal) {
+        groupSelect.value = currentVal;
+    }
 }
 
 function toggleCustomInterviewerInput(value) {
@@ -2277,11 +2291,11 @@ function filterAndRenderStudents() {
 
     // Apply status filter first
     if (currentStudentFilter === 'waiting') {
-        filtered = filtered.filter(s => parseInt(s.total_courses_count || 0) === 0);
+        filtered = filtered.filter(s => !s.current_course_name);
     } else if (currentStudentFilter === 'current') {
-        filtered = filtered.filter(s => parseInt(s.active_courses_count || 0) > 0);
+        filtered = filtered.filter(s => !!s.current_course_name);
     } else if (currentStudentFilter === 'graduated') {
-        filtered = filtered.filter(s => parseInt(s.total_courses_count || 0) > 0 && parseInt(s.active_courses_count || 0) === 0);
+        filtered = filtered.filter(s => parseInt(s.total_courses_count || 0) > 0 && !s.current_course_name);
     }
 
     // Apply search query second

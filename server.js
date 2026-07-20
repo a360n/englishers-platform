@@ -495,10 +495,17 @@ app.put('/api/courses/:id', requireAuth, requireRole(['manager', 'admin', 'teach
 // DELETE: Course (Admin & Manager only)
 app.delete('/api/courses/:id', requireAuth, requireRole(['manager', 'admin', 'teacher']), async (req, res) => {
     try {
-        const result = await db.query('DELETE FROM courses WHERE id = $1 RETURNING id', [req.params.id]);
-        if (result.rows.length === 0) {
+        const courseRes = await db.query('SELECT name FROM courses WHERE id = $1', [req.params.id]);
+        if (courseRes.rows.length === 0) {
             return res.status(404).json({ error: 'Course not found.' });
         }
+        const courseName = courseRes.rows[0].name;
+
+        await db.query('DELETE FROM courses WHERE id = $1', [req.params.id]);
+
+        // Reset suitable_group for any students who were in this course to 'قائمة الانتظار'
+        await db.query("UPDATE students SET suitable_group = 'قائمة الانتظار' WHERE suitable_group = $1", [courseName]);
+
         res.json({ message: 'Course deleted successfully' });
     } catch (err) {
         console.error(err);
@@ -839,6 +846,13 @@ app.post('/api/courses/:id/students', requireAuth, requireRole(['manager', 'admi
             'INSERT INTO course_students (course_id, student_id) VALUES ($1, $2)',
             [courseId, studentId]
         );
+
+        // Synchronize student suitable_group with the newly assigned course name
+        const courseRes = await db.query('SELECT name FROM courses WHERE id = $1', [courseId]);
+        if (courseRes.rows.length > 0) {
+            await db.query('UPDATE students SET suitable_group = $1 WHERE id = $2', [courseRes.rows[0].name, studentId]);
+        }
+
         res.json({ message: 'تم تنسيب الطالب للكورس بنجاح' });
     } catch (err) {
         console.error(err);
@@ -856,6 +870,10 @@ app.delete('/api/courses/:id/students/:studentId', requireAuth, requireRole(['ma
         if (result.rows.length === 0) {
             return res.status(404).json({ error: 'Assignment not found.' });
         }
+
+        // Synchronize student suitable_group to 'قائمة الانتظار'
+        await db.query("UPDATE students SET suitable_group = 'قائمة الانتظار' WHERE id = $1", [req.params.studentId]);
+
         res.json({ message: 'Student removed from course.' });
     } catch (err) {
         console.error(err);
@@ -873,6 +891,18 @@ app.get('/api/students', requireAuth, requireRole(['manager', 'admin', 'teacher'
         const result = await db.query(`
             SELECT s.*, 
                    COALESCE((SELECT COUNT(*)::integer FROM attendance WHERE student_id = s.id), 0) AS attendance_count,
+                   (
+                       SELECT c.name 
+                       FROM course_students cs
+                       JOIN courses c ON cs.course_id = c.id
+                       WHERE cs.student_id = s.id 
+                         AND EXISTS (
+                             SELECT 1 FROM course_dates cd 
+                             WHERE cd.course_id = c.id AND cd.date >= CURRENT_DATE
+                         )
+                       ORDER BY c.id DESC
+                       LIMIT 1
+                   ) AS current_course_name,
                    (
                        SELECT COUNT(*)::integer 
                        FROM course_students cs
@@ -991,29 +1021,79 @@ app.put('/api/students/:id/personal', requireAuth, requireRole(['manager', 'admi
 
 // PUT: Fill administrative academic details for student (Admin & Manager only)
 app.put('/api/students/:id/admin', requireAuth, requireRole(['manager', 'admin']), async (req, res) => {
+    const studentId = parseInt(req.params.id);
     const { interviewer, suitable_group, level, notes } = req.body;
 
+    const groupName = suitable_group ? suitable_group.trim() : 'قائمة الانتظار';
+
+    const client = await db.pool.connect();
     try {
-        const result = await db.query(
+        await client.query('BEGIN');
+
+        // 1. If groupName is 'قائمة الانتظار' or empty/null: remove student from any active course
+        if (!groupName || groupName === 'قائمة الانتظار') {
+            await client.query(`
+                DELETE FROM course_students 
+                WHERE student_id = $1 
+                  AND course_id IN (
+                      SELECT c.id FROM courses c 
+                      JOIN course_dates cd ON cd.course_id = c.id 
+                      WHERE cd.date >= CURRENT_DATE
+                  )
+            `, [studentId]);
+        } else {
+            // 2. Find the target course by name
+            const courseRes = await client.query('SELECT id, name FROM courses WHERE LOWER(name) = LOWER($1)', [groupName]);
+            if (courseRes.rows.length > 0) {
+                const targetCourseId = courseRes.rows[0].id;
+
+                // Remove student from any OTHER active course (Single Active Course Rule)
+                await client.query(`
+                    DELETE FROM course_students 
+                    WHERE student_id = $1 AND course_id != $2
+                      AND course_id IN (
+                          SELECT c.id FROM courses c 
+                          JOIN course_dates cd ON cd.course_id = c.id 
+                          WHERE cd.date >= CURRENT_DATE
+                      )
+                `, [studentId, targetCourseId]);
+
+                // Enroll in target course
+                await client.query(`
+                    INSERT INTO course_students (course_id, student_id)
+                    VALUES ($1, $2)
+                    ON CONFLICT (course_id, student_id) DO NOTHING
+                `, [targetCourseId, studentId]);
+            }
+        }
+
+        // 3. Update student record
+        const result = await client.query(
             `UPDATE students 
              SET interviewer = $1, suitable_group = $2, level = $3, notes = $4 
              WHERE id = $5 RETURNING *`,
             [
                 interviewer ? interviewer.trim() : null,
-                suitable_group ? suitable_group.trim() : null,
+                groupName,
                 level ? level.trim() : 'غير محدد',
                 notes ? notes.trim() : null,
-                req.params.id
+                studentId
             ]
         );
 
         if (result.rows.length === 0) {
+            await client.query('ROLLBACK');
             return res.status(404).json({ error: 'Student profile not found.' });
         }
+
+        await client.query('COMMIT');
         res.json(result.rows[0]);
     } catch (err) {
+        await client.query('ROLLBACK');
         console.error(err);
         res.status(500).json({ error: 'Internal server error' });
+    } finally {
+        client.release();
     }
 });
 
