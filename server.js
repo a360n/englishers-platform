@@ -436,6 +436,13 @@ app.post('/api/courses', requireAuth, requireRole(['manager', 'admin', 'teacher'
         return res.status(400).json({ error: 'All fields are required.' });
     }
 
+    if (start_date && !isValidSchedulePatternDate(start_date, schedule_type)) {
+        const patternText = schedule_type === 'even' ? 'زوجي (سبت، اثنين، أربعاء)' : 'فردي (أحد، ثلاثاء، خميس)';
+        return res.status(400).json({ 
+            error: `تاريخ بدء الكورس (${start_date}) غير متوافق مع نمط التوزيع الأسبوعي المختار (${patternText}). يرجى اختيار تاريخ يطابق أيام النمط.` 
+        });
+    }
+
     const client = await db.pool.connect();
     try {
         await client.query('BEGIN');
@@ -473,6 +480,13 @@ app.put('/api/courses/:id', requireAuth, requireRole(['manager', 'admin', 'teach
     const { name, teacher, schedule_type, time_slot, month_num, curriculum, start_date } = req.body;
     if (!name || !teacher || !schedule_type || !time_slot || !month_num || !curriculum || !start_date) {
         return res.status(400).json({ error: 'All fields are required.' });
+    }
+
+    if (start_date && !isValidSchedulePatternDate(start_date, schedule_type)) {
+        const patternText = schedule_type === 'even' ? 'زوجي (سبت، اثنين، أربعاء)' : 'فردي (أحد، ثلاثاء، خميس)';
+        return res.status(400).json({ 
+            error: `تاريخ بدء الكورس (${start_date}) غير متوافق مع نمط التوزيع الأسبوعي المختار (${patternText}). يرجى اختيار تاريخ يطابق أيام النمط.` 
+        });
     }
 
     try {
@@ -588,6 +602,13 @@ app.post('/api/courses/:id/extend', requireAuth, requireRole(['manager', 'admin'
 
     if (!num_days || !start_date || !schedule_type || !time_slot) {
         return res.status(400).json({ error: 'All fields are required.' });
+    }
+
+    if (start_date && !isValidSchedulePatternDate(start_date, schedule_type)) {
+        const patternText = schedule_type === 'even' ? 'زوجي (سبت، اثنين، أربعاء)' : 'فردي (أحد، ثلاثاء، خميس)';
+        return res.status(400).json({ 
+            error: `تاريخ تمديد الكورس (${start_date}) غير متوافق مع نمط التوزيع الأسبوعي للأيام المضافة (${patternText}).` 
+        });
     }
 
     const client = await db.pool.connect();
@@ -2124,6 +2145,16 @@ app.post('/api/testing/seed-mock-data', requireAuth, async (req, res) => {
 // ----------------------------------------
 // START SERVER
 // ----------------------------------------
+
+// Validate date against schedule pattern helper (even: Sat=6, Mon=1, Wed=3 | odd: Sun=0, Tue=2, Thu=4)
+function isValidSchedulePatternDate(dateStr, scheduleType) {
+    if (!dateStr || !scheduleType) return true;
+    const parts = dateStr.split('-');
+    const dt = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+    const day = dt.getDay(); // 0: Sun, 1: Mon, 2: Tue, 3: Wed, 4: Thu, 5: Fri, 6: Sat
+    const validDays = scheduleType === 'even' ? [6, 1, 3] : [0, 2, 4];
+    return validDays.includes(day);
+}
 
 // Calculate lecture dates helper
 function getCourseDatesArray(startDateStr, scheduleType, numDays = 12) {

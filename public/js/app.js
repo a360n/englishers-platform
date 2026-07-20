@@ -378,6 +378,12 @@ function setupEventListeners() {
             ? document.getElementById('course-curriculum-custom').value
             : curriculumSelectVal;
 
+        // Validate start date pattern
+        if (!validateCourseStartDatePattern()) {
+            alert('عذراً، تاريخ بدء الكورس غير متوافق مع نمط التوزيع الأسبوعي المختار. يرجى اختيار تاريخ يوافق أحد أيام النمط (زوجي: سبت/اثنين/أربعاء، فردي: أحد/ثلاثاء/خميس).');
+            return;
+        }
+
         const payload = {
             name: document.getElementById('course-name').value,
             teacher: document.getElementById('course-teacher').value,
@@ -397,12 +403,13 @@ function setupEventListeners() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
             });
+            const data = await res.json();
             
             if (res.ok) {
                 closeCourseModal();
                 fetchCourses();
             } else {
-                alert('حدث خطأ أثناء حفظ الكورس.');
+                alert(data.error || 'حدث خطأ أثناء حفظ الكورس.');
             }
         } catch (err) {
             console.error(err);
@@ -439,6 +446,12 @@ function setupEventListeners() {
     // Extend Course Days Form
     document.getElementById('extend-course-form').addEventListener('submit', async (e) => {
         e.preventDefault();
+
+        if (!validateExtendStartDatePattern()) {
+            alert('عذراً، تاريخ بدء تمديد الكورس غير متوافق مع نمط التوزيع الأسبوعي المختار للأيام المضافة.');
+            return;
+        }
+
         const numDays = document.getElementById('extend-num-days').value;
         const startDate = document.getElementById('extend-start-date').value;
         const scheduleType = document.getElementById('extend-schedule').value;
@@ -1024,6 +1037,7 @@ function openAddCourseModal() {
         customInput.removeAttribute('required');
     }
     
+    validateCourseStartDatePattern();
     document.getElementById('course-modal').classList.add('active');
 }
 
@@ -1041,6 +1055,7 @@ function openEditCourseModal(id) {
     if (course.start_date) {
         document.getElementById('course-start-date').value = course.start_date.split('T')[0];
     }
+    validateCourseStartDatePattern();
     
     // Split and set start/end times
     const times = course.time_slot.split(' - ');
@@ -2715,3 +2730,80 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 });
+
+// Map day numbers (0-6) to Arabic day names for schedule pattern validation
+const ARABIC_DAY_NAMES = [
+    'الأحد (فردي)',
+    'الاثنين (زوجي)',
+    'الثلاثاء (فردي)',
+    'الأربعاء (زوجي)',
+    'الخميس (فردي)',
+    'الجمعة (عطلة)',
+    'السبت (زوجي)'
+];
+
+function validateCourseStartDatePattern() {
+    const scheduleSelect = document.getElementById('course-schedule');
+    const dateInput = document.getElementById('course-start-date');
+    const warningEl = document.getElementById('course-start-date-warning');
+    if (!scheduleSelect || !dateInput || !warningEl) return true;
+
+    const scheduleType = scheduleSelect.value;
+    const dateVal = dateInput.value;
+
+    if (!dateVal) {
+        warningEl.style.display = 'none';
+        return true;
+    }
+
+    const dateParts = dateVal.split('-');
+    const dt = new Date(parseInt(dateParts[0]), parseInt(dateParts[1]) - 1, parseInt(dateParts[2]));
+    const dayOfWeek = dt.getDay(); // 0 = Sun, 1 = Mon, 2 = Tue, 3 = Wed, 4 = Thu, 5 = Fri, 6 = Sat
+
+    const validDays = scheduleType === 'even' ? [6, 1, 3] : [0, 2, 4];
+    const isEven = scheduleType === 'even';
+    const dayName = ARABIC_DAY_NAMES[dayOfWeek];
+
+    if (!validDays.includes(dayOfWeek)) {
+        const requiredText = isEven ? 'زوجي (السبت، الاثنين، أو الأربعاء)' : 'فردي (الأحد، الثلاثاء، أو الخميس)';
+        warningEl.innerHTML = `<i class="fa-solid fa-triangle-exclamation" style="margin-left: 5px;"></i> تعارض في النمط: اليوم المختار يوافق <strong>${dayName}</strong>. يجب أن يوافق تاريخ البدء <strong>${requiredText}</strong>.`;
+        warningEl.style.display = 'block';
+        return false;
+    } else {
+        warningEl.style.display = 'none';
+        return true;
+    }
+}
+
+function validateExtendStartDatePattern() {
+    const scheduleSelect = document.getElementById('extend-schedule');
+    const dateInput = document.getElementById('extend-start-date');
+    const warningEl = document.getElementById('extend-start-date-warning');
+    if (!scheduleSelect || !dateInput || !warningEl) return true;
+
+    const scheduleType = scheduleSelect.value;
+    const dateVal = dateInput.value;
+
+    if (!dateVal) {
+        warningEl.style.display = 'none';
+        return true;
+    }
+
+    const dateParts = dateVal.split('-');
+    const dt = new Date(parseInt(dateParts[0]), parseInt(dateParts[1]) - 1, parseInt(dateParts[2]));
+    const dayOfWeek = dt.getDay();
+
+    const validDays = scheduleType === 'even' ? [6, 1, 3] : [0, 2, 4];
+    const isEven = scheduleType === 'even';
+    const dayName = ARABIC_DAY_NAMES[dayOfWeek];
+
+    if (!validDays.includes(dayOfWeek)) {
+        const requiredText = isEven ? 'زوجي (السبت، الاثنين، أو الأربعاء)' : 'فردي (الأحد، الثلاثاء، أو الخميس)';
+        warningEl.innerHTML = `<i class="fa-solid fa-triangle-exclamation" style="margin-left: 5px;"></i> تعارض في النمط: التاريخ المختار للتمديد يوافق <strong>${dayName}</strong>. يجب أن يوافق <strong>${requiredText}</strong>.`;
+        warningEl.style.display = 'block';
+        return false;
+    } else {
+        warningEl.style.display = 'none';
+        return true;
+    }
+}
