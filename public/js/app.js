@@ -2556,11 +2556,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 } else {
                     errEl.textContent = data.error || 'فشل تسجيل الطالب.';
                     errEl.style.display = 'block';
+                    const modalContainer = document.querySelector('#admin-register-student-modal .modal-container');
+                    if (modalContainer) modalContainer.scrollTop = 0;
                 }
             } catch (err) {
                 console.error(err);
                 errEl.textContent = 'حدث خطأ أثناء الاتصال بالسيرفر لتسجيل الطالب.';
                 errEl.style.display = 'block';
+                const modalContainer = document.querySelector('#admin-register-student-modal .modal-container');
+                if (modalContainer) modalContainer.scrollTop = 0;
             }
         });
     }

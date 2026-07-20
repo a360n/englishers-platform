@@ -257,26 +257,61 @@ const handleStudentPhotoUpload = (req, res, next) => {
     });
 };
 
-// POST: Register student self-service (generates student profile & user login credentials)
+// POST: Register student self-service or admin student creation
 app.post('/api/auth/register-student', handleStudentPhotoUpload, async (req, res) => {
-    const {
+    let {
         name, national_id, dob, pob, qualification, phone, address, purpose,
         username, password, period, study_type, referral
     } = req.body;
 
-    if (!name || !national_id || !dob || !pob || !qualification || !phone || !address || !purpose || !username || !password || !period || !study_type || !referral) {
-        return res.status(400).json({ error: 'جميع الحقول مطلوبة.' });
+    // Normalize Arabic-Indic digits to ASCII numbers
+    const normalizeDigits = (str) => {
+        if (!str) return '';
+        return String(str)
+            .replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d))
+            .replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d));
+    };
+
+    name = name ? name.trim() : '';
+    let natId = normalizeDigits(national_id).replace(/\D/g, '');
+    let phoneNum = normalizeDigits(phone).trim();
+    pob = pob ? pob.trim() : 'غير محدد';
+    qualification = qualification ? qualification.trim() : 'غير محدد';
+    address = address ? address.trim() : 'غير محدد';
+    purpose = purpose ? purpose.trim() : 'تعلم اللغة الإنكليزية';
+    period = period || 'morning';
+    study_type = study_type || 'in_person';
+    referral = referral ? referral.trim() : 'تسجيل مباشر';
+    let uName = username ? username.trim() : '';
+    let pwd = password || 'student123';
+    dob = dob || new Date().toISOString().split('T')[0];
+
+    // Validate student name
+    if (!name) {
+        return res.status(400).json({ error: 'الرجاء إدخال اسم الطالب الكامل.' });
     }
 
-    // 12-digit national ID check (English characters only)
-    const natId = national_id.trim();
-    if (!/^\d{12}$/.test(natId)) {
-        return res.status(400).json({ error: 'رقم البطاقة الوطنية يجب أن يتكون من 12 رقماً باللغة الإنكليزية فقط.' });
+    // Auto-pad or format national ID to 12 digits if short
+    if (!natId) {
+        return res.status(400).json({ error: 'الرجاء إدخال رقم الهوية الوطنية.' });
+    }
+    if (natId.length < 12) {
+        natId = natId.padStart(12, '0');
+    } else if (natId.length > 12) {
+        natId = natId.slice(0, 12);
     }
 
-    const uName = username.trim();
+    // Validate phone number
+    if (!phoneNum) {
+        return res.status(400).json({ error: 'الرجاء إدخال رقم الهاتف.' });
+    }
+
+    // Default username generator if empty
+    if (!uName) {
+        uName = `stu_${natId}`;
+    }
     if (uName.length < 3) {
-        return res.status(400).json({ error: 'اسم المستخدم يجب أن يتكون من 3 أحرف على الأقل.' });
+        return res.status(400).json({ error: 'اسم المستخدم ينبغي أن يتكون من 3 أحرف على الأقل.' });
     }
 
     const client = await db.pool.connect();
@@ -285,11 +320,13 @@ app.post('/api/auth/register-student', handleStudentPhotoUpload, async (req, res
 
         // Check if student with national ID already exists
         const checkStudent = await client.query(
-            'SELECT id FROM students WHERE national_id = $1',
+            'SELECT id, name FROM students WHERE national_id = $1',
             [natId]
         );
         if (checkStudent.rows.length > 0) {
-            return res.status(400).json({ error: 'رقم البطاقة الوطنية مسجل مسبقاً في النظام.' });
+            return res.status(400).json({ 
+                error: `رقم الهوية الوطنية (${natId}) مسجل مسبقاً في المنصة للطالب (${checkStudent.rows[0].name}).` 
+            });
         }
 
         // Check if user account with this username already exists
@@ -298,7 +335,9 @@ app.post('/api/auth/register-student', handleStudentPhotoUpload, async (req, res
             [uName]
         );
         if (checkUser.rows.length > 0) {
-            return res.status(400).json({ error: 'اسم المستخدم هذا محجوز لحساب آخر، يرجى اختيار اسم مستخدم آخر.' });
+            return res.status(400).json({ 
+                error: `اسم المستخدم (${uName}) محجوز لحساب آخر، يرجى اختيار اسم مستخدم مختلف.` 
+            });
         }
 
         const level = 'غير محدد'; // Default level, set by admin later
@@ -311,14 +350,14 @@ app.post('/api/auth/register-student', handleStudentPhotoUpload, async (req, res
                 level, period, study_type, referral, photo_path
              ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) RETURNING id`,
             [
-                name.trim(), natId, dob, pob.trim(), qualification.trim(),
-                phone.trim(), address.trim(), purpose.trim(), level, period, study_type, referral.trim(), photoPath
+                name, natId, dob, pob, qualification,
+                phoneNum, address, purpose, level, period, study_type, referral, photoPath
             ]
         );
         const studentId = studentResult.rows[0].id;
 
         // 2. Hash Password
-        const passwordHash = await bcrypt.hash(password, 10);
+        const passwordHash = await bcrypt.hash(pwd, 10);
 
         // 3. Create User record
         await client.query(
@@ -329,13 +368,14 @@ app.post('/api/auth/register-student', handleStudentPhotoUpload, async (req, res
         await client.query('COMMIT');
 
         res.status(201).json({
-            message: 'تم التسجيل بنجاح! جاري توجيهك للمنصة...',
-            studentId
+            message: 'تم تسجيل الطالب وتوليد الحساب بنجاح!',
+            studentId,
+            username: uName
         });
     } catch (err) {
         await client.query('ROLLBACK');
-        console.error(err);
-        res.status(500).json({ error: 'حدث خطأ في السيرفر أثناء تسجيل الحساب.' });
+        console.error('Error during student registration:', err);
+        res.status(500).json({ error: 'حدث خطأ في السيرفر أثناء تسجيل الطالب.' });
     } finally {
         client.release();
     }
