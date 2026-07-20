@@ -2284,6 +2284,10 @@ function toggleStudentPersonalEdit(showEdit) {
         viewContainer.style.display = 'none';
         editContainer.style.display = 'block';
         
+        // Clear photo file input on edit start
+        const photoInput = document.getElementById('edit-stu-photo');
+        if (photoInput) photoInput.value = '';
+
         // Populate edit inputs
         document.getElementById('edit-stu-name').value = document.getElementById('sd-name').textContent || '';
         document.getElementById('edit-stu-phone').value = document.getElementById('sd-phone').textContent || '';
@@ -2317,30 +2321,33 @@ document.addEventListener('DOMContentLoaded', () => {
             e.preventDefault();
             const studentId = document.getElementById('sd-student-id').value;
             
-            const payload = {
-                name: document.getElementById('edit-stu-name').value,
-                phone: document.getElementById('edit-stu-phone').value,
-                national_id: document.getElementById('edit-stu-national-id').value,
-                dob: document.getElementById('edit-stu-dob').value,
-                pob: document.getElementById('edit-stu-pob').value,
-                qualification: document.getElementById('edit-stu-qualification').value,
-                address: document.getElementById('edit-stu-address').value,
-                purpose: document.getElementById('edit-stu-purpose').value,
-                period: document.getElementById('edit-stu-period').value,
-                study_type: document.getElementById('edit-stu-study-type').value,
-                referral: document.getElementById('edit-stu-referral').value
-            };
+            const formData = new FormData();
+            formData.append('name', document.getElementById('edit-stu-name').value);
+            formData.append('phone', document.getElementById('edit-stu-phone').value);
+            formData.append('national_id', document.getElementById('edit-stu-national-id').value);
+            formData.append('dob', document.getElementById('edit-stu-dob').value);
+            formData.append('pob', document.getElementById('edit-stu-pob').value);
+            formData.append('qualification', document.getElementById('edit-stu-qualification').value);
+            formData.append('address', document.getElementById('edit-stu-address').value);
+            formData.append('purpose', document.getElementById('edit-stu-purpose').value);
+            formData.append('period', document.getElementById('edit-stu-period').value);
+            formData.append('study_type', document.getElementById('edit-stu-study-type').value);
+            formData.append('referral', document.getElementById('edit-stu-referral').value);
+
+            const photoInput = document.getElementById('edit-stu-photo');
+            if (photoInput && photoInput.files[0]) {
+                formData.append('photo', photoInput.files[0]);
+            }
 
             try {
                 const res = await fetch(`/api/students/${studentId}/personal`, {
                     method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
+                    body: formData
                 });
                 
                 const data = await res.json();
                 if (res.ok) {
-                    alert('تم تحديث البيانات الشخصية للطالب بنجاح.');
+                    alert('تم تحديث البيانات الشخصية والصورة بنجاح.');
                     // Reload student details to view updated info
                     openStudentDetailsModal(studentId);
                     fetchStudents(); // Refresh general student list

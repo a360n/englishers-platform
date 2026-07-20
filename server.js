@@ -883,33 +883,45 @@ app.get('/api/students/:id', requireAuth, async (req, res) => {
     }
 });
 
-// PUT: Update student personal info (Manager & Admin only)
-app.put('/api/students/:id/personal', requireAuth, requireRole(['manager', 'admin']), async (req, res) => {
+// PUT: Update student personal info & optional photo (Manager & Admin only)
+app.put('/api/students/:id/personal', requireAuth, requireRole(['manager', 'admin']), handleStudentPhotoUpload, async (req, res) => {
     const studentId = parseInt(req.params.id);
     const { name, phone, national_id, dob, pob, qualification, address, purpose, period, study_type, referral } = req.body;
     
     if (!name || !phone || !national_id || !dob || !pob || !qualification || !address || !purpose || !period || !study_type || !referral) {
-        return res.status(400).json({ error: 'All fields are required.' });
+        return res.status(400).json({ error: 'جميع الحقول مطلوبة.' });
     }
     
     try {
-        const result = await db.query(
-            `UPDATE students 
-             SET name = $1, phone = $2, national_id = $3, dob = $4, pob = $5, 
-                 qualification = $6, address = $7, purpose = $8, period = $9, 
-                 study_type = $10, referral = $11
-             WHERE id = $12 RETURNING *`,
-            [name, phone, national_id, dob, pob, qualification, address, purpose, period, study_type, referral, studentId]
-        );
+        const photoPath = req.file ? `/uploads/students/${req.file.filename}` : null;
+        let query, params;
+        
+        if (photoPath) {
+            query = `UPDATE students 
+                     SET name = $1, phone = $2, national_id = $3, dob = $4, pob = $5, 
+                         qualification = $6, address = $7, purpose = $8, period = $9, 
+                         study_type = $10, referral = $11, photo_path = $12
+                     WHERE id = $13 RETURNING *`;
+            params = [name, phone, national_id, dob, pob, qualification, address, purpose, period, study_type, referral, photoPath, studentId];
+        } else {
+            query = `UPDATE students 
+                     SET name = $1, phone = $2, national_id = $3, dob = $4, pob = $5, 
+                         qualification = $6, address = $7, purpose = $8, period = $9, 
+                         study_type = $10, referral = $11
+                     WHERE id = $12 RETURNING *`;
+            params = [name, phone, national_id, dob, pob, qualification, address, purpose, period, study_type, referral, studentId];
+        }
+
+        const result = await db.query(query, params);
         
         if (result.rows.length === 0) {
-            return res.status(404).json({ error: 'Student not found.' });
+            return res.status(404).json({ error: 'لم يتم العثور على ملف الطالب.' });
         }
         
-        res.json({ message: 'Student personal information updated successfully.', student: result.rows[0] });
+        res.json({ message: 'تم تحديث البيانات الشخصية والصورة بنجاح.', student: result.rows[0] });
     } catch (err) {
         console.error(err);
-        res.status(500).json({ error: 'Internal server error' });
+        res.status(500).json({ error: 'حدث خطأ في الخادم الداخلي' });
     }
 });
 
