@@ -72,11 +72,11 @@ app.use(session({
 }));
 
 // Expiration Lock Middleware
-const EXPIRATION_DATE = new Date('2026-07-20T23:59:59'); // July 20th, 2026
+const EXPIRATION_DATE = new Date('2026-07-30T23:59:59'); // July 20th, 2026
 
 function checkSystemExpiration(req, res, next) {
     if (new Date() > EXPIRATION_DATE) {
-        // If it's an API request, return JSON error
+        // If it's an API request, return JSON error 
         if (req.path.startsWith('/api/')) {
             return res.status(403).json({
                 error: 'انتهت فترة الصلاحية البرمجية للنظام. يرجى التواصل مع مطور المنصة لتمديد الصلاحية.'
@@ -324,8 +324,8 @@ app.post('/api/auth/register-student', handleStudentPhotoUpload, async (req, res
             [natId]
         );
         if (checkStudent.rows.length > 0) {
-            return res.status(400).json({ 
-                error: `رقم الهوية الوطنية (${natId}) مسجل مسبقاً في المنصة للطالب (${checkStudent.rows[0].name}).` 
+            return res.status(400).json({
+                error: `رقم الهوية الوطنية (${natId}) مسجل مسبقاً في المنصة للطالب (${checkStudent.rows[0].name}).`
             });
         }
 
@@ -335,8 +335,8 @@ app.post('/api/auth/register-student', handleStudentPhotoUpload, async (req, res
             [uName]
         );
         if (checkUser.rows.length > 0) {
-            return res.status(400).json({ 
-                error: `اسم المستخدم (${uName}) محجوز لحساب آخر، يرجى اختيار اسم مستخدم مختلف.` 
+            return res.status(400).json({
+                error: `اسم المستخدم (${uName}) محجوز لحساب آخر، يرجى اختيار اسم مستخدم مختلف.`
             });
         }
 
@@ -417,10 +417,10 @@ async function updateCourseMonthNum(courseId, client) {
         [courseId]
     );
     const actualLecturesCount = res.rows[0].count || 0;
-    
+
     // Calculate new month number: 12 lectures per month
     const newMonthNum = Math.floor(actualLecturesCount / 12) + 1;
-    
+
     // Update courses table
     await dbClient.query(
         'UPDATE courses SET month_num = $1 WHERE id = $2',
@@ -438,8 +438,8 @@ app.post('/api/courses', requireAuth, requireRole(['manager', 'admin', 'teacher'
 
     if (start_date && !isValidSchedulePatternDate(start_date, schedule_type)) {
         const patternText = schedule_type === 'even' ? 'زوجي (سبت، اثنين، أربعاء)' : 'فردي (أحد، ثلاثاء، خميس)';
-        return res.status(400).json({ 
-            error: `تاريخ بدء الكورس (${start_date}) غير متوافق مع نمط التوزيع الأسبوعي المختار (${patternText}). يرجى اختيار تاريخ يطابق أيام النمط.` 
+        return res.status(400).json({
+            error: `تاريخ بدء الكورس (${start_date}) غير متوافق مع نمط التوزيع الأسبوعي المختار (${patternText}). يرجى اختيار تاريخ يطابق أيام النمط.`
         });
     }
 
@@ -484,8 +484,8 @@ app.put('/api/courses/:id', requireAuth, requireRole(['manager', 'admin', 'teach
 
     if (start_date && !isValidSchedulePatternDate(start_date, schedule_type)) {
         const patternText = schedule_type === 'even' ? 'زوجي (سبت، اثنين، أربعاء)' : 'فردي (أحد، ثلاثاء، خميس)';
-        return res.status(400).json({ 
-            error: `تاريخ بدء الكورس (${start_date}) غير متوافق مع نمط التوزيع الأسبوعي المختار (${patternText}). يرجى اختيار تاريخ يطابق أيام النمط.` 
+        return res.status(400).json({
+            error: `تاريخ بدء الكورس (${start_date}) غير متوافق مع نمط التوزيع الأسبوعي المختار (${patternText}). يرجى اختيار تاريخ يطابق أيام النمط.`
         });
     }
 
@@ -606,8 +606,8 @@ app.post('/api/courses/:id/extend', requireAuth, requireRole(['manager', 'admin'
 
     if (start_date && !isValidSchedulePatternDate(start_date, schedule_type)) {
         const patternText = schedule_type === 'even' ? 'زوجي (سبت، اثنين، أربعاء)' : 'فردي (أحد، ثلاثاء، خميس)';
-        return res.status(400).json({ 
-            error: `تاريخ تمديد الكورس (${start_date}) غير متوافق مع نمط التوزيع الأسبوعي للأيام المضافة (${patternText}).` 
+        return res.status(400).json({
+            error: `تاريخ تمديد الكورس (${start_date}) غير متوافق مع نمط التوزيع الأسبوعي للأيام المضافة (${patternText}).`
         });
     }
 
@@ -858,8 +858,8 @@ app.post('/api/courses/:id/students', requireAuth, requireRole(['manager', 'admi
 
         if (activeCourseCheck.rows.length > 0) {
             const activeCourse = activeCourseCheck.rows[0];
-            return res.status(400).json({ 
-                error: `عذراً، لا يمكن إضافة الطالب. الطالب منسوب حالياً لكورس نشط وهو (${activeCourse.name}). يجب إزالة الطالب من الكورس الحالي أو انتظار انتهائه أولاً.` 
+            return res.status(400).json({
+                error: `عذراً، لا يمكن إضافة الطالب. الطالب منسوب حالياً لكورس نشط وهو (${activeCourse.name}). يجب إزالة الطالب من الكورس الحالي أو انتظار انتهائه أولاً.`
             });
         }
 
@@ -1002,15 +1002,15 @@ app.get('/api/students/:id', requireAuth, async (req, res) => {
 app.put('/api/students/:id/personal', requireAuth, requireRole(['manager', 'admin']), handleStudentPhotoUpload, async (req, res) => {
     const studentId = parseInt(req.params.id);
     const { name, phone, national_id, dob, pob, qualification, address, purpose, period, study_type, referral } = req.body;
-    
+
     if (!name || !phone || !national_id || !dob || !pob || !qualification || !address || !purpose || !period || !study_type || !referral) {
         return res.status(400).json({ error: 'جميع الحقول مطلوبة.' });
     }
-    
+
     try {
         const photoPath = req.file ? `/uploads/students/${req.file.filename}` : null;
         let query, params;
-        
+
         if (photoPath) {
             query = `UPDATE students 
                      SET name = $1, phone = $2, national_id = $3, dob = $4, pob = $5, 
@@ -1028,11 +1028,11 @@ app.put('/api/students/:id/personal', requireAuth, requireRole(['manager', 'admi
         }
 
         const result = await db.query(query, params);
-        
+
         if (result.rows.length === 0) {
             return res.status(404).json({ error: 'لم يتم العثور على ملف الطالب.' });
         }
-        
+
         res.json({ message: 'تم تحديث البيانات الشخصية والصورة بنجاح.', student: result.rows[0] });
     } catch (err) {
         console.error(err);
@@ -1520,7 +1520,7 @@ app.get('/api/payments/:id/download-student', requireAuth, async (req, res) => {
             `SELECT p.student_id, s.name as student_name 
              FROM payments p 
              JOIN students s ON p.student_id = s.id 
-             WHERE p.id = $1`, 
+             WHERE p.id = $1`,
             [paymentId]
         );
         if (paymentRes.rows.length === 0) {
@@ -1554,7 +1554,7 @@ app.get('/api/payments/:id/download-admin', requireAuth, requireRole(['manager',
             `SELECT p.id, s.name as student_name 
              FROM payments p 
              JOIN students s ON p.student_id = s.id 
-             WHERE p.id = $1`, 
+             WHERE p.id = $1`,
             [paymentId]
         );
         if (paymentRes.rows.length === 0) {
@@ -1662,7 +1662,7 @@ app.delete('/api/payments/:id', requireAuth, requireRole(['admin']), async (req,
             `SELECT p.amount, p.student_id, s.name as student_name 
              FROM payments p 
              JOIN students s ON p.student_id = s.id 
-             WHERE p.id = $1`, 
+             WHERE p.id = $1`,
             [paymentId]
         );
         if (paymentRes.rows.length === 0) {
@@ -2088,7 +2088,7 @@ app.post('/api/testing/seed-mock-data', requireAuth, async (req, res) => {
         for (let i = 0; i < mockStudents.length; i++) {
             const s = mockStudents[i];
             const totalDue = s.reg + s.curr + s.course;
-            
+
             const stuRes = await client.query(`
                 INSERT INTO students (
                     name, national_id, dob, pob, qualification, phone, address, purpose, 
