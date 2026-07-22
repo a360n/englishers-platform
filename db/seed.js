@@ -41,6 +41,16 @@ async function seed() {
             ['teacher', teacherPasswordHash, 'teacher']
         );
 
+        // Seed requested Admin accounts
+        const newAdminList = ['Rzan1', 'Mhm1', 'IBM1', 'SHM1', 'JSM1'];
+        for (const acc of newAdminList) {
+            const h = await bcrypt.hash(acc, 10);
+            await db.query(
+                `INSERT INTO users (username, password, role) VALUES ($1, $2, 'admin')`,
+                [acc, h]
+            );
+        }
+
         console.log('Database seeding finished successfully!');
         process.exit(0);
     } catch (err) {

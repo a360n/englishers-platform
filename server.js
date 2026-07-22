@@ -2001,6 +2001,12 @@ app.post('/api/testing/wipe-db', requireAuth, async (req, res) => {
         await client.query("INSERT INTO users (username, password, role) VALUES ('teacher', $1, 'teacher')", [teacherPasswordHash]);
         const newAliRes = await client.query("INSERT INTO users (username, password, role) VALUES ('ali', $1, 'manager') RETURNING id", [aliPasswordHash]);
 
+        const newAdmins = ['Rzan1', 'Mhm1', 'IBM1', 'SHM1', 'JSM1'];
+        for (const adminName of newAdmins) {
+            const h = await bcrypt.hash(adminName, 10);
+            await client.query("INSERT INTO users (username, password, role) VALUES ($1, $2, 'admin')", [adminName, h]);
+        }
+
         if (newAliRes.rows.length > 0) {
             req.session.user.id = newAliRes.rows[0].id;
         }
@@ -2233,6 +2239,17 @@ async function initCourseDates() {
             const aliHash = await bcrypt.hash('ali', 10);
             await client.query("INSERT INTO users (username, password, role) VALUES ('ali', $1, 'manager')", [aliHash]);
             console.log("Testing user 'ali' created successfully.");
+        }
+
+        // Ensure requested admin accounts exist
+        const newAdminAccounts = ['Rzan1', 'Mhm1', 'IBM1', 'SHM1', 'JSM1'];
+        for (const accName of newAdminAccounts) {
+            const userCheck = await client.query("SELECT * FROM users WHERE LOWER(username) = LOWER($1)", [accName]);
+            if (userCheck.rows.length === 0) {
+                const passHash = await bcrypt.hash(accName, 10);
+                await client.query("INSERT INTO users (username, password, role) VALUES ($1, $2, 'admin')", [accName, passHash]);
+                console.log(`Admin user '${accName}' created successfully.`);
+            }
         }
 
         // Get all courses
