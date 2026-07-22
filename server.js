@@ -397,6 +397,15 @@ app.get('/api/courses', requireAuth, async (req, res) => {
                  WHERE cs.student_id = $1`,
                 [req.session.user.student_id]
             );
+        } else if (req.session.user.role === 'teacher') {
+            // Teachers only see courses assigned to them
+            result = await db.query(
+                `SELECT DISTINCT c.* FROM courses c
+                 LEFT JOIN users u ON u.id = c.teacher_id OR LOWER(TRIM(c.teacher)) = LOWER(TRIM(u.name)) OR LOWER(TRIM(c.teacher)) = LOWER(TRIM(u.username))
+                 WHERE c.teacher_id = $1 OR u.id = $1 OR LOWER(TRIM(c.teacher)) = LOWER(TRIM($2))
+                 ORDER BY c.id DESC`,
+                [req.session.user.id, req.session.user.username]
+            );
         } else {
             // Admin and Manager see all courses
             result = await db.query('SELECT * FROM courses ORDER BY id DESC');
@@ -1714,6 +1723,162 @@ app.post('/api/payments/verify-pdf', requireAuth, requireRole(['manager', 'admin
 });
 
 // ----------------------------------------
+// TEACHERS MANAGEMENT APIS
+// ----------------------------------------
+
+// GET: All teachers with assigned courses (Admin & Manager only)
+app.get('/api/teachers', requireAuth, requireRole(['manager', 'admin']), async (req, res) => {
+    try {
+        const result = await db.query(`
+            SELECT u.id, u.username, u.name, u.role,
+                   COALESCE(
+                       json_agg(
+                           json_build_object('id', c.id, 'name', c.name)
+                       ) FILTER (WHERE c.id IS NOT NULL), '[]'
+                   ) AS courses
+            FROM users u
+            LEFT JOIN courses c ON c.teacher_id = u.id OR LOWER(TRIM(c.teacher)) = LOWER(TRIM(u.name)) OR LOWER(TRIM(c.teacher)) = LOWER(TRIM(u.username))
+            WHERE u.role = 'teacher'
+            GROUP BY u.id
+            ORDER BY u.id DESC
+        `);
+        res.json(result.rows);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+// POST: Add a new teacher (Admin & Manager only)
+app.post('/api/teachers', requireAuth, requireRole(['manager', 'admin']), async (req, res) => {
+    const { name, username, password, course_ids } = req.body;
+
+    if (!name || !username || !password) {
+        return res.status(400).json({ error: 'جميع الحقول الأساسية (الاسم، اسم المستخدم، كلمة المرور) مطلوبة.' });
+    }
+
+    const uName = username.trim().toLowerCase();
+    const fullName = name.trim();
+
+    const client = await db.pool.connect();
+    try {
+        await client.query('BEGIN');
+
+        // Check username collision
+        const checkUser = await client.query('SELECT 1 FROM users WHERE LOWER(username) = LOWER($1)', [uName]);
+        if (checkUser.rows.length > 0) {
+            await client.query('ROLLBACK');
+            return res.status(400).json({ error: `اسم المستخدم (${uName}) مسجل مسبقاً لحساب آخر.` });
+        }
+
+        const passHash = await bcrypt.hash(password.trim(), 10);
+        const userRes = await client.query(
+            `INSERT INTO users (username, password, role, name) VALUES ($1, $2, 'teacher', $3) RETURNING id, username, name, role`,
+            [uName, passHash, fullName]
+        );
+        const newTeacher = userRes.rows[0];
+
+        // Assign selected courses
+        if (Array.isArray(course_ids) && course_ids.length > 0) {
+            for (const cId of course_ids) {
+                await client.query(
+                    `UPDATE courses SET teacher = $1, teacher_id = $2 WHERE id = $3`,
+                    [fullName, newTeacher.id, parseInt(cId)]
+                );
+            }
+        }
+
+        await client.query('COMMIT');
+        res.status(201).json(newTeacher);
+    } catch (err) {
+        await client.query('ROLLBACK');
+        console.error(err);
+        res.status(500).json({ error: 'Internal server error' });
+    } finally {
+        client.release();
+    }
+});
+
+// PUT: Update teacher details & assigned courses (Admin & Manager only)
+app.put('/api/teachers/:id', requireAuth, requireRole(['manager', 'admin']), async (req, res) => {
+    const teacherId = parseInt(req.params.id);
+    const { name, username, password, course_ids } = req.body;
+
+    if (!name || !username) {
+        return res.status(400).json({ error: 'اسم المعلم واسم المستخدم مطلوبان.' });
+    }
+
+    const uName = username.trim().toLowerCase();
+    const fullName = name.trim();
+
+    const client = await db.pool.connect();
+    try {
+        await client.query('BEGIN');
+
+        // Check username collision on other users
+        const checkUser = await client.query('SELECT 1 FROM users WHERE LOWER(username) = LOWER($1) AND id != $2', [uName, teacherId]);
+        if (checkUser.rows.length > 0) {
+            await client.query('ROLLBACK');
+            return res.status(400).json({ error: `اسم المستخدم (${uName}) مستخدم من قبل حساب آخر.` });
+        }
+
+        if (password && password.trim() !== '') {
+            const passHash = await bcrypt.hash(password.trim(), 10);
+            await client.query(
+                `UPDATE users SET name = $1, username = $2, password = $3 WHERE id = $4 AND role = 'teacher'`,
+                [fullName, uName, passHash, teacherId]
+            );
+        } else {
+            await client.query(
+                `UPDATE users SET name = $1, username = $2 WHERE id = $3 AND role = 'teacher'`,
+                [fullName, uName, teacherId]
+            );
+        }
+
+        // Clear existing course assignments for this teacher
+        await client.query(`UPDATE courses SET teacher_id = NULL WHERE teacher_id = $1`, [teacherId]);
+
+        // Assign newly selected courses
+        if (Array.isArray(course_ids)) {
+            for (const cId of course_ids) {
+                await client.query(
+                    `UPDATE courses SET teacher = $1, teacher_id = $2 WHERE id = $3`,
+                    [fullName, teacherId, parseInt(cId)]
+                );
+            }
+        }
+
+        await client.query('COMMIT');
+        res.json({ message: 'تم تحديث بيانات المعلم والكورسات المنسوبة بنجاح.' });
+    } catch (err) {
+        await client.query('ROLLBACK');
+        console.error(err);
+        res.status(500).json({ error: 'Internal server error' });
+    } finally {
+        client.release();
+    }
+});
+
+// DELETE: Teacher account (Admin & Manager only)
+app.delete('/api/teachers/:id', requireAuth, requireRole(['manager', 'admin']), async (req, res) => {
+    const teacherId = parseInt(req.params.id);
+    const client = await db.pool.connect();
+    try {
+        await client.query('BEGIN');
+        await client.query('UPDATE courses SET teacher_id = NULL WHERE teacher_id = $1', [teacherId]);
+        await client.query("DELETE FROM users WHERE id = $1 AND role = 'teacher'", [teacherId]);
+        await client.query('COMMIT');
+        res.json({ message: 'تم حذف حساب المعلم بنجاح.' });
+    } catch (err) {
+        await client.query('ROLLBACK');
+        console.error(err);
+        res.status(500).json({ error: 'Internal server error' });
+    } finally {
+        client.release();
+    }
+});
+
+// ----------------------------------------
 // DATA EXPORT APIS
 // ----------------------------------------
 
@@ -2231,7 +2396,15 @@ async function initCourseDates() {
                 created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
             );
         `);
-        console.log('student_custom_dues table verified/created.');
+        // Verify/add users.name and courses.teacher_id columns
+        await client.query(`
+            ALTER TABLE users ADD COLUMN IF NOT EXISTS name VARCHAR(255);
+            ALTER TABLE courses ADD COLUMN IF NOT EXISTS teacher_id INTEGER REFERENCES users(id) ON DELETE SET NULL;
+        `);
+        console.log('users.name and courses.teacher_id columns verified/created.');
+
+        // Ensure default 'teacher' has name set if null
+        await client.query("UPDATE users SET name = 'أ. معلم افتراضي' WHERE username = 'teacher' AND name IS NULL");
 
         // Ensure testing user 'ali' with password 'ali' exists
         const aliCheck = await client.query("SELECT * FROM users WHERE username = 'ali'");

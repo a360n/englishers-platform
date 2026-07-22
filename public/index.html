@@ -221,6 +221,9 @@
                                 <span id="notifications-count-badge" class="badge badge-danger" style="display:none; font-size:11px; padding:2px 7px; border-radius:10px;">0</span>
                             </a>
                         </li>
+                        <li class="sidebar-item" data-tab="tab-teachers">
+                            <a class="sidebar-link"><i class="fa-solid fa-chalkboard-user"></i> <span>قائمة المعلمين</span></a>
+                        </li>
                         <li class="sidebar-item" data-tab="tab-reports">
                             <a class="sidebar-link"><i class="fa-solid fa-file-csv"></i> <span>تصدير البيانات</span></a>
                         </li>
@@ -591,6 +594,38 @@
                     </div>
 
                     <!-- ========================================== -->
+                    <!-- TAB: TEACHERS (ADMIN / MANAGER VIEW) -->
+                    <!-- ========================================== -->
+                    <div id="tab-teachers" class="tab-content" style="display:none;">
+                        <div class="card">
+                            <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
+                                <h3 class="card-title" style="margin:0;">إدارة وقائمة المعلمين والأساتذة</h3>
+                                <button class="btn btn-primary" onclick="openAddTeacherModal()">
+                                    <i class="fa-solid fa-user-plus"></i> إضافة معلم جديد
+                                </button>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="attendance-table" style="width: 100%;">
+                                        <thead>
+                                            <tr>
+                                                <th>اسم المعلم</th>
+                                                <th>اسم المستخدم (يوزر الحساب)</th>
+                                                <th>عدد الكورسات المنسوبة</th>
+                                                <th>الكورسات المنسوبة له</th>
+                                                <th style="text-align: center;">الإجراءات والتحكم</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="teachers-table-body">
+                                            <!-- Dynamic teacher rows -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ========================================== -->
                     <!-- TAB: REPORTS & EXPORTS (ADMIN / MANAGER VIEW) -->
                     <!-- ========================================== -->
                     <div id="tab-reports" class="tab-content" style="display:none;">
@@ -804,7 +839,9 @@
                     </div>
                     <div class="form-group">
                         <label for="course-teacher">اسم المدرس / المعلم</label>
-                        <input type="text" id="course-teacher" placeholder="مثال: أ. أحمد علي" required>
+                        <select id="course-teacher" required>
+                            <!-- Dynamically populated options -->
+                        </select>
                     </div>
                     <div class="form-row">
                         <div class="form-group">
@@ -889,7 +926,7 @@
                         <p><strong>الشهر الحالي بالدورة:</strong> <span id="cd-month"
                                 style="font-weight:bold; color:var(--primary-color);"></span></p>
                     </div>
-                    <div style="display:flex; gap:10px; align-items:center;">
+                    <div id="cd-admin-actions" style="display:flex; gap:10px; align-items:center;">
                         <button class="btn btn-secondary btn-sm" onclick="openEditCourseModal(activeCourseId)"
                             style="padding:8px 16px; font-size:13px;">تعديل الكورس <i
                                 class="fa-solid fa-edit"></i></button>
@@ -900,7 +937,7 @@
                 </div>
 
                 <!-- Section: Assign student to this course -->
-                <div style="margin-bottom: 25px; border-bottom: 1.5px solid var(--border-color); padding-bottom: 20px;">
+                <div id="cd-assign-section" style="margin-bottom: 25px; border-bottom: 1.5px solid var(--border-color); padding-bottom: 20px;">
                     <h4 style="margin-bottom: 10px; color:var(--primary-color);">تنسيب طالب جديد للكورس</h4>
                     <form id="assign-student-form" style="display:flex; gap:15px; align-items: flex-end;">
                         <div class="form-group" style="flex-grow:1; margin-bottom:0;">
@@ -916,7 +953,7 @@
                 </div>
 
                 <!-- Section: Extend Course Days -->
-                <div style="margin-bottom: 25px; border-bottom: 1.5px solid var(--border-color); padding-bottom: 20px;">
+                <div id="cd-extend-section" style="margin-bottom: 25px; border-bottom: 1.5px solid var(--border-color); padding-bottom: 20px;">
                     <h4 style="margin-bottom: 10px; color:var(--primary-color);">إضافة محاضرات (أيام) جديدة للدورة</h4>
                     <form id="extend-course-form"
                         style="display:flex; flex-wrap:wrap; gap:15px; align-items: flex-end;">
@@ -1682,6 +1719,46 @@
                         </button>
                         <button type="button" class="btn btn-outline" onclick="closeAdminRegisterStudentModal()"
                             style="flex: 1; padding: 10px; font-size: 14px;">إلغاء</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Add/Edit Teacher -->
+    <div id="teacher-modal" class="modal">
+        <div class="modal-content" style="max-width: 550px;">
+            <div class="modal-header">
+                <h3 id="teacher-modal-title" class="modal-title">إضافة معلم جديد</h3>
+                <button class="close-modal" onclick="closeTeacherModal()">&times;</button>
+            </div>
+            <div class="modal-body" style="padding: 24px;">
+                <form id="teacher-form">
+                    <input type="hidden" id="teacher-modal-id">
+                    <div class="form-group">
+                        <label for="teacher-name">اسم المعلم الثلاثي/الكامل</label>
+                        <input type="text" id="teacher-name" placeholder="مثال: أ. محمد علي" required>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="teacher-username">اسم مستخدم الحساب (اسم الدخول بالإنكليزية)</label>
+                            <input type="text" id="teacher-username" placeholder="مثال: mhm1" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="teacher-password">كلمة المرور</label>
+                            <input type="password" id="teacher-password" placeholder="أدخل كلمة المرور">
+                            <small id="teacher-password-hint" style="display:none; color:var(--text-muted); font-size:11px;">اتركه فارغاً للحفاظ على كلمة المرور الحالية</small>
+                        </div>
+                    </div>
+                    <div class="form-group" style="margin-top:10px;">
+                        <label style="font-weight:bold; margin-bottom:8px; display:block;">الكورسات المنسوبة للمعلم (اختر كورس أو أكثر):</label>
+                        <div id="teacher-courses-checkboxes" style="max-height: 180px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: var(--border-radius-sm); padding: 12px; background: var(--bg-card); display: flex; flex-direction: column; gap: 8px;">
+                            <!-- Dynamic course checkboxes -->
+                        </div>
+                    </div>
+                    <div class="modal-footer" style="padding-top:15px; margin-top: 15px; border-top: 1px solid var(--border-color); display:flex; gap:10px;">
+                        <button type="submit" class="btn btn-primary" style="flex:1;">حفظ البيانات <i class="fa-solid fa-check"></i></button>
+                        <button type="button" class="btn btn-secondary" onclick="closeTeacherModal()" style="flex:1;">إلغاء</button>
                     </div>
                 </form>
             </div>

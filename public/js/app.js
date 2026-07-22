@@ -5,6 +5,7 @@ let currentUser = null;
 let studentsList = [];
 let paymentsList = [];
 let coursesList = [];
+let teachersList = [];
 let currentStudentFilter = 'all';
 let activeCourseId = null;
 let currentAttendanceData = {}; // { dateStr: { studentId: 'present'/'absent' } }
@@ -130,7 +131,7 @@ function renderUserProfile() {
         // Only show 'Courses' tab for teacher
         document.querySelectorAll('.sidebar-item').forEach(item => {
             const tab = item.getAttribute('data-tab');
-            if (['tab-students', 'tab-payments', 'tab-dues', 'tab-reports'].includes(tab)) {
+            if (['tab-students', 'tab-payments', 'tab-dues', 'tab-notifications', 'tab-teachers', 'tab-reports'].includes(tab)) {
                 item.style.display = 'none';
             } else {
                 item.style.display = 'block';
@@ -178,6 +179,7 @@ function switchTab(tabId) {
         case 'tab-payments': titleEl.textContent = 'الوصولات والمعاملات المالية'; break;
         case 'tab-dues': titleEl.textContent = 'مستحقات وأقساط الطلاب'; break;
         case 'tab-notifications': titleEl.textContent = 'إشعارات ومواعيد استحقاق الأقساط'; break;
+        case 'tab-teachers': titleEl.textContent = 'إدارة وقائمة المعلمين والأساتذة'; break;
         case 'tab-reports': titleEl.textContent = 'تصدير وحفظ البيانات'; break;
         case 'tab-student-dashboard': titleEl.textContent = 'لوحة معلومات الطالب'; break;
         default: titleEl.textContent = 'لوحة التحكم';
@@ -191,6 +193,7 @@ function loadDashboardData() {
         fetchStudents();
         if (currentUser.role !== 'teacher') {
             fetchPayments();
+            fetchTeachers();
         }
     } else if (currentUser.role === 'student') {
         fetchStudentDashboard(currentUser.student_id);
@@ -1228,6 +1231,21 @@ async function openCourseDetailsModal(id) {
         if (cdMonthEl) cdMonthEl.textContent = `الشهر ${course.month_num}`;
         document.getElementById('course-details-modal-title').textContent = `إدارة كورس: ${course.name}`;
 
+        // Toggle admin vs teacher view controls
+        const adminActions = document.getElementById('cd-admin-actions');
+        const assignSection = document.getElementById('cd-assign-section');
+        const extendSection = document.getElementById('cd-extend-section');
+
+        if (currentUser && currentUser.role === 'teacher') {
+            if (adminActions) adminActions.style.display = 'none';
+            if (assignSection) assignSection.style.display = 'none';
+            if (extendSection) extendSection.style.display = 'none';
+        } else {
+            if (adminActions) adminActions.style.display = 'flex';
+            if (assignSection) assignSection.style.display = 'block';
+            if (extendSection) extendSection.style.display = 'block';
+        }
+
         // Fetch Attendance records
         const attRes = await fetch(`/api/courses/${id}/attendance`);
         const attRecords = await attRes.json();
@@ -1299,26 +1317,34 @@ function renderAttendanceSheet() {
     const headerRow = document.createElement('tr');
     headerRow.innerHTML = `<th>أسماء الطلاب</th>`;
     
+    const isAdminOrManager = currentUser && ['manager', 'admin'].includes(currentUser.role);
+
     courseSessionsList.forEach((session, index) => {
         const date = session.date;
         const timeSlot = session.time_slot || 'غير محدد';
-        
+
+        const sessionActionsHtml = isAdminOrManager ? `
+            <div style="display:flex; justify-content:center; gap:8px; margin-top:6px; border-top:1px dashed var(--border-color); padding-top:5px;">
+                <a href="javascript:void(0)" onclick="editSessionDate('${date}', '${timeSlot}')" style="color:var(--secondary-color); font-size:11px;" title="تعديل الموعد"><i class="fa-solid fa-pen-to-square"></i></a>
+                <a href="javascript:void(0)" onclick="openPostponeModal('${date}', '${timeSlot}')" style="color:#d97706; font-size:11px;" title="تأجيل المحاضرة"><i class="fa-solid fa-clock-rotate-left"></i></a>
+                <a href="javascript:void(0)" onclick="deleteSessionDate('${date}')" style="color:var(--danger); font-size:11px;" title="حذف المحاضرة"><i class="fa-solid fa-trash-can"></i></a>
+            </div>
+        ` : '';
+
         headerRow.innerHTML += `
             <th style="min-width:110px; text-align:center; vertical-align: top; padding: 10px 5px;">
                 <div style="font-weight:800; font-size:12px; color:var(--primary-color);">م.${index + 1}</div>
                 <div style="font-size:10px; font-weight:700; margin-top:2px; color:var(--text-primary);">${date}</div>
                 <div style="font-size:9px; font-weight:normal; color:var(--text-secondary); margin-top:2px; direction: ltr;">${timeSlot}</div>
-                <div style="display:flex; justify-content:center; gap:8px; margin-top:6px; border-top:1px dashed var(--border-color); padding-top:5px;">
-                    <a href="javascript:void(0)" onclick="editSessionDate('${date}', '${timeSlot}')" style="color:var(--secondary-color); font-size:11px;" title="تعديل الموعد"><i class="fa-solid fa-pen-to-square"></i></a>
-                    <a href="javascript:void(0)" onclick="openPostponeModal('${date}', '${timeSlot}')" style="color:#d97706; font-size:11px;" title="تأجيل المحاضرة"><i class="fa-solid fa-clock-rotate-left"></i></a>
-                    <a href="javascript:void(0)" onclick="deleteSessionDate('${date}')" style="color:var(--danger); font-size:11px;" title="حذف المحاضرة"><i class="fa-solid fa-trash-can"></i></a>
-                </div>
+                ${sessionActionsHtml}
             </th>
         `;
     });
     
-    // Add actions column
-    headerRow.innerHTML += `<th>الإجراءات</th>`;
+    // Add actions column if admin/manager
+    if (isAdminOrManager) {
+        headerRow.innerHTML += `<th>الإجراءات</th>`;
+    }
     thead.appendChild(headerRow);
     table.appendChild(thead);
 
@@ -1383,12 +1409,14 @@ function renderAttendanceSheet() {
             }
         });
 
-        // Delete student from course button
-        colsHtml += `
-            <td>
-                <button class="btn btn-danger btn-sm" onclick="removeStudentFromCourse(${student.id})" style="padding:4px 8px; font-size:11px;">إزالة <i class="fa-solid fa-user-minus"></i></button>
-            </td>
-        `;
+        // Delete student from course button if admin/manager
+        if (isAdminOrManager) {
+            colsHtml += `
+                <td>
+                    <button class="btn btn-danger btn-sm" onclick="removeStudentFromCourse(${student.id})" style="padding:4px 8px; font-size:11px;">إزالة <i class="fa-solid fa-user-minus"></i></button>
+                </td>
+            `;
+        }
         row.innerHTML = colsHtml;
         tbody.appendChild(row);
     });
@@ -2927,5 +2955,193 @@ function validateExtendStartDatePattern() {
     } else {
         warningEl.style.display = 'none';
         return true;
+    }
+}
+
+// ----------------------------------------
+// TEACHERS MANAGEMENT FUNCTIONS
+// ----------------------------------------
+
+async function fetchTeachers() {
+    try {
+        const res = await fetch('/api/teachers');
+        if (!res.ok) return;
+        teachersList = await res.json();
+        renderTeachersTable(teachersList);
+        populateTeacherOptions();
+    } catch (err) {
+        console.error(err);
+    }
+}
+
+function populateTeacherOptions() {
+    const select = document.getElementById('course-teacher');
+    if (!select) return;
+    const currentVal = select.value;
+    select.innerHTML = '<option value="">-- اختر المدرس / المعلم --</option>';
+
+    teachersList.forEach(t => {
+        const opt = document.createElement('option');
+        opt.value = t.name || t.username;
+        opt.textContent = `${t.name || t.username} (${t.username})`;
+        select.appendChild(opt);
+    });
+
+    if (currentVal) select.value = currentVal;
+}
+
+function renderTeachersTable(teachers) {
+    const tbody = document.getElementById('teachers-table-body');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+
+    if (!teachers || teachers.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:25px; color:var(--text-secondary); font-weight:600;">لا يوجد معلمون مسجلون حالياً. اضغط على "إضافة معلم جديد" لتسجيل معلم وتعيين الكورسات له.</td></tr>`;
+        return;
+    }
+
+    teachers.forEach(t => {
+        const row = document.createElement('tr');
+        row.style.cursor = 'pointer';
+
+        let coursesBadges = '';
+        if (Array.isArray(t.courses) && t.courses.length > 0) {
+            coursesBadges = t.courses.map(c => `<span class="badge badge-info" style="margin-left:4px; font-size:11px; margin-bottom:2px; display:inline-block;">${c.name}</span>`).join(' ');
+        } else {
+            coursesBadges = `<span style="color:var(--text-muted); font-size:12px;">غير منسوب لكورس حالياً</span>`;
+        }
+
+        const coursesCount = Array.isArray(t.courses) ? t.courses.length : 0;
+
+        row.innerHTML = `
+            <td><strong>${t.name || t.username}</strong></td>
+            <td><span class="badge badge-warning" style="font-family:monospace; font-weight:bold; font-size:12px;">${t.username}</span></td>
+            <td><strong style="color:var(--primary-color);">${coursesCount} كورس</strong></td>
+            <td>${coursesBadges}</td>
+            <td style="text-align:center;">
+                <button class="btn btn-secondary btn-sm" onclick="event.stopPropagation(); openEditTeacherModal(${t.id})" style="padding:4px 10px; font-size:12px; margin-left:4px;" title="تعديل بيانات المعلم"><i class="fa-solid fa-edit"></i> تعديل</button>
+                <button class="btn btn-danger btn-sm" onclick="event.stopPropagation(); deleteTeacher(${t.id})" style="padding:4px 10px; font-size:12px;" title="حذف حساب المعلم"><i class="fa-solid fa-trash"></i> حذف</button>
+            </td>
+        `;
+
+        row.onclick = () => openEditTeacherModal(t.id);
+        tbody.appendChild(row);
+    });
+}
+
+function openAddTeacherModal() {
+    document.getElementById('teacher-modal-id').value = '';
+    document.getElementById('teacher-modal-title').textContent = 'إضافة معلم جديد';
+    document.getElementById('teacher-name').value = '';
+    document.getElementById('teacher-username').value = '';
+    document.getElementById('teacher-password').value = '';
+    document.getElementById('teacher-password').required = true;
+    document.getElementById('teacher-password-hint').style.display = 'none';
+
+    renderTeacherCourseCheckboxes([]);
+    document.getElementById('teacher-modal').classList.add('active');
+}
+
+function openEditTeacherModal(teacherId) {
+    const teacher = teachersList.find(t => t.id === teacherId);
+    if (!teacher) return;
+
+    document.getElementById('teacher-modal-id').value = teacher.id;
+    document.getElementById('teacher-modal-title').textContent = `تعديل بيانات المعلم: ${teacher.name || teacher.username}`;
+    document.getElementById('teacher-name').value = teacher.name || '';
+    document.getElementById('teacher-username').value = teacher.username || '';
+    document.getElementById('teacher-password').value = '';
+    document.getElementById('teacher-password').required = false;
+    document.getElementById('teacher-password-hint').style.display = 'block';
+
+    const assignedCourseIds = Array.isArray(teacher.courses) ? teacher.courses.map(c => c.id) : [];
+    renderTeacherCourseCheckboxes(assignedCourseIds);
+    document.getElementById('teacher-modal').classList.add('active');
+}
+
+function renderTeacherCourseCheckboxes(assignedIds) {
+    const container = document.getElementById('teacher-courses-checkboxes');
+    if (!container) return;
+    container.innerHTML = '';
+
+    if (!coursesList || coursesList.length === 0) {
+        container.innerHTML = `<div style="font-size:12px; color:var(--text-secondary);">لا توجد كورسات مضافة بعد في المنصة.</div>`;
+        return;
+    }
+
+    coursesList.forEach(c => {
+        const isChecked = assignedIds.includes(c.id);
+        const div = document.createElement('div');
+        div.style.display = 'flex';
+        div.style.alignItems = 'center';
+        div.style.gap = '8px';
+        div.innerHTML = `
+            <input type="checkbox" name="teacher_course" value="${c.id}" id="chk-course-${c.id}" ${isChecked ? 'checked' : ''} style="width:16px; height:16px; cursor:pointer;">
+            <label for="chk-course-${c.id}" style="font-size:13px; cursor:pointer; margin:0; font-weight:600;">${c.name} (${c.teacher ? 'المعلم الحالي: ' + c.teacher : 'بدون معلم'})</label>
+        `;
+        container.appendChild(div);
+    });
+}
+
+function closeTeacherModal() {
+    document.getElementById('teacher-modal').classList.remove('active');
+}
+
+// Teacher Form Submit Listener
+document.addEventListener('DOMContentLoaded', () => {
+    const teacherForm = document.getElementById('teacher-form');
+    if (teacherForm) {
+        teacherForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('teacher-modal-id').value;
+            const name = document.getElementById('teacher-name').value.trim();
+            const username = document.getElementById('teacher-username').value.trim();
+            const password = document.getElementById('teacher-password').value;
+
+            const selectedCheckboxes = document.querySelectorAll('input[name="teacher_course"]:checked');
+            const course_ids = Array.from(selectedCheckboxes).map(cb => parseInt(cb.value));
+
+            const payload = { name, username, password, course_ids };
+            const url = id ? `/api/teachers/${id}` : '/api/teachers';
+            const method = id ? 'PUT' : 'POST';
+
+            try {
+                const res = await fetch(url, {
+                    method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                if (!res.ok) {
+                    alert(data.error || 'حدث خطأ أثناء حفظ بيانات المعلم.');
+                    return;
+                }
+                alert(id ? 'تم تحديث بيانات المعلم والكورسات المنسوبة بنجاح.' : 'تم إضافة المعلم وتنسيب الكورسات بنجاح.');
+                closeTeacherModal();
+                fetchTeachers();
+                fetchCourses();
+            } catch (err) {
+                console.error(err);
+                alert('حدث خطأ في الاتصال بالسيرفر.');
+            }
+        });
+    }
+});
+
+async function deleteTeacher(id) {
+    if (!confirm('هل أنت تأكد من رغبتك في حذف حساب المعلم؟ سيتم إلغاء تنسيبه من الكورسات المنسوبة إليه أيضاً.')) return;
+    try {
+        const res = await fetch(`/api/teachers/${id}`, { method: 'DELETE' });
+        const data = await res.json();
+        if (!res.ok) {
+            alert(data.error || 'حدث خطأ أثناء حذف المعلم.');
+            return;
+        }
+        alert('تم حذف حساب المعلم بنجاح.');
+        fetchTeachers();
+        fetchCourses();
+    } catch (err) {
+        console.error(err);
+        alert('حدث خطأ أثناء الاتصال بالسيرفر.');
     }
 }
