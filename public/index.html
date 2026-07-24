@@ -1506,20 +1506,53 @@
                 <form id="student-custom-dues-form"
                     style="border-bottom: 1px solid var(--border-color); padding-bottom: 20px; margin-bottom: 20px;">
                     <input type="hidden" id="custom-dues-student-id">
-                    <div class="form-row">
-                        <div class="form-group" style="flex: 1.5;">
-                            <label for="custom-dues-title">عنوان أو نوع المستحقات الجديدة</label>
-                            <input type="text" id="custom-dues-title"
-                                placeholder="مثال: أجور كتب إضافية، رسوم إعادة اختبار" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="custom-dues-amount">المبلغ (IQD)</label>
-                            <input type="text" id="custom-dues-amount" placeholder="مثال: 15,000" required>
+                    
+                    <!-- Mode Selection -->
+                    <div class="form-group" style="margin-bottom: 15px;">
+                        <label style="font-weight: bold; font-size: 13px; margin-bottom: 8px; display: block;">اختر نوع المستحقات الإضافية المراد إضافتها:</label>
+                        <div style="display: flex; gap: 15px; background: rgba(0,0,0,0.03); padding: 10px 14px; border-radius: 8px; border: 1px solid var(--border-color);">
+                            <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 13px; font-weight: bold; color: var(--primary-color);">
+                                <input type="radio" name="custom-due-mode" value="lecture_balance" checked onchange="toggleCustomDueMode(this.value)">
+                                🎓 إضافة رصيد محاضرات إضافي (شراء/تجديد)
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 13px; font-weight: bold; color: var(--text-primary);">
+                                <input type="radio" name="custom-due-mode" value="general" onchange="toggleCustomDueMode(this.value)">
+                                📝 مستحقات عامة أخرى (كتب، رسوم)
+                            </label>
                         </div>
                     </div>
+
+                    <!-- Section A: Lecture Balance Fields -->
+                    <div id="section-lecture-balance-due" style="background: rgba(79, 70, 229, 0.04); padding: 14px; border-radius: 8px; border: 1px solid rgba(79, 70, 229, 0.2); margin-bottom: 15px;">
+                        <div class="form-row">
+                            <div class="form-group" style="flex: 1;">
+                                <label for="custom-dues-lecture-count" style="font-weight: bold; color: var(--primary-color);">عدد المحاضرات المضافة (+)</label>
+                                <input type="number" id="custom-dues-lecture-count" value="12" min="1" oninput="updateLectureDueTitle()" placeholder="مثال: 12" style="font-weight: bold;">
+                            </div>
+                            <div class="form-group" style="flex: 1.5;">
+                                <label for="custom-dues-lecture-price" style="font-weight: bold; color: var(--primary-color);">سعر المحاضرات / المبلغ (IQD)</label>
+                                <input type="text" id="custom-dues-lecture-price" placeholder="مثال: 50,000" style="font-weight: bold;">
+                            </div>
+                        </div>
+                        <small style="color: var(--text-muted); display: block; margin-top: 6px;">سيتم إضافة هذا العدد تلقائياً إلى رصيد محاضرات الطالب وتنشيط الجدول فور حفظ المستحقات.</small>
+                    </div>
+
+                    <!-- Section B: Title and Amount (for general dues or auto-filled for lectures) -->
+                    <div id="section-general-due-fields" style="display: none;">
+                        <div class="form-row">
+                            <div class="form-group" style="flex: 1.5;">
+                                <label for="custom-dues-title">عنوان أو نوع المستحقات الجديدة</label>
+                                <input type="text" id="custom-dues-title" placeholder="مثال: أجور كتب إضافية، رسوم إعادة اختبار">
+                            </div>
+                            <div class="form-group">
+                                <label for="custom-dues-amount">المبلغ (IQD)</label>
+                                <input type="text" id="custom-dues-amount" placeholder="مثال: 15,000">
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="form-row" style="margin-top: 15px;">
-                        <button type="submit" class="btn btn-success">إضافة وتثبيت المستحقات الإضافية <i
-                                class="fa-solid fa-plus-circle"></i></button>
+                        <button type="submit" class="btn btn-success" style="width: 100%; justify-content: center; padding: 10px; font-weight: bold;">إضافة وتثبيت المستحقات الإضافية <i class="fa-solid fa-plus-circle"></i></button>
                     </div>
                 </form>
 
