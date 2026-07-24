@@ -1,14 +1,27 @@
 // Receipt verification utility using pdf-parse and HMAC signature comparison
-const { PDFParse } = require('pdf-parse');
 const { generateSignature } = require('./pdf');
 const db = require('../db/index');
 
 async function verifyReceiptPDF(pdfBuffer) {
     try {
-        // Extract text from the PDF buffer
-        const parser = new PDFParse({ data: pdfBuffer });
-        const pdfData = await parser.getText();
-        const text = pdfData.text;
+        let text = '';
+        try {
+            const pdfParseModule = require('pdf-parse');
+            if (typeof pdfParseModule === 'function') {
+                const pdfData = await pdfParseModule(pdfBuffer);
+                text = pdfData ? pdfData.text : '';
+            } else if (pdfParseModule && pdfParseModule.PDFParse) {
+                const parser = new pdfParseModule.PDFParse({ data: pdfBuffer });
+                const pdfData = await parser.getText();
+                text = pdfData ? pdfData.text : '';
+            }
+        } catch (parseErr) {
+            console.error('PDF text extraction error:', parseErr);
+            return {
+                valid: false,
+                reason: 'تعذر استخراج البيانات من ملف PDF المرفق للتحقق.'
+            };
+        }
 
         console.log('Extracted text from PDF for verification:\n', text);
 

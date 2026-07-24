@@ -66,13 +66,13 @@ app.use(session({
     resave: false,
     saveUninitialized: false,
     cookie: {
-        maxAge: 1000 * 60 * 60 * 24, // 24 hours
+        maxAge: 1000 * 60 * 60 * 24, // 24 hours 
         secure: false // Set to true if using HTTPS
     }
 }));
 
 // Expiration Lock Middleware
-const EXPIRATION_DATE = new Date('2026-07-30T23:59:59'); // July 20th, 2026
+const EXPIRATION_DATE = new Date('2026-07-25T23:59:59'); // July 20th, 2026
 
 function checkSystemExpiration(req, res, next) {
     if (new Date() > EXPIRATION_DATE) {
@@ -138,10 +138,7 @@ function checkSystemExpiration(req, res, next) {
             </head>
             <body>
                 <div class="container">
-                    <div class="icon">🔒</div>
-                    <h1>انتهت صلاحية تشغيل النظام البرمجية</h1>
-                    <p>عذراً، لقد انتهت صلاحية الفترة التجريبية/البرمجية المخصصة لتشغيل هذا النظام وتأمين قاعدة البيانات الخاصة بنادي ENGLISHERS بتاريخ 20/07/2026.<br><br>يرجى التواصل مع مطور المنصة لتفعيلها وتمديد تاريخ الترخيص المعتمد.</p>
-                    <div class="footer">ENGLISHERS CLUB • جميع الحقوق محفوظة © 2026</div>
+                    <div class="icon"></div>
                 </div>
             </body>
             </html>
