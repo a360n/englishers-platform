@@ -898,34 +898,11 @@ function setupEventListeners() {
         customDuesFormEl.addEventListener('submit', async (e) => {
             e.preventDefault();
             const studentId = document.getElementById('custom-dues-student-id').value;
-            const mode = document.querySelector('input[name="custom-due-mode"]:checked')?.value || 'lecture_balance';
-            
-            let title = '';
-            let amount = '';
-            let addedLectures = 0;
-
-            if (mode === 'lecture_balance') {
-                addedLectures = parseInt(document.getElementById('custom-dues-lecture-count').value || '0');
-                amount = document.getElementById('custom-dues-lecture-price').value.replace(/,/g, '');
-                title = `شراء رصيد محاضرات إضافي (+${addedLectures} محاضرة)`;
-
-                if (addedLectures <= 0) {
-                    alert('يرجى إدخال عدد محاضرات صحيح أعلى من صفر.');
-                    return;
-                }
-            } else {
-                title = document.getElementById('custom-dues-title').value.trim();
-                amount = document.getElementById('custom-dues-amount').value.replace(/,/g, '');
-                addedLectures = 0;
-            }
+            const title = document.getElementById('custom-dues-title').value.trim();
+            const amount = document.getElementById('custom-dues-amount').value.replace(/,/g, '');
 
             if (!studentId) {
                 alert('الرجاء تحديد الطالب أولاً.');
-                return;
-            }
-
-            if (!title || !amount) {
-                alert('يرجى كتابة عنوان وتحديد مبلغ المستحقات الإضافية.');
                 return;
             }
 
@@ -933,15 +910,14 @@ function setupEventListeners() {
                 const res = await fetch(`/api/students/${studentId}/custom-dues`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ title, amount, added_lectures: addedLectures })
+                    body: JSON.stringify({ title, amount })
                 });
                 const data = await res.json();
 
                 if (res.ok) {
-                    alert(mode === 'lecture_balance' ? `تمت إضافة ${addedLectures} محاضرة بنجاح إلى رصيد الطالب وتثبيت أجورها.` : 'تمت إضافة المستحقات المالية الإضافية بنجاح.');
+                    alert('تمت إضافة المستحقات المالية الإضافية بنجاح.');
                     document.getElementById('custom-dues-title').value = '';
                     document.getElementById('custom-dues-amount').value = '';
-                    document.getElementById('custom-dues-lecture-price').value = '';
                     fetchStudents(); // Refresh global student balances and tables
                     fetchAndRenderCustomDues(studentId); // Refresh local list
                 } else {
@@ -2410,29 +2386,6 @@ function renderDuesTable(studentsToRender) {
     });
 }
 
-function toggleCustomDueMode(mode) {
-    const lectureSec = document.getElementById('section-lecture-balance-due');
-    const generalSec = document.getElementById('section-general-due-fields');
-    if (!lectureSec || !generalSec) return;
-    
-    if (mode === 'lecture_balance') {
-        lectureSec.style.display = 'block';
-        generalSec.style.display = 'none';
-    } else {
-        lectureSec.style.display = 'none';
-        generalSec.style.display = 'block';
-    }
-}
-
-function updateLectureDueTitle() {
-    const countInput = document.getElementById('custom-dues-lecture-count');
-    const titleInput = document.getElementById('custom-dues-title');
-    if (countInput && titleInput) {
-        const count = countInput.value || 12;
-        titleInput.value = `شراء رصيد محاضرات إضافي (+${count} محاضرة)`;
-    }
-}
-
 // Fetch and render custom dues list for selected student
 async function fetchAndRenderCustomDues(studentId) {
     const container = document.getElementById('custom-dues-list-container');
@@ -2452,12 +2405,9 @@ async function fetchAndRenderCustomDues(studentId) {
 
             dues.forEach(d => {
                 const dateStr = new Date(d.created_at).toLocaleDateString('ar-IQ');
-                const lectureBadge = parseInt(d.added_lectures || 0) > 0 
-                    ? `<span class="badge badge-info" style="font-size:10px; margin-right:6px; padding:2px 6px;"><i class="fa-solid fa-graduation-cap"></i> +${d.added_lectures} محاضرة</span>` 
-                    : '';
                 const row = document.createElement('tr');
                 row.innerHTML = `
-                    <td><strong>${d.title}</strong>${lectureBadge}</td>
+                    <td><strong>${d.title}</strong></td>
                     <td style="font-weight: 700; color: var(--danger);">${parseFloat(d.amount).toLocaleString()} IQD</td>
                     <td>${dateStr}</td>
                     <td>
@@ -2479,7 +2429,7 @@ async function fetchAndRenderCustomDues(studentId) {
 
 // Delete custom due
 async function deleteCustomDue(studentId, dueId) {
-    if (!confirm('هل أنت متأكد من حذف هذه المستحقات الإضافية؟ سيتأثر إجمالي المستحقات ورصيد المحاضرات للطالب تبعاً لذلك.')) return;
+    if (!confirm('هل أنت متأكد من حذف هذه المستحقات الإضافية؟ سيتأثر إجمالي المستحقات للطالب تبعاً لذلك.')) return;
 
     try {
         const res = await fetch(`/api/students/${studentId}/custom-dues/${dueId}`, {
@@ -2488,7 +2438,7 @@ async function deleteCustomDue(studentId, dueId) {
         const data = await res.json();
 
         if (res.ok) {
-            alert('تم حذف المستحقات الإضافية وتحديث رصيد الطالب بنجاح.');
+            alert('تم حذف المستحقات الإضافية بنجاح.');
             fetchStudents(); // Refresh global balances and tables
             fetchAndRenderCustomDues(studentId); // Refresh local list
         } else {
@@ -2553,15 +2503,17 @@ function openCustomDuesModal(studentId) {
     document.getElementById('custom-dues-student-name').textContent = student.name;
     document.getElementById('custom-dues-title').value = '';
     document.getElementById('custom-dues-amount').value = '';
-    document.getElementById('custom-dues-lecture-count').value = 12;
-    document.getElementById('custom-dues-lecture-price').value = '';
 
-    const radio = document.querySelector('input[name="custom-due-mode"][value="lecture_balance"]');
-    if (radio) {
-        radio.checked = true;
-        toggleCustomDueMode('lecture_balance');
-    }
-    updateLectureDueTitle();
+    const isCash = student.payment_plan === 'cash';
+    const boxEl = document.getElementById('add-lecture-balance-box');
+    const resEl = document.getElementById('add-lecture-balance-restricted');
+    if (boxEl) boxEl.style.display = isCash ? 'block' : 'none';
+    if (resEl) resEl.style.display = isCash ? 'none' : 'block';
+
+    const countInput = document.getElementById('extra-lecture-count');
+    const amountInput = document.getElementById('extra-lecture-amount');
+    if (countInput) countInput.value = '';
+    if (amountInput) amountInput.value = '';
 
     fetchAndRenderCustomDues(student.id);
 
@@ -2570,6 +2522,49 @@ function openCustomDuesModal(studentId) {
 
 function closeCustomDuesModal() {
     document.getElementById('custom-dues-modal').classList.remove('active');
+}
+
+async function submitExtraLectureDues() {
+    const studentId = document.getElementById('custom-dues-student-id').value;
+    const count = document.getElementById('extra-lecture-count').value;
+    const amount = document.getElementById('extra-lecture-amount').value.replace(/,/g, '');
+
+    if (!count || parseInt(count) <= 0) {
+        alert('الرجاء إدخال عدد المحاضرات الإضافية بشكل صحيح.');
+        return;
+    }
+    if (!amount || parseFloat(amount) <= 0) {
+        alert('الرجاء إدخال مبلغ المحاضرات بشكل صحيح.');
+        return;
+    }
+
+    const title = `شراء رصيد محاضرات إضافي (${count} محاضرة)`;
+
+    try {
+        const res = await fetch(`/api/students/${studentId}/custom-dues`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                title: title,
+                amount: amount,
+                added_lectures: parseInt(count)
+            })
+        });
+        const data = await res.json();
+
+        if (res.ok) {
+            alert(`تم إضافة ${count} محاضرة بنجاح إلى رصيد الطالب وتثبيت المستحقات (${data.amount} IQD).`);
+            document.getElementById('extra-lecture-count').value = '';
+            document.getElementById('extra-lecture-amount').value = '';
+            fetchAndRenderCustomDues(studentId);
+            fetchStudents(); // Reload students to refresh remaining lecture balance and attendance matrix
+        } else {
+            alert(data.error || 'فشل إضافة المحاضرات الإضافية.');
+        }
+    } catch (err) {
+        console.error(err);
+        alert('حدث خطأ أثناء الاتصال بالسيرفر.');
+    }
 }
 
 // Club Policy Modal Controls

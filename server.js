@@ -1242,43 +1242,48 @@ app.post('/api/students/:id/custom-dues', requireAuth, requireRole(['manager', '
     const { title, amount, added_lectures } = req.body;
 
     if (!title || !amount) {
-        return res.status(400).json({ error: 'Title and amount are required.' });
+        return res.status(400).json({ error: 'العنوان والمبلغ مطلوبان.' });
     }
 
     const dueAmount = parseFloat(amount);
     if (isNaN(dueAmount) || dueAmount <= 0) {
-        return res.status(400).json({ error: 'Amount must be a positive number.' });
+        return res.status(400).json({ error: 'المبلغ يجب أن يكون رقماً موجباً.' });
     }
 
-    const addedLectures = parseInt(added_lectures || 0);
+    const addLecturesCount = parseInt(added_lectures || 0);
 
     const client = await db.pool.connect();
     try {
         await client.query('BEGIN');
 
-        // Check if student exists
-        const studentCheck = await client.query('SELECT 1 FROM students WHERE id = $1', [studentId]);
+        // Check if student exists & check payment_plan if adding lectures
+        const studentCheck = await client.query('SELECT payment_plan, purchased_lectures FROM students WHERE id = $1', [studentId]);
         if (studentCheck.rows.length === 0) {
             await client.query('ROLLBACK');
-            return res.status(404).json({ error: 'Student not found.' });
+            return res.status(404).json({ error: 'الطالب غير موجود.' });
+        }
+
+        const student = studentCheck.rows[0];
+
+        if (addLecturesCount > 0) {
+            if (student.payment_plan !== 'cash') {
+                await client.query('ROLLBACK');
+                return res.status(400).json({ error: 'عذراً، إضافة رصيد المحاضرات الإضافي متاح فقط لطلاب نظام دفع الكاش.' });
+            }
+
+            // Increase student purchased_lectures balance
+            await client.query(
+                'UPDATE students SET purchased_lectures = COALESCE(purchased_lectures, 12) + $1 WHERE id = $2',
+                [addLecturesCount, studentId]
+            );
         }
 
         // Insert custom due
         const insertRes = await client.query(
-            `INSERT INTO student_custom_dues (student_id, title, amount, added_lectures) 
-             VALUES ($1, $2, $3, $4) RETURNING *`,
-            [studentId, title, dueAmount, addedLectures]
+            `INSERT INTO student_custom_dues (student_id, title, amount) 
+             VALUES ($1, $2, $3) RETURNING *`,
+            [studentId, title, dueAmount]
         );
-
-        // If added_lectures > 0, update student's purchased_lectures
-        if (addedLectures > 0) {
-            await client.query(
-                `UPDATE students 
-                 SET purchased_lectures = COALESCE(purchased_lectures, 12) + $1 
-                 WHERE id = $2`,
-                [addedLectures, studentId]
-            );
-        }
 
         // Update student's total_due
         await client.query(
@@ -1340,19 +1345,6 @@ app.delete('/api/students/:id/custom-dues/:dueId', requireAuth, requireRole(['ma
         if (deleteRes.rows.length === 0) {
             await client.query('ROLLBACK');
             return res.status(404).json({ error: 'Custom due record not found.' });
-        }
-
-        const deletedDue = deleteRes.rows[0];
-        const addedLectures = parseInt(deletedDue.added_lectures || 0);
-
-        // If deleted due had added_lectures > 0, deduct from student's purchased_lectures
-        if (addedLectures > 0) {
-            await client.query(
-                `UPDATE students 
-                 SET purchased_lectures = GREATEST(0, COALESCE(purchased_lectures, 12) - $1) 
-                 WHERE id = $2`,
-                [addedLectures, studentId]
-            );
         }
 
         // Update student's total_due
@@ -2576,10 +2568,8 @@ async function initCourseDates() {
                 student_id INTEGER REFERENCES students(id) ON DELETE CASCADE,
                 title VARCHAR(255) NOT NULL,
                 amount NUMERIC(10, 2) NOT NULL DEFAULT 0.00,
-                added_lectures INTEGER DEFAULT 0,
                 created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
             );
-            ALTER TABLE student_custom_dues ADD COLUMN IF NOT EXISTS added_lectures INTEGER DEFAULT 0;
         `);
         // Verify/add users.name, courses.teacher_id, and courses.is_active columns
         await client.query(`
