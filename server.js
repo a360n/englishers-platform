@@ -453,8 +453,8 @@ app.post('/api/courses', requireAuth, requireRole(['manager', 'admin', 'teacher'
     try {
         await client.query('BEGIN');
         const result = await client.query(
-            `INSERT INTO courses (name, teacher, schedule_type, time_slot, month_num, curriculum, start_date) 
-             VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
+            `INSERT INTO courses (name, teacher, schedule_type, time_slot, month_num, curriculum, start_date, is_active) 
+             VALUES ($1, $2, $3, $4, $5, $6, $7, true) RETURNING *`,
             [name.trim(), teacher.trim(), schedule_type, time_slot.trim(), parseInt(month_num), curriculum.trim(), start_date || new Date()]
         );
         const course = result.rows[0];
@@ -2500,6 +2500,7 @@ async function initCourseDates() {
             ALTER TABLE courses ADD COLUMN IF NOT EXISTS teacher_id INTEGER REFERENCES users(id) ON DELETE SET NULL;
             ALTER TABLE courses ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT TRUE;
         `);
+        await client.query("UPDATE courses SET is_active = TRUE WHERE is_active IS NULL");
         console.log('users.name, courses.teacher_id, and courses.is_active columns verified/created.');
 
         // Ensure default 'teacher' has name set if null
