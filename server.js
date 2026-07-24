@@ -2215,40 +2215,42 @@ app.post('/api/testing/seed-mock-data', requireAuth, async (req, res) => {
             req.session.user.id = creatorId;
         }
 
-        // Ensure teacher user accounts exist and retrieve their IDs
-        let tAliRes = await client.query("SELECT id FROM users WHERE username = 'teacher_ali'");
-        let tAliId;
-        if (tAliRes.rows.length === 0) {
-            const h = await bcrypt.hash('teacher_ali', 10);
-            const insRes = await client.query("INSERT INTO users (username, password, role, name) VALUES ('teacher_ali', $1, 'teacher', 'أ. علي الخفاجي') RETURNING id", [h]);
-            tAliId = insRes.rows[0].id;
-        } else {
-            tAliId = tAliRes.rows[0].id;
+        // Seed & Ensure mock teacher user accounts exist
+        const mockTeachers = [
+            { username: 'teacher_ali', name: 'أ. علي الخفاجي' },
+            { username: 'teacher_marwa', name: 'أ. مروة العبيدي' },
+            { username: 'teacher_zainab', name: 'أ. زينب الكرخي' },
+            { username: 'teacher_hassan', name: 'أ. حسن العامري' }
+        ];
+
+        const teacherIds = {};
+        for (const t of mockTeachers) {
+            let tRes = await client.query("SELECT id FROM users WHERE username = $1", [t.username]);
+            if (tRes.rows.length === 0) {
+                const h = await bcrypt.hash(t.username, 10);
+                const insRes = await client.query(
+                    "INSERT INTO users (username, password, role, name) VALUES ($1, $2, 'teacher', $3) RETURNING id",
+                    [t.username, h, t.name]
+                );
+                teacherIds[t.username] = insRes.rows[0].id;
+            } else {
+                teacherIds[t.username] = tRes.rows[0].id;
+            }
         }
 
-        let tMarwaRes = await client.query("SELECT id FROM users WHERE username = 'teacher_marwa'");
-        let tMarwaId;
-        if (tMarwaRes.rows.length === 0) {
-            const h = await bcrypt.hash('teacher_marwa', 10);
-            const insRes = await client.query("INSERT INTO users (username, password, role, name) VALUES ('teacher_marwa', $1, 'teacher', 'أ. مروة العبيدي') RETURNING id", [h]);
-            tMarwaId = insRes.rows[0].id;
-        } else {
-            tMarwaId = tMarwaRes.rows[0].id;
-        }
-
-        // 1. Insert 2 Courses with valid schedule pattern start dates (2026-07-04 is Sat = Even, 2026-07-05 is Sun = Odd)
+        // 1. Insert Courses with valid schedule pattern start dates (2026-07-04 is Sat = Even, 2026-07-05 is Sun = Odd)
         const course1Res = await client.query(`
             INSERT INTO courses (name, teacher, teacher_id, schedule_type, time_slot, month_num, curriculum, start_date)
             VALUES ('كورس اللغة الإنكليزية للمبتدئين (A1)', 'أ. علي الخفاجي', $1, 'even', '10:00 AM - 12:00 PM', 1, 'الكتاب الأساسي + كراسة المحادثة', '2026-07-04')
             RETURNING id, start_date, schedule_type, time_slot, name
-        `, [tAliId]);
+        `, [teacherIds['teacher_ali']]);
         const course1 = course1Res.rows[0];
 
         const course2Res = await client.query(`
             INSERT INTO courses (name, teacher, teacher_id, schedule_type, time_slot, month_num, curriculum, start_date)
             VALUES ('دورة المحادثة والطلاقة المتقدمة (B1)', 'أ. مروة العبيدي', $1, 'odd', '04:00 PM - 06:00 PM', 1, 'منهج Oxford English File', '2026-07-05')
             RETURNING id, start_date, schedule_type, time_slot, name
-        `, [tMarwaId]);
+        `, [teacherIds['teacher_marwa']]);
         const course2 = course2Res.rows[0];
 
         // Seed 12 dates for each course
