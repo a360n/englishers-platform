@@ -265,6 +265,54 @@ function loadDashboardData() {
 
 // Event Listeners Configuration
 function setupEventListeners() {
+    // Close any modal when clicking on backdrop overlay outside modal content
+    document.addEventListener('click', (e) => {
+        if (e.target && e.target.classList.contains('modal-overlay') && e.target.classList.contains('active')) {
+            const modalId = e.target.id;
+            switch (modalId) {
+                case 'course-modal':
+                    closeCourseModal();
+                    break;
+                case 'course-details-modal':
+                    closeCourseDetailsModal();
+                    break;
+                case 'edit-session-modal':
+                    closeEditSessionModal();
+                    break;
+                case 'postpone-session-modal':
+                    closePostponeModal();
+                    break;
+                case 'student-details-modal':
+                    closeStudentDetailsModal();
+                    break;
+                case 'payment-modal':
+                    closePaymentModal();
+                    break;
+                case 'base-dues-modal':
+                    closeBaseDuesModal();
+                    break;
+                case 'custom-dues-modal':
+                    closeCustomDuesModal();
+                    break;
+                case 'policy-modal':
+                    closePolicyModal();
+                    break;
+                case 'image-fullscreen-modal':
+                    closeFullscreenImage();
+                    break;
+                case 'admin-register-student-modal':
+                    closeAdminRegisterStudentModal();
+                    break;
+                case 'teacher-modal':
+                    closeTeacherModal();
+                    break;
+                default:
+                    e.target.classList.remove('active');
+                    break;
+            }
+        }
+    });
+
     // Tab switching
     const sidebarItems = document.querySelectorAll('.sidebar-item');
     sidebarItems.forEach(item => {

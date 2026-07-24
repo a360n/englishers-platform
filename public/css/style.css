@@ -725,9 +725,11 @@ tr:hover td {
 .modal-overlay.active {
     opacity: 1;
     pointer-events: auto;
+    cursor: pointer;
 }
 
 .modal-container {
+    cursor: default;
     background-color: var(--bg-card);
     width: 100%;
     max-width: 640px;
