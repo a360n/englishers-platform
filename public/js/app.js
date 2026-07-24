@@ -1091,7 +1091,10 @@ function populateStudentOptions() {
         if (selectAssign) {
             const optAssign = document.createElement('option');
             optAssign.value = s.id;
-            const extraStatus = parseInt(s.active_courses_count || 0) > 0 ? ' - (منسوب لكورس نشط)' : '';
+            const activeCourseName = s.current_course_name || (s.suitable_group && s.suitable_group !== 'قائمة الانتظار' ? s.suitable_group : '');
+            const extraStatus = (parseInt(s.active_courses_count || 0) > 0 || activeCourseName) 
+                ? ` - 🔒 (منسوب لكورس نشط: ${activeCourseName || 'كورس نشط'})` 
+                : '';
             optAssign.textContent = optionText + extraStatus;
             optAssign.setAttribute('data-name', s.name || '');
             optAssign.setAttribute('data-phone', s.phone || '');

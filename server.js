@@ -949,10 +949,7 @@ app.get('/api/students', requireAuth, requireRole(['manager', 'admin', 'teacher'
                        FROM course_students cs
                        JOIN courses c ON cs.course_id = c.id
                        WHERE cs.student_id = s.id 
-                         AND EXISTS (
-                             SELECT 1 FROM course_dates cd 
-                             WHERE cd.course_id = c.id AND cd.date >= CURRENT_DATE
-                         )
+                         AND COALESCE(c.is_active, true) = true
                        ORDER BY c.id DESC
                        LIMIT 1
                    ) AS current_course_name,
@@ -961,10 +958,7 @@ app.get('/api/students', requireAuth, requireRole(['manager', 'admin', 'teacher'
                        FROM course_students cs
                        JOIN courses c ON cs.course_id = c.id
                        WHERE cs.student_id = s.id 
-                         AND EXISTS (
-                             SELECT 1 FROM course_dates cd 
-                             WHERE cd.course_id = c.id AND cd.date >= CURRENT_DATE
-                         )
+                         AND COALESCE(c.is_active, true) = true
                    ) AS active_courses_count,
                    (
                        SELECT COUNT(*)::integer 
