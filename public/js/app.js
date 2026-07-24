@@ -7,7 +7,9 @@ let paymentsList = [];
 let coursesList = [];
 let teachersList = [];
 let currentStudentFilter = 'all';
+let currentCourseFilter = 'all';
 let activeCourseId = null;
+let activeCourseObject = null;
 let currentAttendanceData = {}; // { dateStr: { studentId: 'present'/'absent' } }
 let courseStudentsList = [];
 let allAttendanceDates = [];
@@ -895,12 +897,37 @@ async function fetchCourses() {
     }
 }
 
+function setCourseFilter(filter) {
+    currentCourseFilter = filter;
+    const btnAll = document.getElementById('filter-course-all');
+    const btnActive = document.getElementById('filter-course-active');
+    const btnInactive = document.getElementById('filter-course-inactive');
+    
+    if (btnAll) btnAll.className = filter === 'all' ? 'btn btn-sm btn-primary' : 'btn btn-sm btn-outline';
+    if (btnActive) btnActive.className = filter === 'active' ? 'btn btn-sm btn-primary' : 'btn btn-sm btn-outline';
+    if (btnInactive) btnInactive.className = filter === 'inactive' ? 'btn btn-sm btn-primary' : 'btn btn-sm btn-outline';
+    
+    renderCoursesTable(coursesList);
+}
+
 function renderCoursesTable(courses) {
     const tbody = document.getElementById('courses-table-body');
+    if (!tbody) return;
     tbody.innerHTML = '';
+
+    let filtered = courses;
+    if (currentCourseFilter === 'active') {
+        filtered = courses.filter(c => c.is_active !== false);
+    } else if (currentCourseFilter === 'inactive') {
+        filtered = courses.filter(c => c.is_active === false);
+    }
     
-    courses.forEach(c => {
+    filtered.forEach(c => {
         const scheduleStr = c.schedule_type === 'even' ? 'زوجي (سبت/اثنين/أربعاء)' : 'فردي (أحد/ثلاثاء/خميس)';
+        const statusBadge = c.is_active !== false 
+            ? '<span class="badge badge-success" style="font-size:11px; padding:3px 8px;"><i class="fa-solid fa-circle-check"></i> نشط</span>' 
+            : '<span class="badge badge-secondary" style="font-size:11px; padding:3px 8px;"><i class="fa-solid fa-ban"></i> غير نشط</span>';
+
         const row = document.createElement('tr');
         row.style.cursor = 'pointer';
         row.onclick = () => openCourseDetailsModal(c.id);
@@ -909,6 +936,7 @@ function renderCoursesTable(courses) {
             <td>C-${c.id}</td>
             <td><strong>${c.name}</strong></td>
             <td>${c.teacher}</td>
+            <td>${statusBadge}</td>
             <td>${scheduleStr}</td>
             <td>${c.time_slot}</td>
             <td>الشهر ${c.month_num}</td>
@@ -1259,6 +1287,39 @@ function getCourseDates(startDateStr, scheduleType) {
     return dates;
 }
 
+// Function to toggle Course Active Status (Active <-> Inactive)
+async function toggleCourseActiveStatus() {
+    if (!activeCourseId || !activeCourseObject) return;
+    const currentIsActive = activeCourseObject.is_active !== false;
+    const newStatus = !currentIsActive;
+    
+    const confirmMsg = newStatus 
+        ? `هل أنت تضمن إعادة تنشيط الكورس (${activeCourseObject.name})؟` 
+        : `هل أنت تأكد من تحويل الكورس (${activeCourseObject.name}) إلى غير نشط؟ (سيتم تجميد إمكانية تسجيل وتعديل الحضور والغياب فوراً).`;
+
+    if (!confirm(confirmMsg)) return;
+
+    try {
+        const res = await fetch(`/api/courses/${activeCourseId}/status`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ is_active: newStatus })
+        });
+        const data = await res.json();
+        if (!res.ok) {
+            alert(data.error || 'حدث خطأ أثناء تحديث حالة الكورس.');
+            return;
+        }
+
+        alert(newStatus ? 'تم تنشيط الكورس بنجاح!' : 'تم تحويل الكورس إلى غير نشط وتجميد سجل الحضور.');
+        fetchCourses();
+        openCourseDetailsModal(activeCourseId);
+    } catch (err) {
+        console.error(err);
+        alert('حدث خطأ أثناء الاتصال بالخادم.');
+    }
+}
+
 // Course details and attendance matrix modal
 async function openCourseDetailsModal(id) {
     activeCourseId = id;
@@ -1275,6 +1336,7 @@ async function openCourseDetailsModal(id) {
         }
 
         const course = data.course;
+        activeCourseObject = course;
         courseStudentsList = data.students.map(st => {
             const mainSt = studentsList.find(s => s.id === st.id);
             return {
@@ -1291,6 +1353,40 @@ async function openCourseDetailsModal(id) {
         const cdMonthEl = document.getElementById('cd-month');
         if (cdMonthEl) cdMonthEl.textContent = `الشهر ${course.month_num}`;
         document.getElementById('course-details-modal-title').textContent = `إدارة كورس: ${course.name}`;
+
+        // Course Active Status UI handling
+        const statusBadge = document.getElementById('cd-status-badge');
+        const statusBtn = document.getElementById('cd-toggle-status-btn');
+        const frozenBanner = document.getElementById('cd-frozen-banner');
+        const isActive = course.is_active !== false;
+
+        if (statusBadge) {
+            statusBadge.className = isActive ? 'badge badge-success' : 'badge badge-secondary';
+            statusBadge.style.fontSize = '12px';
+            statusBadge.style.padding = '4px 10px';
+            statusBadge.innerHTML = isActive 
+                ? '<i class="fa-solid fa-circle-check" style="margin-left:4px;"></i> كورس نشط (فعال)' 
+                : '<i class="fa-solid fa-ban" style="margin-left:4px;"></i> غير نشط (مجمد)';
+        }
+
+        if (statusBtn) {
+            if (currentUser && ['manager', 'admin'].includes(currentUser.role)) {
+                statusBtn.style.display = 'inline-block';
+                if (isActive) {
+                    statusBtn.className = 'btn btn-warning btn-sm';
+                    statusBtn.innerHTML = 'تحويل لـ غير نشط (تجميد الحضور) <i class="fa-solid fa-pause"></i>';
+                } else {
+                    statusBtn.className = 'btn btn-success btn-sm';
+                    statusBtn.innerHTML = 'تنشيط الكورس <i class="fa-solid fa-play"></i>';
+                }
+            } else {
+                statusBtn.style.display = 'none';
+            }
+        }
+
+        if (frozenBanner) {
+            frozenBanner.style.display = isActive ? 'none' : 'block';
+        }
 
         // Toggle admin vs teacher view controls
         const adminActions = document.getElementById('cd-admin-actions');
@@ -1423,11 +1519,27 @@ function renderAttendanceSheet() {
 
         let colsHtml = `<td><strong>${student.name}</strong>${frozenBadge}<br><small style="color:var(--text-muted);">${student.phone}</small></td>`;
         
+        const isCourseInactive = activeCourseObject && activeCourseObject.is_active === false;
+
         // Render cells for each of the 12 dates
         allAttendanceDates.forEach(date => {
             const status = currentAttendanceData[date]?.[student.id] || 'none';
 
-            if (student.is_frozen) {
+            if (isCourseInactive) {
+                let btnClass = 'attendance-none';
+                let btnText = 'غير محدد 🔒';
+                
+                if (status === 'present') { btnClass = 'attendance-present'; btnText = 'حاضر 🔒'; }
+                else if (status === 'absent') { btnClass = 'attendance-absent'; btnText = 'غائب 🔒'; }
+
+                colsHtml += `
+                    <td>
+                        <button class="attendance-btn ${btnClass}" disabled style="opacity: 0.65; cursor: not-allowed; pointer-events: none;" title="الكورس غير نشط، الحضور والغياب مجمد">
+                            ${btnText}
+                        </button>
+                    </td>
+                `;
+            } else if (student.is_frozen) {
                 if (status === 'present') {
                     colsHtml += `
                         <td>
@@ -1488,6 +1600,10 @@ function renderAttendanceSheet() {
 
 // Cycles cell state: present -> absent -> none -> present
 function cycleAttendanceState(dateStr, studentId, btnEl) {
+    if (activeCourseObject && activeCourseObject.is_active === false) {
+        alert('عذراً، هذا الكورس غير نشط حالياً وتم تجميد إمكانية تسجيل وتعديل الحضور والغياب.');
+        return;
+    }
     const student = courseStudentsList.find(s => s.id === studentId) || studentsList.find(s => s.id === studentId);
     if (student && student.is_frozen) {
         alert('عذراً، هذا الطالب حساب مجمد حالياً ولا يمكن تسجيل حضور أو غياب له.');

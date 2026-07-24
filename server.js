@@ -533,6 +533,32 @@ app.delete('/api/courses/:id', requireAuth, requireRole(['manager', 'admin', 'te
     }
 });
 
+// PUT: Update Course Active Status (Admin & Manager only)
+app.put('/api/courses/:id/status', requireAuth, requireRole(['manager', 'admin']), async (req, res) => {
+    const courseId = parseInt(req.params.id);
+    const { is_active } = req.body;
+
+    if (typeof is_active !== 'boolean') {
+        return res.status(400).json({ error: 'الحالة (is_active) مطلوبة وقيمة منطقية.' });
+    }
+
+    try {
+        const result = await db.query(
+            'UPDATE courses SET is_active = $1 WHERE id = $2 RETURNING *',
+            [is_active, courseId]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'الكورس غير موجود.' });
+        }
+
+        res.json({ message: 'تم تحديث حالة الكورس بنجاح.', course: result.rows[0] });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
 // GET: Course Details + Assigned Students
 app.get('/api/courses/:id/details', requireAuth, async (req, res) => {
     const courseId = req.params.id;
@@ -1338,6 +1364,13 @@ app.post('/api/courses/:id/attendance', requireAuth, requireRole(['manager', 'ad
     try {
         await client.query('BEGIN');
 
+        // Check if course is active
+        const courseCheck = await client.query('SELECT is_active FROM courses WHERE id = $1', [courseId]);
+        if (courseCheck.rows.length > 0 && courseCheck.rows[0].is_active === false) {
+            await client.query('ROLLBACK');
+            return res.status(400).json({ error: 'عذراً، هذا الكورس غير نشط حالياً وتم تجميد إمكانية تسجيل وتعديل الحضور والغياب.' });
+        }
+
         for (const [studentIdStr, status] of Object.entries(attendance)) {
             const studentId = parseInt(studentIdStr);
 
@@ -1382,6 +1415,13 @@ app.post('/api/courses/:id/attendance-bulk', requireAuth, requireRole(['manager'
     const client = await db.pool.connect();
     try {
         await client.query('BEGIN');
+
+        // Check if course is active
+        const courseCheck = await client.query('SELECT is_active FROM courses WHERE id = $1', [courseId]);
+        if (courseCheck.rows.length > 0 && courseCheck.rows[0].is_active === false) {
+            await client.query('ROLLBACK');
+            return res.status(400).json({ error: 'عذراً، هذا الكورس غير نشط حالياً وتم تجميد إمكانية تسجيل وتعديل الحضور والغياب.' });
+        }
 
         for (const [date, studentsMap] of Object.entries(attendanceSheet)) {
             for (const [studentIdStr, status] of Object.entries(studentsMap)) {
@@ -2454,12 +2494,13 @@ async function initCourseDates() {
                 created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
             );
         `);
-        // Verify/add users.name and courses.teacher_id columns
+        // Verify/add users.name, courses.teacher_id, and courses.is_active columns
         await client.query(`
             ALTER TABLE users ADD COLUMN IF NOT EXISTS name VARCHAR(255);
             ALTER TABLE courses ADD COLUMN IF NOT EXISTS teacher_id INTEGER REFERENCES users(id) ON DELETE SET NULL;
+            ALTER TABLE courses ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT TRUE;
         `);
-        console.log('users.name and courses.teacher_id columns verified/created.');
+        console.log('users.name, courses.teacher_id, and courses.is_active columns verified/created.');
 
         // Ensure default 'teacher' has name set if null
         await client.query("UPDATE users SET name = 'أ. معلم افتراضي' WHERE username = 'teacher' AND name IS NULL");

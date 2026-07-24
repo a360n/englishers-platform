@@ -320,8 +320,15 @@
                     <!-- ========================================== -->
                     <div id="tab-courses" class="tab-content">
                         <div class="card-table-wrapper">
-                            <div class="card-table-header">
-                                <div class="card-table-title">قائمة الدورات والكورسات الدراسية</div>
+                            <div class="card-table-header" style="flex-wrap:wrap; gap:12px; display:flex; align-items:center; justify-content:space-between;">
+                                <div style="display:flex; align-items:center; gap:15px; flex-wrap:wrap;">
+                                    <div class="card-table-title">قائمة الدورات والكورسات الدراسية</div>
+                                    <div style="display:flex; gap:6px;">
+                                        <button id="filter-course-all" class="btn btn-sm btn-primary" onclick="setCourseFilter('all')">الكورسات (الكل)</button>
+                                        <button id="filter-course-active" class="btn btn-sm btn-outline" onclick="setCourseFilter('active')">النشطة <span class="badge badge-success" style="font-size:10px; padding:2px 5px;">نشط</span></button>
+                                        <button id="filter-course-inactive" class="btn btn-sm btn-outline" onclick="setCourseFilter('inactive')">غير النشطة <span class="badge badge-secondary" style="font-size:10px; padding:2px 5px;">غير نشط</span></button>
+                                    </div>
+                                </div>
                                 <button class="btn btn-primary btn-sm" onclick="openAddCourseModal()">
                                     إضافة دورة جديدة <i class="fa-solid fa-plus"></i>
                                 </button>
@@ -333,6 +340,7 @@
                                             <th>المعرف</th>
                                             <th>اسم الكورس</th>
                                             <th>المعلم</th>
+                                            <th>الحالة</th>
                                             <th>نمط التوزيع</th>
                                             <th>الوقت</th>
                                             <th>رقم الشهر</th>
@@ -948,6 +956,20 @@
                             style="padding:8px 16px; font-size:13px;">حذف الكورس <i
                                 class="fa-solid fa-trash"></i></button>
                     </div>
+                </div>
+
+                <!-- Course Active/Inactive Status Switch Bar -->
+                <div id="cd-status-bar" style="display:flex; align-items:center; justify-content:space-between; margin-bottom:18px; background:var(--bg-card); padding:10px 16px; border-radius:var(--border-radius-sm); border:1px solid var(--border-color); box-shadow:var(--shadow-sm);">
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <span style="font-weight:bold; font-size:13px; color:var(--text-primary);">حالة الكورس الحالية:</span>
+                        <span id="cd-status-badge"></span>
+                    </div>
+                    <button id="cd-toggle-status-btn" class="btn btn-sm" onclick="toggleCourseActiveStatus()" style="font-size:12px; padding:6px 14px; display:none;"></button>
+                </div>
+
+                <!-- Frozen Course Alert Banner -->
+                <div id="cd-frozen-banner" style="display:none; padding:12px 16px; background:#fef3c7; color:#92400e; border:1px solid #fde68a; border-radius:var(--border-radius-sm); font-weight:bold; font-size:13px; margin-bottom:18px; text-align:center; direction:rtl;">
+                    <i class="fa-solid fa-lock" style="margin-left:6px; font-size:15px;"></i> هذا الكورس غير نشط حالياً، تم تجميد إمكانيات تسجيل وتعديل الحضور والغياب للجميع.
                 </div>
 
                 <!-- Section: Assign student to this course -->
