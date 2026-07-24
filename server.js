@@ -581,10 +581,15 @@ app.get('/api/courses/:id/details', requireAuth, async (req, res) => {
         }
 
         const studentsRes = await db.query(
-            `SELECT s.id, s.name, s.phone, s.level, s.is_frozen 
+            `SELECT s.id, s.name, s.phone, s.level, s.is_frozen, COALESCE(s.purchased_lectures, 12) AS purchased_lectures,
+                    COALESCE((SELECT COUNT(*)::integer FROM attendance WHERE student_id = s.id AND status IN ('present', 'absent')), 0) AS used_lectures_overall,
+                    cs.created_at AS assigned_at,
+                    COALESCE(cs.is_active, true) AS is_active_in_course,
+                    cs.removed_at
              FROM students s 
              JOIN course_students cs ON s.id = cs.student_id 
-             WHERE cs.course_id = $1`,
+             WHERE cs.course_id = $1
+             ORDER BY COALESCE(cs.is_active, true) DESC, s.id ASC`,
             [courseId]
         );
 
@@ -856,7 +861,6 @@ app.post('/api/courses/:id/dates/:dateStr/postpone', requireAuth, requireRole(['
     }
 });
 
-// POST: Assign a student to a course (Admin & Manager only)
 // POST: Assign student to a course (Admin, Manager & Teacher)
 app.post('/api/courses/:id/students', requireAuth, requireRole(['manager', 'admin', 'teacher']), async (req, res) => {
     const { studentId } = req.body;
@@ -866,24 +870,22 @@ app.post('/api/courses/:id/students', requireAuth, requireRole(['manager', 'admi
     try {
         // 1. Check if mapping exists in this exact course
         const check = await db.query(
-            'SELECT 1 FROM course_students WHERE course_id = $1 AND student_id = $2',
+            'SELECT is_active FROM course_students WHERE course_id = $1 AND student_id = $2',
             [courseId, studentId]
         );
-        if (check.rows.length > 0) {
+        if (check.rows.length > 0 && check.rows[0].is_active !== false) {
             return res.status(400).json({ error: 'الطالب مضاف بالفعل لهذه الدورة التعليمية.' });
         }
 
-        // 2. Protection Rule: Check if student is currently assigned to ANY OTHER active course (has sessions >= CURRENT_DATE)
+        // 2. Protection Rule: Check if student is currently active in ANY OTHER course
         const activeCourseCheck = await db.query(
             `SELECT c.id, c.name 
              FROM course_students cs
              JOIN courses c ON cs.course_id = c.id
              WHERE cs.student_id = $1
                AND cs.course_id != $2
-               AND EXISTS (
-                   SELECT 1 FROM course_dates cd 
-                   WHERE cd.course_id = c.id AND cd.date >= CURRENT_DATE
-               )
+               AND COALESCE(cs.is_active, true) = true
+               AND COALESCE(c.is_active, true) = true
              LIMIT 1`,
             [studentId, courseId]
         );
@@ -895,10 +897,19 @@ app.post('/api/courses/:id/students', requireAuth, requireRole(['manager', 'admi
             });
         }
 
-        await db.query(
-            'INSERT INTO course_students (course_id, student_id) VALUES ($1, $2)',
-            [courseId, studentId]
-        );
+        if (check.rows.length > 0) {
+            // Re-activate mapping for previously removed student
+            await db.query(
+                'UPDATE course_students SET is_active = TRUE, created_at = CURRENT_TIMESTAMP, removed_at = NULL WHERE course_id = $1 AND student_id = $2',
+                [courseId, studentId]
+            );
+        } else {
+            // Create new mapping
+            await db.query(
+                'INSERT INTO course_students (course_id, student_id, is_active, created_at) VALUES ($1, $2, TRUE, CURRENT_TIMESTAMP)',
+                [courseId, studentId]
+            );
+        }
 
         // Synchronize student suitable_group with the newly assigned course name
         const courseRes = await db.query('SELECT name FROM courses WHERE id = $1', [courseId]);
@@ -915,19 +926,41 @@ app.post('/api/courses/:id/students', requireAuth, requireRole(['manager', 'admi
 
 // DELETE: Remove a student from a course (Admin & Manager only)
 app.delete('/api/courses/:id/students/:studentId', requireAuth, requireRole(['manager', 'admin', 'teacher']), async (req, res) => {
+    const courseId = req.params.id;
+    const studentId = req.params.studentId;
     try {
-        const result = await db.query(
-            'DELETE FROM course_students WHERE course_id = $1 AND student_id = $2 RETURNING *',
-            [req.params.id, req.params.studentId]
+        // Check if student has attendance history in this course
+        const attCheck = await db.query(
+            "SELECT 1 FROM attendance WHERE course_id = $1 AND student_id = $2 AND status IN ('present', 'absent') LIMIT 1",
+            [courseId, studentId]
         );
-        if (result.rows.length === 0) {
-            return res.status(404).json({ error: 'Assignment not found.' });
+
+        if (attCheck.rows.length > 0) {
+            // Student HAS attendance history -> Soft delete to preserve history in attendance matrix
+            await db.query(
+                "UPDATE course_students SET is_active = FALSE, removed_at = CURRENT_TIMESTAMP WHERE course_id = $1 AND student_id = $2",
+                [courseId, studentId]
+            );
+        } else {
+            // Student HAS NO attendance history -> Hard delete
+            await db.query(
+                "DELETE FROM course_students WHERE course_id = $1 AND student_id = $2",
+                [courseId, studentId]
+            );
         }
 
-        // Synchronize student suitable_group to 'قائمة الانتظار'
-        await db.query("UPDATE students SET suitable_group = 'قائمة الانتظار' WHERE id = $1", [req.params.studentId]);
+        // Synchronize student suitable_group
+        const activeCourseCheck = await db.query(
+            "SELECT c.name FROM course_students cs JOIN courses c ON cs.course_id = c.id WHERE cs.student_id = $1 AND COALESCE(cs.is_active, true) = true AND COALESCE(c.is_active, true) = true LIMIT 1",
+            [studentId]
+        );
+        if (activeCourseCheck.rows.length > 0) {
+            await db.query("UPDATE students SET suitable_group = $1 WHERE id = $2", [activeCourseCheck.rows[0].name, studentId]);
+        } else {
+            await db.query("UPDATE students SET suitable_group = 'قائمة الانتظار' WHERE id = $2", [studentId]);
+        }
 
-        res.json({ message: 'Student removed from course.' });
+        res.json({ message: 'تم إزالة الطالب من الكورس وحفظ سجلاته.' });
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: 'Internal server error' });
@@ -943,6 +976,8 @@ app.get('/api/students', requireAuth, requireRole(['manager', 'admin', 'teacher'
     try {
         const result = await db.query(`
             SELECT s.*, 
+                   COALESCE((SELECT COUNT(*)::integer FROM attendance WHERE student_id = s.id AND status IN ('present', 'absent')), 0) AS used_lectures,
+                   GREATEST(0, COALESCE(s.purchased_lectures, 12) - COALESCE((SELECT COUNT(*)::integer FROM attendance WHERE student_id = s.id AND status IN ('present', 'absent')), 0)) AS remaining_lectures,
                    COALESCE((SELECT COUNT(*)::integer FROM attendance WHERE student_id = s.id), 0) AS attendance_count,
                    (
                        SELECT c.name 
@@ -985,7 +1020,13 @@ app.get('/api/students/:id', requireAuth, async (req, res) => {
     }
 
     try {
-        const studentRes = await db.query('SELECT * FROM students WHERE id = $1', [studentId]);
+        const studentRes = await db.query(
+            `SELECT s.*, 
+                   COALESCE((SELECT COUNT(*)::integer FROM attendance WHERE student_id = s.id AND status IN ('present', 'absent')), 0) AS used_lectures,
+                   GREATEST(0, COALESCE(s.purchased_lectures, 12) - COALESCE((SELECT COUNT(*)::integer FROM attendance WHERE student_id = s.id AND status IN ('present', 'absent')), 0)) AS remaining_lectures
+            FROM students s WHERE s.id = $1`,
+            [studentId]
+        );
         if (studentRes.rows.length === 0) {
             return res.status(404).json({ error: 'Student not found.' });
         }
@@ -1148,24 +1189,25 @@ app.put('/api/students/:id/admin', requireAuth, requireRole(['manager', 'admin']
 
 // PUT: Update student financial dues (Admin & Manager only)
 app.put('/api/students/:id/dues', requireAuth, requireRole(['manager', 'admin', 'teacher']), async (req, res) => {
-    const { reg_fee, curriculum_fee, course_fee, payment_plan, installment_amount } = req.body;
+    const { reg_fee, curriculum_fee, course_fee, payment_plan, installment_amount, purchased_lectures } = req.body;
 
     const rFee = parseFloat(reg_fee || 0);
     const cFee = parseFloat(curriculum_fee || 0);
     const coFee = parseFloat(course_fee || 0);
     const plan = payment_plan === 'installment' ? 'installment' : 'cash';
     const instAmount = parseFloat(installment_amount || 0);
+    const pLectures = parseInt(purchased_lectures || 12);
 
     const client = await db.pool.connect();
     try {
         await client.query('BEGIN');
 
-        // Update student basic fee fields and plan
+        // Update student basic fee fields and plan and purchased lectures
         const result = await client.query(
             `UPDATE students 
-             SET reg_fee = $1, curriculum_fee = $2, course_fee = $3, payment_plan = $4, installment_amount = $5
-             WHERE id = $6 RETURNING *`,
-            [rFee, cFee, coFee, plan, instAmount, req.params.id]
+             SET reg_fee = $1, curriculum_fee = $2, course_fee = $3, payment_plan = $4, installment_amount = $5, purchased_lectures = $6
+             WHERE id = $7 RETURNING *`,
+            [rFee, cFee, coFee, plan, instAmount, pLectures, req.params.id]
         );
 
         if (result.rows.length === 0) {
@@ -2473,12 +2515,22 @@ function getCourseDatesArray(startDateStr, scheduleType, numDays = 12) {
 async function initCourseDates() {
     const client = await db.pool.connect();
     try {
-        // Verify/add photo_path and is_frozen columns in students table
+        // Verify/add photo_path, is_frozen, and purchased_lectures columns in students table
         await client.query(`
             ALTER TABLE students ADD COLUMN IF NOT EXISTS photo_path VARCHAR(555);
             ALTER TABLE students ADD COLUMN IF NOT EXISTS is_frozen BOOLEAN DEFAULT FALSE;
+            ALTER TABLE students ADD COLUMN IF NOT EXISTS purchased_lectures INTEGER DEFAULT 12;
         `);
-        console.log('students.photo_path and is_frozen columns verified/created.');
+        await client.query("UPDATE students SET purchased_lectures = 12 WHERE purchased_lectures IS NULL");
+        console.log('students.photo_path, is_frozen, and purchased_lectures columns verified/created.');
+
+        // Verify/add created_at, is_active, and removed_at in course_students table
+        await client.query(`
+            ALTER TABLE course_students ADD COLUMN IF NOT EXISTS created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP;
+            ALTER TABLE course_students ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT TRUE;
+            ALTER TABLE course_students ADD COLUMN IF NOT EXISTS removed_at TIMESTAMP WITH TIME ZONE;
+        `);
+        await client.query("UPDATE course_students SET is_active = TRUE WHERE is_active IS NULL");
 
         // Verify course_dates table
         await client.query(`

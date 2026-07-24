@@ -856,6 +856,7 @@ function setupEventListeners() {
             const courseFee = document.getElementById('dues-course-fee').value.replace(/,/g, '');
             const paymentPlan = document.getElementById('dues-payment-plan').value;
             const installmentAmount = document.getElementById('dues-installment-amount').value.replace(/,/g, '');
+            const purchasedLectures = document.getElementById('dues-purchased-lectures') ? document.getElementById('dues-purchased-lectures').value : 12;
 
             if (!studentId) {
                 alert('الرجاء تحديد الطالب أولاً.');
@@ -871,7 +872,8 @@ function setupEventListeners() {
                         curriculum_fee: currFee,
                         course_fee: courseFee,
                         payment_plan: paymentPlan,
-                        installment_amount: installmentAmount
+                        installment_amount: installmentAmount,
+                        purchased_lectures: purchasedLectures
                     })
                 });
                 const data = await res.json();
@@ -1560,23 +1562,53 @@ function renderAttendanceSheet() {
     const tbody = document.createElement('tbody');
     courseStudentsList.forEach(student => {
         const row = document.createElement('tr');
-        if (student.is_frozen) {
+        const isRemoved = student.is_active_in_course === false;
+        
+        if (isRemoved) {
+            row.classList.add('tr-removed');
+        } else if (student.is_frozen) {
             row.classList.add('tr-frozen');
         }
 
-        const frozenBadge = student.is_frozen 
-            ? `<span class="badge badge-frozen" style="padding:2px 6px; font-size:10px; margin-right:4px;"><i class="fa-solid fa-snowflake"></i> مجمد</span>`
-            : '';
+        const statusBadge = isRemoved 
+            ? `<span class="badge badge-danger" style="padding:2px 6px; font-size:10px; margin-right:4px;"><i class="fa-solid fa-user-slash"></i> تم الإزالة</span>`
+            : (student.is_frozen 
+                ? `<span class="badge badge-frozen" style="padding:2px 6px; font-size:10px; margin-right:4px;"><i class="fa-solid fa-snowflake"></i> مجمد</span>`
+                : '');
 
-        let colsHtml = `<td><strong>${student.name}</strong>${frozenBadge}<br><small style="color:var(--text-muted);">${student.phone}</small></td>`;
+        let colsHtml = `<td><strong>${student.name}</strong>${statusBadge}<br><small style="color:var(--text-muted);">${student.phone}</small></td>`;
         
         const isCourseInactive = activeCourseObject && activeCourseObject.is_active === false;
 
-        // Render cells for each of the 12 dates
-        allAttendanceDates.forEach(date => {
+        // Determine student assignment date in this course
+        const assignedDateStr = student.assigned_at ? student.assigned_at.split('T')[0] : '1970-01-01';
+
+        // Find index of first date >= assignedDateStr
+        let startDateIndex = allAttendanceDates.findIndex(d => d >= assignedDateStr);
+        if (startDateIndex === -1) {
+            startDateIndex = allAttendanceDates.length; // all dates are before assignment date
+        }
+
+        const purchasedCount = parseInt(student.purchased_lectures || 12);
+
+        // Render cells for each of the dates
+        allAttendanceDates.forEach((date, idx) => {
             const status = currentAttendanceData[date]?.[student.id] || 'none';
 
-            if (isCourseInactive) {
+            if (isRemoved) {
+                let btnClass = 'attendance-none';
+                let btnText = '- 🔒';
+                if (status === 'present') { btnClass = 'attendance-present'; btnText = 'حاضر 🔒'; }
+                else if (status === 'absent') { btnClass = 'attendance-absent'; btnText = 'غائب 🔒'; }
+
+                colsHtml += `
+                    <td>
+                        <button class="attendance-btn ${btnClass}" disabled style="opacity: 0.65; cursor: not-allowed; pointer-events: none;" title="تم إزالة الطالب من هذا الكورس وحفظ سجلاته">
+                            ${btnText}
+                        </button>
+                    </td>
+                `;
+            } else if (isCourseInactive) {
                 let btnClass = 'attendance-none';
                 let btnText = 'غير محدد 🔒';
                 
@@ -1616,30 +1648,67 @@ function renderAttendanceSheet() {
                         </td>
                     `;
                 }
-            } else {
+            } else if (idx < startDateIndex) {
+                // Lecture date is BEFORE student was assigned to this course
                 let btnClass = 'attendance-none';
-                let btnText = 'غير محدد';
-                
-                if (status === 'present') { btnClass = 'attendance-present'; btnText = 'حاضر'; }
-                else if (status === 'absent') { btnClass = 'attendance-absent'; btnText = 'غائب'; }
+                let btnText = 'سابق للإضافة 🔒';
+                if (status === 'present') { btnClass = 'attendance-present'; btnText = 'حاضر 🔒'; }
+                else if (status === 'absent') { btnClass = 'attendance-absent'; btnText = 'غائب 🔒'; }
 
                 colsHtml += `
                     <td>
-                        <button class="attendance-btn ${btnClass}" onclick="cycleAttendanceState('${date}', ${student.id}, this)">
+                        <button class="attendance-btn ${btnClass}" disabled style="opacity: 0.55; cursor: not-allowed; pointer-events: none; font-size: 10px;" title="تاريخ المحاضرة (${date}) سابق لتاريخ إضافة الطالب للكورس (${assignedDateStr})">
                             ${btnText}
                         </button>
                     </td>
                 `;
+            } else {
+                // Lecture date is ON or AFTER student assignment date
+                const lectureNumForStudent = idx - startDateIndex;
+                if (lectureNumForStudent >= purchasedCount) {
+                    // Lecture date exceeds student's purchased lecture balance
+                    let btnClass = 'attendance-none';
+                    let btnText = 'خارج الرصيد 🔒';
+                    if (status === 'present') { btnClass = 'attendance-present'; btnText = 'حاضر 🔒'; }
+                    else if (status === 'absent') { btnClass = 'attendance-absent'; btnText = 'غائب 🔒'; }
+
+                    colsHtml += `
+                        <td>
+                            <button class="attendance-btn ${btnClass}" disabled style="opacity: 0.55; cursor: not-allowed; pointer-events: none; font-size: 10px; background: #fff7ed; color: #c2410c; border: 1px solid #ffedd5;" title="هذه المحاضرة تتجاوز رصيد المحاضرات المشتراة للطالب (${purchasedCount} محاضرة)">
+                                ${btnText}
+                            </button>
+                        </td>
+                    `;
+                } else {
+                    // Valid and unlocked lecture slot!
+                    let btnClass = 'attendance-none';
+                    let btnText = 'غير محدد';
+                    
+                    if (status === 'present') { btnClass = 'attendance-present'; btnText = 'حاضر'; }
+                    else if (status === 'absent') { btnClass = 'attendance-absent'; btnText = 'غائب'; }
+
+                    colsHtml += `
+                        <td>
+                            <button class="attendance-btn ${btnClass}" onclick="cycleAttendanceState('${date}', ${student.id}, this)">
+                                ${btnText}
+                            </button>
+                        </td>
+                    `;
+                }
             }
         });
 
         // Delete student from course button if admin/manager
         if (isAdminOrManager) {
-            colsHtml += `
-                <td>
-                    <button class="btn btn-danger btn-sm" onclick="removeStudentFromCourse(${student.id})" style="padding:4px 8px; font-size:11px;">إزالة <i class="fa-solid fa-user-minus"></i></button>
-                </td>
-            `;
+            if (isRemoved) {
+                colsHtml += `<td><span style="font-size:11px; color:#ef4444; font-weight:bold;">تم الإزالة 🛑</span></td>`;
+            } else {
+                colsHtml += `
+                    <td>
+                        <button class="btn btn-danger btn-sm" onclick="removeStudentFromCourse(${student.id})" style="padding:4px 8px; font-size:11px;">إزالة <i class="fa-solid fa-user-minus"></i></button>
+                    </td>
+                `;
+            }
         }
         row.innerHTML = colsHtml;
         tbody.appendChild(row);
@@ -1824,6 +1893,15 @@ async function openStudentDetailsModal(id) {
             } else {
                 currentCourseEl.textContent = assignedCourses.map(c => c.name).join(', ');
             }
+        }
+
+        // Lecture balance check
+        const lectureBalanceEl = document.getElementById('sd-lecture-balance');
+        if (lectureBalanceEl) {
+            const purchased = parseInt(student.purchased_lectures || 12);
+            const used = parseInt(student.used_lectures || 0);
+            const remaining = Math.max(0, purchased - used);
+            lectureBalanceEl.innerHTML = `<span style="color:${remaining <= 3 ? '#dc2626' : 'var(--primary-color)'}; font-weight:bold;">${remaining} محاضرة متبقية</span> <small style="color:var(--text-muted); font-weight:normal;">(تم استخدام ${used} من أصل ${purchased})</small>`;
         }
 
         // Show/hide Personal Edit Button (Manager and Admin only)
@@ -2404,6 +2482,9 @@ function openBaseDuesModal(studentId) {
     const amountInput = document.getElementById('dues-installment-amount');
     if (amountInput) amountInput.value = Math.round(student.installment_amount || 0).toLocaleString();
 
+    const pLecturesInput = document.getElementById('dues-purchased-lectures');
+    if (pLecturesInput) pLecturesInput.value = student.purchased_lectures || 12;
+
     toggleInstallmentInput(plan);
 
     document.getElementById('base-dues-modal').classList.add('active');
@@ -2457,22 +2538,20 @@ function checkAdminDuesAlerts(students) {
 
     students.forEach(s => {
         if (s.payment_plan === 'installment') {
-            const attCount = parseInt(s.attendance_count || 0);
+            const purchased = parseInt(s.purchased_lectures || 12);
+            const used = parseInt(s.used_lectures || 0);
+            const remaining = Math.max(0, purchased - used);
             const instAmount = parseFloat(s.installment_amount || 0);
-            const totalPaid = parseFloat(s.total_paid || 0);
             
-            // Calculate warning conditions
-            const currentMonthIndex = Math.floor(attCount / 12) + 1;
-            const sessionsInCurrentMonth = attCount % 12;
-            const expectedPaymentTotal = currentMonthIndex * instAmount;
-            
-            if (sessionsInCurrentMonth >= 9 && totalPaid < expectedPaymentTotal) {
-                const isCritical = sessionsInCurrentMonth >= 11;
+            // Trigger alert when remaining lectures in cycle <= 3
+            if (remaining <= 3) {
+                const isCritical = remaining === 0;
                 allDuesAlerts.push({
                     student: s,
-                    sessions: sessionsInCurrentMonth,
+                    usedLectures: used,
+                    remainingLectures: remaining,
+                    purchasedLectures: purchased,
                     amount: instAmount,
-                    monthNum: currentMonthIndex,
                     isCritical: isCritical
                 });
             }
@@ -2570,7 +2649,7 @@ function filterAndRenderNotifications() {
     filtered.forEach(item => {
         const s = item.student;
         const badgeBg = item.isCritical ? 'background: #fee2e2; color: #dc2626; border: 1px solid #fca5a5;' : 'background: #fff3cd; color: #856404; border: 1px solid #ffe8a1;';
-        const urgencyText = item.isCritical ? '🚨 قسط متأخر جداً (حرج)' : '⚠️ قرب انتهاء الشهر الحالي';
+        const urgencyText = item.isCritical ? '🚨 نفد رصيد المحاضرات (حرج)' : `⚠️ متبقي ${item.remainingLectures} محاضرات فقط`;
         const courseName = s.current_course_name || s.suitable_group || 'غير محدد';
         const avatarUrl = s.photo_path || '/images/default_student.png';
 
@@ -2594,8 +2673,8 @@ function filterAndRenderNotifications() {
                             <strong style="color: var(--primary-color);">${courseName}</strong>
                         </div>
                         <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
-                            <span style="color: var(--text-secondary);">تقدم المحاضرات:</span>
-                            <strong>${item.sessions} / 12 محاضرة (الشهر ${item.monthNum})</strong>
+                            <span style="color: var(--text-secondary);">رصيد المحاضرات المتبقي:</span>
+                            <strong style="color: ${item.remainingLectures === 0 ? 'var(--danger)' : 'var(--warning)'};">${item.remainingLectures} متبقية (تم استخدام ${item.usedLectures} من أصل ${item.purchasedLectures})</strong>
                         </div>
                         <div style="display: flex; justify-content: space-between;">
                             <span style="color: var(--text-secondary);">المبلغ المطلوب تسديده:</span>

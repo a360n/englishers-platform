@@ -962,3 +962,16 @@ input:checked + .slider {
 input:checked + .slider:before {
     transform: translateX(22px);
 }
+
+/* Transferred / Removed Student Attendance Row Styling */
+tr.tr-removed {
+    background-color: #fef2f2 !important;
+    border-right: 4px solid #ef4444 !important;
+}
+tr.tr-removed td {
+    color: #991b1b !important;
+}
+tr.tr-removed .btn-attendance {
+    opacity: 0.65;
+    cursor: not-allowed !important;
+}

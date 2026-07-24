@@ -1463,6 +1463,11 @@
                         <input type="text" id="dues-course-fee" value="0" required>
                     </div>
                     <div class="form-group" style="margin-bottom: 15px;">
+                        <label for="dues-purchased-lectures" style="font-weight:bold;">رصيد / عدد المحاضرات المشتراة (لهذه المستحقات) *</label>
+                        <input type="number" id="dues-purchased-lectures" value="12" min="1" required placeholder="مثال: 12">
+                        <small style="color:var(--text-muted); display:block; margin-top:4px;">عدد المحاضرات المتاحة للطالب بناءً على هذا القسط أو الاشتراك</small>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 15px;">
                         <label for="dues-payment-plan">نظام الدفع المعتمد</label>
                         <select id="dues-payment-plan" onchange="toggleInstallmentInput(this.value)" required>
                             <option value="cash">دفع كاش بالكامل (كامل المبلغ)</option>
