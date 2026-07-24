@@ -3038,7 +3038,7 @@ function openAddTeacherModal() {
     document.getElementById('teacher-password').required = true;
     document.getElementById('teacher-password-hint').style.display = 'none';
 
-    renderTeacherCourseCheckboxes([]);
+    renderTeacherCourseCheckboxes([], null);
     document.getElementById('teacher-modal').classList.add('active');
 }
 
@@ -3055,11 +3055,11 @@ function openEditTeacherModal(teacherId) {
     document.getElementById('teacher-password-hint').style.display = 'block';
 
     const assignedCourseIds = Array.isArray(teacher.courses) ? teacher.courses.map(c => c.id) : [];
-    renderTeacherCourseCheckboxes(assignedCourseIds);
+    renderTeacherCourseCheckboxes(assignedCourseIds, teacher.id);
     document.getElementById('teacher-modal').classList.add('active');
 }
 
-function renderTeacherCourseCheckboxes(assignedIds) {
+function renderTeacherCourseCheckboxes(assignedIds, currentTeacherId) {
     const container = document.getElementById('teacher-courses-checkboxes');
     if (!container) return;
     container.innerHTML = '';
@@ -3071,14 +3071,32 @@ function renderTeacherCourseCheckboxes(assignedIds) {
 
     coursesList.forEach(c => {
         const isChecked = assignedIds.includes(c.id);
+        const isAssignedToOther = c.teacher_id && c.teacher_id !== currentTeacherId;
+
         const div = document.createElement('div');
         div.style.display = 'flex';
         div.style.alignItems = 'center';
         div.style.gap = '8px';
-        div.innerHTML = `
-            <input type="checkbox" name="teacher_course" value="${c.id}" id="chk-course-${c.id}" ${isChecked ? 'checked' : ''} style="width:16px; height:16px; cursor:pointer;">
-            <label for="chk-course-${c.id}" style="font-size:13px; cursor:pointer; margin:0; font-weight:600;">${c.name} (${c.teacher ? 'المعلم الحالي: ' + c.teacher : 'بدون معلم'})</label>
-        `;
+        div.style.padding = '4px 0';
+
+        if (isAssignedToOther) {
+            div.style.opacity = '0.65';
+            div.innerHTML = `
+                <input type="checkbox" disabled id="chk-course-${c.id}" style="width:16px; height:16px; cursor:not-allowed;">
+                <label for="chk-course-${c.id}" style="font-size:13px; cursor:not-allowed; margin:0; color:var(--text-secondary);">
+                    <strong>${c.name}</strong> 
+                    <span class="badge badge-warning" style="margin-right:6px; font-size:11px; padding:2px 6px;">🔒 منسوب للمعلم: ${c.teacher || 'معلم آخر'}</span>
+                </label>
+            `;
+        } else {
+            div.innerHTML = `
+                <input type="checkbox" name="teacher_course" value="${c.id}" id="chk-course-${c.id}" ${isChecked ? 'checked' : ''} style="width:16px; height:16px; cursor:pointer;">
+                <label for="chk-course-${c.id}" style="font-size:13px; cursor:pointer; margin:0; font-weight:600;">
+                    ${c.name} ${isChecked ? '<span style="color:var(--primary-color); font-size:11px;">(منسوب لهذا المعلم)</span>' : '<span style="color:var(--text-muted); font-size:11px;">(متاح للتنسيب)</span>'}
+                </label>
+            `;
+        }
+
         container.appendChild(div);
     });
 }

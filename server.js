@@ -1778,12 +1778,25 @@ app.post('/api/teachers', requireAuth, requireRole(['manager', 'admin']), async 
         );
         const newTeacher = userRes.rows[0];
 
-        // Assign selected courses
+        // Assign selected courses with protection against double-assigning to another teacher
         if (Array.isArray(course_ids) && course_ids.length > 0) {
-            for (const cId of course_ids) {
+            const intCourseIds = course_ids.map(id => parseInt(id));
+            const conflictCheck = await client.query(
+                `SELECT id, name, teacher FROM courses WHERE id = ANY($1::int[]) AND teacher_id IS NOT NULL`,
+                [intCourseIds]
+            );
+            if (conflictCheck.rows.length > 0) {
+                await client.query('ROLLBACK');
+                const conflict = conflictCheck.rows[0];
+                return res.status(400).json({
+                    error: `عذراً، الكورس (${conflict.name}) منسوب بالفعل للمعلم (${conflict.teacher || 'معلم آخر'}). لا يمكن إسناد الكورس لأكثر من معلم واحد.`
+                });
+            }
+
+            for (const cId of intCourseIds) {
                 await client.query(
                     `UPDATE courses SET teacher = $1, teacher_id = $2 WHERE id = $3`,
-                    [fullName, newTeacher.id, parseInt(cId)]
+                    [fullName, newTeacher.id, cId]
                 );
             }
         }
@@ -1833,6 +1846,22 @@ app.put('/api/teachers/:id', requireAuth, requireRole(['manager', 'admin']), asy
                 `UPDATE users SET name = $1, username = $2 WHERE id = $3 AND role = 'teacher'`,
                 [fullName, uName, teacherId]
             );
+        }
+
+        // Check course assignment conflict with OTHER teachers
+        if (Array.isArray(course_ids) && course_ids.length > 0) {
+            const intCourseIds = course_ids.map(id => parseInt(id));
+            const conflictCheck = await client.query(
+                `SELECT id, name, teacher FROM courses WHERE id = ANY($1::int[]) AND teacher_id IS NOT NULL AND teacher_id != $2`,
+                [intCourseIds, teacherId]
+            );
+            if (conflictCheck.rows.length > 0) {
+                await client.query('ROLLBACK');
+                const conflict = conflictCheck.rows[0];
+                return res.status(400).json({
+                    error: `عذراً، الكورس (${conflict.name}) منسوب بالفعل للمعلم (${conflict.teacher || 'معلم آخر'}). لا يمكن إسناد الكورس لأكثر من معلم واحد.`
+                });
+            }
         }
 
         // Clear existing course assignments for this teacher
