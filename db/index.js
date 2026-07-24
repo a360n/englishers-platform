@@ -1,6 +1,9 @@
 // Database utility connection pool using pg
-const { Pool } = require('pg');
+const { Pool, types } = require('pg');
 require('dotenv').config();
+
+// Force PG to return DATE columns (oid 1082) as literal string 'YYYY-MM-DD' without converting to Date object
+types.setTypeParser(1082, (val) => val);
 
 const pool = new Pool({
     user: process.env.DB_USER || 'alial-khazali',

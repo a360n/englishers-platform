@@ -460,7 +460,7 @@ app.post('/api/courses', requireAuth, requireRole(['manager', 'admin', 'teacher'
         const course = result.rows[0];
 
         // Seed initial 12 dates
-        const startDateStr = new Date(course.start_date).toISOString().split('T')[0];
+        const startDateStr = typeof course.start_date === 'string' ? course.start_date.split('T')[0] : formatDateToString(course.start_date);
         const dates = getCourseDatesArray(startDateStr, course.schedule_type, 12);
         for (const d of dates) {
             await client.query(
@@ -2423,11 +2423,24 @@ app.post('/api/testing/seed-mock-data', requireAuth, async (req, res) => {
 // START SERVER
 // ----------------------------------------
 
+function formatDateToString(d) {
+    if (!d) return '';
+    if (typeof d === 'string') return d.split('T')[0];
+    if (d instanceof Date) {
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return `${y}-${m}-${day}`;
+    }
+    return String(d).split('T')[0];
+}
+
 // Validate date against schedule pattern helper (even: Sat=6, Mon=1, Wed=3 | odd: Sun=0, Tue=2, Thu=4)
 function isValidSchedulePatternDate(dateStr, scheduleType) {
     if (!dateStr || !scheduleType) return true;
-    const parts = dateStr.split('-');
-    const dt = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+    const cleanStr = typeof dateStr === 'string' ? dateStr.split('T')[0] : formatDateToString(dateStr);
+    const parts = cleanStr.split('-');
+    const dt = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]), 12, 0, 0);
     const day = dt.getDay(); // 0: Sun, 1: Mon, 2: Tue, 3: Wed, 4: Thu, 5: Fri, 6: Sat
     const validDays = scheduleType === 'even' ? [6, 1, 3] : [0, 2, 4];
     return validDays.includes(day);
@@ -2436,8 +2449,9 @@ function isValidSchedulePatternDate(dateStr, scheduleType) {
 // Calculate lecture dates helper
 function getCourseDatesArray(startDateStr, scheduleType, numDays = 12) {
     const dates = [];
-    const parts = startDateStr.split('-');
-    let current = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+    const cleanStr = typeof startDateStr === 'string' ? startDateStr.split('T')[0] : formatDateToString(startDateStr);
+    const parts = cleanStr.split('-');
+    let current = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]), 12, 0, 0);
 
     // Day index: 0 = Sun, 1 = Mon, 2 = Tue, 3 = Wed, 4 = Thu, 5 = Fri, 6 = Sat
     const targetDays = scheduleType === 'even' ? [6, 1, 3] : [0, 2, 4];
@@ -2527,7 +2541,7 @@ async function initCourseDates() {
             const count = parseInt(datesRes.rows[0].count);
             if (count === 0) {
                 console.log(`Migrating/seeding dates for Course ${course.id}: ${course.name}...`);
-                const startDateStr = new Date(course.start_date).toISOString().split('T')[0];
+                const startDateStr = typeof course.start_date === 'string' ? course.start_date.split('T')[0] : formatDateToString(course.start_date);
                 const dates = getCourseDatesArray(startDateStr, course.schedule_type, 12);
                 for (const d of dates) {
                     await client.query(
