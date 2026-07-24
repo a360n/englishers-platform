@@ -2155,29 +2155,36 @@ app.post('/api/testing/wipe-db', requireAuth, async (req, res) => {
         await client.query('BEGIN');
         await client.query('TRUNCATE attendance, course_students, payments, student_custom_dues, course_dates, courses, users, students RESTART IDENTITY CASCADE');
 
-        // Re-insert default system users and testing user 'ali'
+        // Re-insert default system users, teachers, and testing user 'ali'
         const managerPasswordHash = await bcrypt.hash('Manager@Englishers2026', 10);
         const adminPasswordHash = await bcrypt.hash('Admin@Englishers2026', 10);
         const teacherPasswordHash = await bcrypt.hash('Teacher@Englishers2026', 10);
         const aliPasswordHash = await bcrypt.hash('ali', 10);
 
-        await client.query("INSERT INTO users (username, password, role) VALUES ('manager', $1, 'manager')", [managerPasswordHash]);
-        await client.query("INSERT INTO users (username, password, role) VALUES ('admin', $1, 'admin')", [adminPasswordHash]);
-        await client.query("INSERT INTO users (username, password, role) VALUES ('teacher', $1, 'teacher')", [teacherPasswordHash]);
-        const newAliRes = await client.query("INSERT INTO users (username, password, role) VALUES ('ali', $1, 'manager') RETURNING id", [aliPasswordHash]);
+        await client.query("INSERT INTO users (username, password, role, name) VALUES ('manager', $1, 'manager', 'المدير العام')", [managerPasswordHash]);
+        await client.query("INSERT INTO users (username, password, role, name) VALUES ('admin', $1, 'admin', 'المسؤولة الإدارية')", [adminPasswordHash]);
+        await client.query("INSERT INTO users (username, password, role, name) VALUES ('teacher', $1, 'teacher', 'أ. معلم افتراضي')", [teacherPasswordHash]);
+        const newAliRes = await client.query("INSERT INTO users (username, password, role, name) VALUES ('ali', $1, 'manager', 'علي (حساب تجريب)') RETURNING id", [aliPasswordHash]);
 
+        // Re-insert admin team accounts
         const newAdmins = ['Rzan1', 'Mhm1', 'IBM1', 'SHM1', 'JSM1'];
         for (const adminName of newAdmins) {
             const h = await bcrypt.hash(adminName, 10);
-            await client.query("INSERT INTO users (username, password, role) VALUES ($1, $2, 'admin')", [adminName, h]);
+            await client.query("INSERT INTO users (username, password, role, name) VALUES ($1, $2, 'admin', $3)", [adminName, h, adminName]);
         }
+
+        // Re-insert default teacher accounts
+        const teacherAliHash = await bcrypt.hash('teacher_ali', 10);
+        const teacherMarwaHash = await bcrypt.hash('teacher_marwa', 10);
+        await client.query("INSERT INTO users (username, password, role, name) VALUES ('teacher_ali', $1, 'teacher', 'أ. علي الخفاجي')", [teacherAliHash]);
+        await client.query("INSERT INTO users (username, password, role, name) VALUES ('teacher_marwa', $1, 'teacher', 'أ. مروة العبيدي')", [teacherMarwaHash]);
 
         if (newAliRes.rows.length > 0) {
             req.session.user.id = newAliRes.rows[0].id;
         }
 
         await client.query('COMMIT');
-        res.json({ message: 'تم تفريغ وحذف كافة بيانات قاعدة البيانات بنجاح والحفاظ على حسابات النظام!' });
+        res.json({ message: 'تم تفريغ وحذف كافة بيانات قاعدة البيانات بنجاح والحفاظ على حسابات النظام والمعلمين!' });
     } catch (err) {
         await client.query('ROLLBACK');
         console.error('Error during wipe-db:', err);
@@ -2208,19 +2215,40 @@ app.post('/api/testing/seed-mock-data', requireAuth, async (req, res) => {
             req.session.user.id = creatorId;
         }
 
-        // 1. Insert 2 Courses
+        // Ensure teacher user accounts exist and retrieve their IDs
+        let tAliRes = await client.query("SELECT id FROM users WHERE username = 'teacher_ali'");
+        let tAliId;
+        if (tAliRes.rows.length === 0) {
+            const h = await bcrypt.hash('teacher_ali', 10);
+            const insRes = await client.query("INSERT INTO users (username, password, role, name) VALUES ('teacher_ali', $1, 'teacher', 'أ. علي الخفاجي') RETURNING id", [h]);
+            tAliId = insRes.rows[0].id;
+        } else {
+            tAliId = tAliRes.rows[0].id;
+        }
+
+        let tMarwaRes = await client.query("SELECT id FROM users WHERE username = 'teacher_marwa'");
+        let tMarwaId;
+        if (tMarwaRes.rows.length === 0) {
+            const h = await bcrypt.hash('teacher_marwa', 10);
+            const insRes = await client.query("INSERT INTO users (username, password, role, name) VALUES ('teacher_marwa', $1, 'teacher', 'أ. مروة العبيدي') RETURNING id", [h]);
+            tMarwaId = insRes.rows[0].id;
+        } else {
+            tMarwaId = tMarwaRes.rows[0].id;
+        }
+
+        // 1. Insert 2 Courses with valid schedule pattern start dates (2026-07-04 is Sat = Even, 2026-07-05 is Sun = Odd)
         const course1Res = await client.query(`
-            INSERT INTO courses (name, teacher, schedule_type, time_slot, month_num, curriculum, start_date)
-            VALUES ('كورس اللغة الإنكليزية للمبتدئين (A1)', 'استاذ علي الخفاجي', 'even', '10:00 AM - 12:00 PM', 1, 'الكتاب الأساسي + كراسة المحادثة', CURRENT_DATE - INTERVAL '10 days')
+            INSERT INTO courses (name, teacher, teacher_id, schedule_type, time_slot, month_num, curriculum, start_date)
+            VALUES ('كورس اللغة الإنكليزية للمبتدئين (A1)', 'أ. علي الخفاجي', $1, 'even', '10:00 AM - 12:00 PM', 1, 'الكتاب الأساسي + كراسة المحادثة', '2026-07-04')
             RETURNING id, start_date, schedule_type, time_slot, name
-        `);
+        `, [tAliId]);
         const course1 = course1Res.rows[0];
 
         const course2Res = await client.query(`
-            INSERT INTO courses (name, teacher, schedule_type, time_slot, month_num, curriculum, start_date)
-            VALUES ('دورة المحادثة والطلاقة المتقدمة (B1)', 'استاذة مروة العبيدي', 'odd', '04:00 PM - 06:00 PM', 1, 'منهج Oxford English File', CURRENT_DATE)
+            INSERT INTO courses (name, teacher, teacher_id, schedule_type, time_slot, month_num, curriculum, start_date)
+            VALUES ('دورة المحادثة والطلاقة المتقدمة (B1)', 'أ. مروة العبيدي', $1, 'odd', '04:00 PM - 06:00 PM', 1, 'منهج Oxford English File', '2026-07-05')
             RETURNING id, start_date, schedule_type, time_slot, name
-        `);
+        `, [tMarwaId]);
         const course2 = course2Res.rows[0];
 
         // Seed 12 dates for each course
@@ -2242,18 +2270,18 @@ app.post('/api/testing/seed-mock-data', requireAuth, async (req, res) => {
             );
         }
 
-        // 2. Insert 10 Diverse Students
+        // 2. Insert 10 Diverse Students (including frozen student sample)
         const mockStudents = [
-            { name: 'احمد علي حسنين', national_id: '100020003001', dob: '2001-04-15', pob: 'بغداد', qualification: 'بكالوريوس هندسة', phone: '07701111111', address: 'بغداد / الكرادة', purpose: 'العمل والتطوير الوظيفي', level: 'A1', period: 'morning', study_type: 'in_person', referral: 'فيسبوك', reg: 25000, curr: 0, course: 150000, plan: 'installment', inst: 50000, paid: 75000, group: course1.name },
-            { name: 'سارة محمد الكعبي', national_id: '100020003002', dob: '1999-08-20', pob: 'البصرة', qualification: 'خريجة لغات', phone: '07702222222', address: 'بغداد / المنصور', purpose: 'السفر والدراسات العليا', level: 'B1', period: 'evening', study_type: 'in_person', referral: 'انستغرام', reg: 25000, curr: 0, course: 200000, plan: 'cash', inst: 0, paid: 225000, group: course2.name },
-            { name: 'مصطفى حميد الساعدي', national_id: '100020003003', dob: '2002-01-10', pob: 'ميسان', qualification: 'طالب جامعي', phone: '07703333333', address: 'بغداد / الشعب', purpose: 'التواصل العام', level: 'A2', period: 'morning', study_type: 'in_person', referral: 'صديق', reg: 25000, curr: 0, course: 150000, plan: 'installment', inst: 50000, paid: 25000, group: course1.name },
-            { name: 'مريم حسن الزبيدي', national_id: '100020003004', dob: '2000-11-05', pob: 'بغداد', qualification: 'طبيبة أسنان', phone: '07704444444', address: 'بغداد / الجادرية', purpose: 'المؤتمرات الطبية', level: 'B2', period: 'evening', study_type: 'online', referral: 'إعلان النادي', reg: 25000, curr: 0, course: 250000, plan: 'cash', inst: 0, paid: 275000, group: course2.name },
-            { name: 'زينب جاسم العبيدي', national_id: '100020003005', dob: '2003-03-30', pob: 'بابل', qualification: 'طالبة إعدادية', phone: '07705555555', address: 'بغداد / الأعظمية', purpose: 'امتحانات الأيلتس', level: 'C1', period: 'afternoon', study_type: 'in_person', referral: 'فيسبوك', reg: 25000, curr: 0, course: 150000, plan: 'installment', inst: 50000, paid: 75000, group: course1.name },
-            { name: 'عمر فاروق الدليمي', national_id: '100020003006', dob: '1998-06-18', pob: 'الأنبار', qualification: 'ماجستير إدارة', phone: '07706666666', address: 'بغداد / اليرموك', purpose: 'ترقية وظيفية', level: 'C2', period: 'evening', study_type: 'in_person', referral: 'توصية معلم', reg: 25000, curr: 0, course: 300000, plan: 'cash', inst: 0, paid: 325000, group: course2.name },
-            { name: 'حسين عبد الله التميمي', national_id: '100020003007', dob: '2001-09-12', pob: 'بغداد', qualification: 'دبلوم تقني', phone: '07707777777', address: 'بغداد / الدورة', purpose: 'العمل في شركة أجنبية', level: 'A1', period: 'morning', study_type: 'in_person', referral: 'انستغرام', reg: 25000, curr: 0, course: 150000, plan: 'installment', inst: 50000, paid: 25000, group: course1.name },
-            { name: 'نور الهدى مرتضى', national_id: '100020003008', dob: '2004-02-22', pob: 'نجف', qualification: 'طالبة جامعية', phone: '07708888888', address: 'بغداد / زيونة', purpose: 'الدراسة الخارج', level: 'B1', period: 'afternoon', study_type: 'online', referral: 'فيسبوك', reg: 25000, curr: 0, course: 200000, plan: 'cash', inst: 0, paid: 225000, group: course2.name },
-            { name: 'كرار حيدر الشمري', national_id: '100020003009', dob: '2000-07-14', pob: 'بغداد', qualification: 'محاسب', phone: '07709999999', address: 'بغداد / الغدير', purpose: 'التطوير الذاتي', level: 'A2', period: 'evening', study_type: 'in_person', referral: 'صديق', reg: 25000, curr: 0, course: 150000, plan: 'installment', inst: 50000, paid: 75000, group: course1.name },
-            { name: 'فاطمة عباس المالكي', national_id: '100020003010', dob: '2002-12-01', pob: 'كربلاء', qualification: 'خريجة قانون', phone: '07800000000', address: 'بغداد / القادسية', purpose: 'الهجرة والسفر', level: 'B2', period: 'morning', study_type: 'in_person', referral: 'إعلان النادي', reg: 25000, curr: 0, course: 200000, plan: 'cash', inst: 0, paid: 225000, group: course2.name }
+            { name: 'احمد علي حسنين', national_id: '100020003001', dob: '2001-04-15', pob: 'بغداد', qualification: 'بكالوريوس هندسة', phone: '07701111111', address: 'بغداد / الكرادة', purpose: 'العمل والتطوير الوظيفي', level: 'A1', period: 'morning', study_type: 'in_person', referral: 'فيسبوك', reg: 25000, curr: 0, course: 150000, plan: 'installment', inst: 50000, paid: 75000, group: course1.name, is_frozen: false },
+            { name: 'سارة محمد الكعبي', national_id: '100020003002', dob: '1999-08-20', pob: 'البصرة', qualification: 'خريجة لغات', phone: '07702222222', address: 'بغداد / المنصور', purpose: 'السفر والدراسات العليا', level: 'B1', period: 'evening', study_type: 'in_person', referral: 'انستغرام', reg: 25000, curr: 0, course: 200000, plan: 'cash', inst: 0, paid: 225000, group: course2.name, is_frozen: false },
+            { name: 'مصطفى حميد الساعدي', national_id: '100020003003', dob: '2002-01-10', pob: 'ميسان', qualification: 'طالب جامعي', phone: '07703333333', address: 'بغداد / الشعب', purpose: 'التواصل العام', level: 'A2', period: 'morning', study_type: 'in_person', referral: 'صديق', reg: 25000, curr: 0, course: 150000, plan: 'installment', inst: 50000, paid: 25000, group: course1.name, is_frozen: false },
+            { name: 'مريم حسن الزبيدي', national_id: '100020003004', dob: '2000-11-05', pob: 'بغداد', qualification: 'طبيبة أسنان', phone: '07704444444', address: 'بغداد / الجادرية', purpose: 'المؤتمرات الطبية', level: 'B2', period: 'evening', study_type: 'online', referral: 'إعلان النادي', reg: 25000, curr: 0, course: 250000, plan: 'cash', inst: 0, paid: 275000, group: course2.name, is_frozen: false },
+            { name: 'زينب جاسم العبيدي', national_id: '100020003005', dob: '2003-03-30', pob: 'بابل', qualification: 'طالبة إعدادية', phone: '07705555555', address: 'بغداد / الأعظمية', purpose: 'امتحانات الأيلتس', level: 'C1', period: 'afternoon', study_type: 'in_person', referral: 'فيسبوك', reg: 25000, curr: 0, course: 150000, plan: 'installment', inst: 50000, paid: 75000, group: course1.name, is_frozen: false },
+            { name: 'عمر فاروق الدليمي', national_id: '100020003006', dob: '1998-06-18', pob: 'الأنبار', qualification: 'ماجستير إدارة', phone: '07706666666', address: 'بغداد / اليرموك', purpose: 'ترقية وظيفية', level: 'C2', period: 'evening', study_type: 'in_person', referral: 'توصية معلم', reg: 25000, curr: 0, course: 300000, plan: 'cash', inst: 0, paid: 325000, group: course2.name, is_frozen: false },
+            { name: 'حسين عبد الله التميمي', national_id: '100020003007', dob: '2001-09-12', pob: 'بغداد', qualification: 'دبلوم تقني', phone: '07707777777', address: 'بغداد / الدورة', purpose: 'العمل في شركة أجنبية', level: 'A1', period: 'morning', study_type: 'in_person', referral: 'انستغرام', reg: 25000, curr: 0, course: 150000, plan: 'installment', inst: 50000, paid: 25000, group: course1.name, is_frozen: false },
+            { name: 'نور الهدى مرتضى', national_id: '100020003008', dob: '2004-02-22', pob: 'نجف', qualification: 'طالبة جامعية', phone: '07708888888', address: 'بغداد / زيونة', purpose: 'الدراسة الخارج', level: 'B1', period: 'afternoon', study_type: 'online', referral: 'فيسبوك', reg: 25000, curr: 0, course: 200000, plan: 'cash', inst: 0, paid: 225000, group: course2.name, is_frozen: false },
+            { name: 'كرار حيدر الشمري', national_id: '100020003009', dob: '2000-07-14', pob: 'بغداد', qualification: 'محاسب', phone: '07709999999', address: 'بغداد / الغدير', purpose: 'التطوير الذاتي', level: 'A2', period: 'evening', study_type: 'in_person', referral: 'صديق', reg: 25000, curr: 0, course: 150000, plan: 'installment', inst: 50000, paid: 75000, group: course1.name, is_frozen: true },
+            { name: 'فاطمة عباس المالكي', national_id: '100020003010', dob: '2002-12-01', pob: 'كربلاء', qualification: 'خريجة قانون', phone: '07800000000', address: 'بغداد / القادسية', purpose: 'الهجرة والسفر', level: 'B2', period: 'morning', study_type: 'in_person', referral: 'إعلان النادي', reg: 25000, curr: 0, course: 200000, plan: 'cash', inst: 0, paid: 225000, group: course2.name, is_frozen: false }
         ];
 
         for (let i = 0; i < mockStudents.length; i++) {
@@ -2264,13 +2292,13 @@ app.post('/api/testing/seed-mock-data', requireAuth, async (req, res) => {
                 INSERT INTO students (
                     name, national_id, dob, pob, qualification, phone, address, purpose, 
                     level, period, study_type, referral, interviewer, suitable_group,
-                    reg_fee, curriculum_fee, course_fee, total_due, total_paid, payment_plan, installment_amount
-                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21)
+                    reg_fee, curriculum_fee, course_fee, total_due, total_paid, payment_plan, installment_amount, is_frozen
+                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22)
                 RETURNING id`,
                 [
                     s.name, s.national_id, s.dob, s.pob, s.qualification, s.phone, s.address, s.purpose,
                     s.level, s.period, s.study_type, s.referral, 'محمد عمار ابراهيم', s.group,
-                    s.reg, s.curr, s.course, totalDue, s.paid, s.plan, s.inst
+                    s.reg, s.curr, s.course, totalDue, s.paid, s.plan, s.inst, s.is_frozen
                 ]
             );
             const studentId = stuRes.rows[0].id;
@@ -2303,21 +2331,23 @@ app.post('/api/testing/seed-mock-data', requireAuth, async (req, res) => {
                 );
             }
 
-            // Add attendance for course dates
-            const courseDates = (i % 2 === 0) ? dates1 : dates2;
-            for (let dIdx = 0; dIdx < 4; dIdx++) {
-                if (courseDates[dIdx]) {
-                    const status = (i + dIdx) % 5 === 0 ? 'absent' : 'present';
-                    await client.query(
-                        `INSERT INTO attendance (course_id, student_id, date, status) VALUES ($1, $2, $3, $4) ON CONFLICT DO NOTHING`,
-                        [targetCourseId, studentId, courseDates[dIdx], status]
-                    );
+            // Add attendance for course dates (skip frozen student attendance insertion)
+            if (!s.is_frozen) {
+                const courseDates = (i % 2 === 0) ? dates1 : dates2;
+                for (let dIdx = 0; dIdx < 4; dIdx++) {
+                    if (courseDates[dIdx]) {
+                        const status = (i + dIdx) % 5 === 0 ? 'absent' : 'present';
+                        await client.query(
+                            `INSERT INTO attendance (course_id, student_id, date, status) VALUES ($1, $2, $3, $4) ON CONFLICT DO NOTHING`,
+                            [targetCourseId, studentId, courseDates[dIdx], status]
+                        );
+                    }
                 }
             }
         }
 
         await client.query('COMMIT');
-        res.json({ message: 'تمت عملية حقن 10 طلاب وكورسين ودفعات مالية وهمية بنجاح!' });
+        res.json({ message: 'تمت عملية حقن 10 طلاب وكورسين منسوبين لمعلمين بدقة بنجاح!' });
     } catch (err) {
         await client.query('ROLLBACK');
         console.error('Error seeding mock data:', err);
