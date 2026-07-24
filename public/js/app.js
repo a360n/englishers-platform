@@ -13,6 +13,67 @@ let courseStudentsList = [];
 let allAttendanceDates = [];
 let courseSessionsList = [];
 
+// Dropdown Preset Constants & Helper Functions
+const REFERRAL_PRESETS = ['السوشيل ميديا', 'الأصدقاء', 'الإدارة', 'عقود'];
+const PURPOSE_PRESETS = ['سفر', 'دراسة', 'تطوير ذات'];
+
+function handleDropdownCustomToggle(selectEl, customInputId) {
+    const customInput = document.getElementById(customInputId);
+    if (!customInput) return;
+    if (selectEl.value === 'other') {
+        customInput.style.display = 'block';
+        customInput.required = true;
+        customInput.focus();
+    } else {
+        customInput.style.display = 'none';
+        customInput.required = false;
+        customInput.value = '';
+    }
+}
+
+function getDropdownOrCustomValue(selectId, customInputId) {
+    const selectEl = document.getElementById(selectId);
+    const customEl = document.getElementById(customInputId);
+    if (!selectEl) return '';
+    if (selectEl.value === 'other') {
+        return customEl ? customEl.value.trim() : '';
+    }
+    return selectEl.value;
+}
+
+function setDropdownOrCustomValue(selectId, customInputId, value, presetsArray) {
+    const selectEl = document.getElementById(selectId);
+    const customEl = document.getElementById(customInputId);
+    if (!selectEl) return;
+    
+    const val = (value || '').trim();
+    if (!val || val === '-') {
+        selectEl.value = '';
+        if (customEl) {
+            customEl.value = '';
+            customEl.style.display = 'none';
+            customEl.required = false;
+        }
+        return;
+    }
+
+    if (presetsArray.includes(val)) {
+        selectEl.value = val;
+        if (customEl) {
+            customEl.value = '';
+            customEl.style.display = 'none';
+            customEl.required = false;
+        }
+    } else {
+        selectEl.value = 'other';
+        if (customEl) {
+            customEl.value = val;
+            customEl.style.display = 'block';
+            customEl.required = true;
+        }
+    }
+}
+
 // Initialize App
 document.addEventListener('DOMContentLoaded', () => {
     checkSession();
@@ -293,14 +354,14 @@ function setupEventListeners() {
         formData.append('qualification', document.getElementById('reg-qualification').value);
         formData.append('phone', document.getElementById('reg-phone').value);
         formData.append('address', document.getElementById('reg-address').value);
-        formData.append('purpose', document.getElementById('reg-purpose').value);
+        formData.append('purpose', getDropdownOrCustomValue('reg-purpose-select', 'reg-purpose-custom'));
         const usernameVal = document.getElementById('reg-username').value;
         const passwordVal = document.getElementById('reg-password').value;
         formData.append('username', usernameVal);
         formData.append('password', passwordVal);
         formData.append('period', document.getElementById('reg-period').value);
         formData.append('study_type', document.getElementById('reg-study-type').value);
-        formData.append('referral', document.getElementById('reg-referral').value);
+        formData.append('referral', getDropdownOrCustomValue('reg-referral-select', 'reg-referral-custom'));
 
         const photoInput = document.getElementById('reg-photo');
         if (photoInput && photoInput.files[0]) {
@@ -2620,14 +2681,14 @@ function toggleStudentPersonalEdit(showEdit) {
         document.getElementById('edit-stu-pob').value = document.getElementById('sd-dob-pob').getAttribute('data-raw-pob') || '';
         document.getElementById('edit-stu-qualification').value = document.getElementById('sd-qualification').textContent || '';
         document.getElementById('edit-stu-address').value = document.getElementById('sd-address').textContent || '';
-        document.getElementById('edit-stu-purpose').value = document.getElementById('sd-purpose').textContent || '';
+        setDropdownOrCustomValue('edit-stu-purpose-select', 'edit-stu-purpose-custom', document.getElementById('sd-purpose').textContent, PURPOSE_PRESETS);
         
         const rawPeriod = document.getElementById('sd-period-type').getAttribute('data-raw-period') || 'morning';
         const rawStudyType = document.getElementById('sd-period-type').getAttribute('data-raw-study-type') || 'in_person';
         document.getElementById('edit-stu-period').value = rawPeriod;
         document.getElementById('edit-stu-study-type').value = rawStudyType;
         
-        document.getElementById('edit-stu-referral').value = document.getElementById('sd-referral').textContent || '';
+        setDropdownOrCustomValue('edit-stu-referral-select', 'edit-stu-referral-custom', document.getElementById('sd-referral').textContent, REFERRAL_PRESETS);
     } else {
         viewContainer.style.display = 'block';
         editContainer.style.display = 'none';
@@ -2650,10 +2711,10 @@ document.addEventListener('DOMContentLoaded', () => {
             formData.append('pob', document.getElementById('edit-stu-pob').value);
             formData.append('qualification', document.getElementById('edit-stu-qualification').value);
             formData.append('address', document.getElementById('edit-stu-address').value);
-            formData.append('purpose', document.getElementById('edit-stu-purpose').value);
+            formData.append('purpose', getDropdownOrCustomValue('edit-stu-purpose-select', 'edit-stu-purpose-custom'));
             formData.append('period', document.getElementById('edit-stu-period').value);
             formData.append('study_type', document.getElementById('edit-stu-study-type').value);
-            formData.append('referral', document.getElementById('edit-stu-referral').value);
+            formData.append('referral', getDropdownOrCustomValue('edit-stu-referral-select', 'edit-stu-referral-custom'));
 
             const photoInput = document.getElementById('edit-stu-photo');
             if (photoInput && photoInput.files[0]) {
@@ -2806,6 +2867,8 @@ function openAdminRegisterStudentModal() {
     const errEl = document.getElementById('admin-reg-alert-error');
     const succEl = document.getElementById('admin-reg-alert-success');
     if (form) form.reset();
+    setDropdownOrCustomValue('admin-reg-purpose-select', 'admin-reg-purpose-custom', '', PURPOSE_PRESETS);
+    setDropdownOrCustomValue('admin-reg-referral-select', 'admin-reg-referral-custom', '', REFERRAL_PRESETS);
     if (errEl) errEl.style.display = 'none';
     if (succEl) succEl.style.display = 'none';
     if (modal) modal.classList.add('active');
@@ -2835,10 +2898,10 @@ document.addEventListener('DOMContentLoaded', () => {
             formData.append('qualification', document.getElementById('admin-reg-qualification').value);
             formData.append('phone', document.getElementById('admin-reg-phone').value);
             formData.append('address', document.getElementById('admin-reg-address').value);
-            formData.append('purpose', document.getElementById('admin-reg-purpose').value);
+            formData.append('purpose', getDropdownOrCustomValue('admin-reg-purpose-select', 'admin-reg-purpose-custom'));
             formData.append('period', document.getElementById('admin-reg-period').value);
             formData.append('study_type', document.getElementById('admin-reg-study-type').value);
-            formData.append('referral', document.getElementById('admin-reg-referral').value);
+            formData.append('referral', getDropdownOrCustomValue('admin-reg-referral-select', 'admin-reg-referral-custom'));
             formData.append('username', document.getElementById('admin-reg-username').value);
             formData.append('password', document.getElementById('admin-reg-password').value);
 

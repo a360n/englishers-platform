@@ -107,9 +107,15 @@
                     </div>
 
                     <div class="form-group">
-                        <label for="reg-purpose">الغاية من تعلم اللغة الإنكليزية</label>
-                        <textarea id="reg-purpose" placeholder="مثال: العمل، السفر، الدراسة الأكاديمية"
-                            required></textarea>
+                        <label for="reg-purpose-select">الغاية من تعلم اللغة الإنكليزية</label>
+                        <select id="reg-purpose-select" onchange="handleDropdownCustomToggle(this, 'reg-purpose-custom')" required>
+                            <option value="">-- اختر الغاية من التعلم --</option>
+                            <option value="سفر">سفر</option>
+                            <option value="دراسة">دراسة</option>
+                            <option value="تطوير ذات">تطوير ذات</option>
+                            <option value="other">أخرى</option>
+                        </select>
+                        <input type="text" id="reg-purpose-custom" placeholder="أدخل الغاية المخصصة..." style="display:none; margin-top:6px;">
                     </div>
 
                     <div class="form-row">
@@ -146,8 +152,16 @@
                             </select>
                         </div>
                         <div class="form-group">
-                            <label for="reg-referral">كيف عرفت بنادي إنكليشرز؟</label>
-                            <input type="text" id="reg-referral" placeholder="مثال: فيسبوك، انستغرام، صديق" required>
+                            <label for="reg-referral-select">كيف عرفت بنادي إنكليشرز؟</label>
+                            <select id="reg-referral-select" onchange="handleDropdownCustomToggle(this, 'reg-referral-custom')" required>
+                                <option value="">-- اختر من القائمة --</option>
+                                <option value="السوشيل ميديا">السوشيل ميديا</option>
+                                <option value="الأصدقاء">الأصدقاء</option>
+                                <option value="الإدارة">الإدارة</option>
+                                <option value="عقود">عقود</option>
+                                <option value="other">أخرى</option>
+                            </select>
+                            <input type="text" id="reg-referral-custom" placeholder="أدخل التفاصيل المخصصة..." style="display:none; margin-top:6px;">
                         </div>
                     </div>
 
@@ -1221,8 +1235,15 @@
                                 </div>
                                 <div class="form-group" style="margin-bottom: 12px;">
                                     <label style="font-size:12px; font-weight:bold;">الغاية من التعلم</label>
-                                    <input type="text" id="edit-stu-purpose" required
+                                    <select id="edit-stu-purpose-select" onchange="handleDropdownCustomToggle(this, 'edit-stu-purpose-custom')" required
                                         style="width:100%; padding: 8px; font-size:13px; border:1px solid var(--border-color); border-radius:var(--border-radius-sm); background:var(--bg-card); color:var(--text-primary);">
+                                        <option value="">-- اختر الغاية من التعلم --</option>
+                                        <option value="سفر">سفر</option>
+                                        <option value="دراسة">دراسة</option>
+                                        <option value="تطوير ذات">تطوير ذات</option>
+                                        <option value="other">أخرى</option>
+                                    </select>
+                                    <input type="text" id="edit-stu-purpose-custom" placeholder="أدخل الغاية المخصصة..." style="display:none; margin-top:6px; width:100%; padding:8px; font-size:13px; border:1px solid var(--border-color); border-radius:var(--border-radius-sm); background:var(--bg-card); color:var(--text-primary);">
                                 </div>
                                 <div class="form-group" style="margin-bottom: 12px;">
                                     <label style="font-size:12px; font-weight:bold;">الفترة المناسبة</label>
@@ -1243,8 +1264,16 @@
                                 </div>
                                 <div class="form-group" style="margin-bottom: 12px;">
                                     <label style="font-size:12px; font-weight:bold;">كيف عرف النادي</label>
-                                    <input type="text" id="edit-stu-referral" required
+                                    <select id="edit-stu-referral-select" onchange="handleDropdownCustomToggle(this, 'edit-stu-referral-custom')" required
                                         style="width:100%; padding: 8px; font-size:13px; border:1px solid var(--border-color); border-radius:var(--border-radius-sm); background:var(--bg-card); color:var(--text-primary);">
+                                        <option value="">-- اختر من القائمة --</option>
+                                        <option value="السوشيل ميديا">السوشيل ميديا</option>
+                                        <option value="الأصدقاء">الأصدقاء</option>
+                                        <option value="الإدارة">الإدارة</option>
+                                        <option value="عقود">عقود</option>
+                                        <option value="other">أخرى</option>
+                                    </select>
+                                    <input type="text" id="edit-stu-referral-custom" placeholder="أدخل التفاصيل المخصصة..." style="display:none; margin-top:6px; width:100%; padding:8px; font-size:13px; border:1px solid var(--border-color); border-radius:var(--border-radius-sm); background:var(--bg-card); color:var(--text-primary);">
                                 </div>
                                 <div style="display:flex; gap:10px; margin-top:15px;">
                                     <button type="submit" class="btn btn-primary"
@@ -1655,9 +1684,15 @@
 
                         <div class="form-group" style="margin-bottom: 12px; grid-column: span 2;">
                             <label style="font-size:12px; font-weight:bold;">الغاية من التعلم *</label>
-                            <input type="text" id="admin-reg-purpose" required
-                                placeholder="السفر / العمل / امتحانات الأيلتس..."
+                            <select id="admin-reg-purpose-select" onchange="handleDropdownCustomToggle(this, 'admin-reg-purpose-custom')" required
                                 style="width:100%; padding: 8px; font-size:13px; border:1px solid var(--border-color); border-radius:var(--border-radius-sm); background:var(--bg-card); color:var(--text-primary);">
+                                <option value="">-- اختر الغاية من التعلم --</option>
+                                <option value="سفر">سفر</option>
+                                <option value="دراسة">دراسة</option>
+                                <option value="تطوير ذات">تطوير ذات</option>
+                                <option value="other">أخرى</option>
+                            </select>
+                            <input type="text" id="admin-reg-purpose-custom" placeholder="أدخل الغاية المخصصة..." style="display:none; margin-top:6px; width:100%; padding:8px; font-size:13px; border:1px solid var(--border-color); border-radius:var(--border-radius-sm); background:var(--bg-card); color:var(--text-primary);">
                         </div>
 
                         <div class="form-group" style="margin-bottom: 12px;">
@@ -1681,9 +1716,16 @@
 
                         <div class="form-group" style="margin-bottom: 12px; grid-column: span 2;">
                             <label style="font-size:12px; font-weight:bold;">كيف عرف النادي *</label>
-                            <input type="text" id="admin-reg-referral" required
-                                placeholder="فيسبوك / انستغرام / صديق..."
+                            <select id="admin-reg-referral-select" onchange="handleDropdownCustomToggle(this, 'admin-reg-referral-custom')" required
                                 style="width:100%; padding: 8px; font-size:13px; border:1px solid var(--border-color); border-radius:var(--border-radius-sm); background:var(--bg-card); color:var(--text-primary);">
+                                <option value="">-- اختر من القائمة --</option>
+                                <option value="السوشيل ميديا">السوشيل ميديا</option>
+                                <option value="الأصدقاء">الأصدقاء</option>
+                                <option value="الإدارة">الإدارة</option>
+                                <option value="عقود">عقود</option>
+                                <option value="other">أخرى</option>
+                            </select>
+                            <input type="text" id="admin-reg-referral-custom" placeholder="أدخل التفاصيل المخصصة..." style="display:none; margin-top:6px; width:100%; padding:8px; font-size:13px; border:1px solid var(--border-color); border-radius:var(--border-radius-sm); background:var(--bg-card); color:var(--text-primary);">
                         </div>
 
                         <div class="form-group" style="margin-bottom: 12px; grid-column: span 2;">
