@@ -859,8 +859,8 @@ function setupEventListeners() {
             const currFee = document.getElementById('dues-curriculum-fee').value.replace(/,/g, '');
             const courseFee = document.getElementById('dues-course-fee').value.replace(/,/g, '');
             const paymentPlan = document.getElementById('dues-payment-plan').value;
-            const installmentAmount = document.getElementById('dues-installment-amount').value.replace(/,/g, '');
             const purchasedLectures = document.getElementById('dues-purchased-lectures') ? document.getElementById('dues-purchased-lectures').value : 12;
+            const instAmount = currentInstallmentSchedule.length > 0 ? currentInstallmentSchedule[0].amount : 0;
 
             if (!studentId) {
                 alert('الرجاء تحديد الطالب أولاً.');
@@ -876,8 +876,9 @@ function setupEventListeners() {
                         curriculum_fee: currFee,
                         course_fee: courseFee,
                         payment_plan: paymentPlan,
-                        installment_amount: installmentAmount,
-                        purchased_lectures: purchasedLectures
+                        installment_amount: instAmount,
+                        purchased_lectures: purchasedLectures,
+                        installments: currentInstallmentSchedule
                     })
                 });
                 const data = await res.json();
@@ -1993,6 +1994,47 @@ async function openStudentDetailsModal(id) {
             balEl.style.color = 'var(--text-muted)';
         }
 
+        // Installments Schedule breakdown rendering in student profile
+        const instBox = document.getElementById('sd-installments-schedule-box');
+        const installments = data.installments || [];
+        if (instBox) {
+            if (student.payment_plan === 'installment' && installments.length > 0) {
+                instBox.style.display = 'block';
+
+                const unpaidInst = installments.find(i => i.status !== 'paid');
+                if (unpaidInst) {
+                    document.getElementById('sd-next-inst-amount').textContent = `${Math.round(parseFloat(unpaidInst.amount || 0)).toLocaleString()} IQD`;
+                    document.getElementById('sd-next-inst-date').textContent = unpaidInst.due_date ? unpaidInst.due_date.split('T')[0] : 'غير محدد';
+                } else {
+                    document.getElementById('sd-next-inst-amount').textContent = 'سُدد بالكامل ✅';
+                    document.getElementById('sd-next-inst-date').textContent = '-';
+                }
+
+                const tbody = document.getElementById('sd-installments-table-body');
+                if (tbody) {
+                    const todayStr = new Date().toISOString().split('T')[0];
+                    tbody.innerHTML = installments.map(inst => {
+                        const isPaid = inst.status === 'paid';
+                        const isOverdue = !isPaid && inst.due_date && new Date(inst.due_date) < new Date(todayStr);
+                        const statusBadge = isPaid
+                            ? '<span class="badge badge-success" style="font-size:10px;">مسدد بالكامل ✅</span>'
+                            : (isOverdue ? '<span class="badge badge-danger" style="font-size:10px;">متأخر عن الموعد 🚨</span>' : '<span class="badge badge-info" style="font-size:10px;">قسط قادم ⏳</span>');
+
+                        return `
+                            <tr>
+                                <td><strong>الشهر ${inst.month_index}</strong></td>
+                                <td><strong>${Math.round(parseFloat(inst.amount || 0)).toLocaleString()} IQD</strong></td>
+                                <td>${inst.due_date ? inst.due_date.split('T')[0] : '-'}</td>
+                                <td>${statusBadge}</td>
+                            </tr>
+                        `;
+                    }).join('');
+                }
+            } else {
+                instBox.style.display = 'none';
+            }
+        }
+
         document.getElementById('student-details-modal').classList.add('active');
     } catch (err) {
         console.error(err);
@@ -2499,19 +2541,219 @@ async function deleteCustomDue(studentId, dueId) {
 }
 
 // Base Dues Modal Controls
+// Base Dues Modal & Installment Schedule Logic
+let currentInstallmentSchedule = [];
+let targetTotalDueAmount = 0;
+
 function toggleInstallmentInput(plan) {
-    const group = document.getElementById('dues-installment-amount-group');
-    if (!group) return;
+    const section = document.getElementById('dues-installment-section');
+    if (!section) return;
+
     if (plan === 'installment') {
-        group.style.display = 'block';
+        section.style.display = 'block';
+        const monthsCountSelect = document.getElementById('dues-months-count');
+        const monthsCount = monthsCountSelect ? parseInt(monthsCountSelect.value || 3) : 3;
+        
+        calculateTargetTotalDue();
+        
+        if (!currentInstallmentSchedule || currentInstallmentSchedule.length !== monthsCount) {
+            generateDefaultInstallmentSchedule(monthsCount);
+        } else {
+            renderInstallmentScheduleInputs();
+        }
     } else {
-        group.style.display = 'none';
-        const amountInput = document.getElementById('dues-installment-amount');
-        if (amountInput) amountInput.value = 0;
+        section.style.display = 'none';
+        currentInstallmentSchedule = [];
     }
 }
 
-function openBaseDuesModal(studentId) {
+function calculateTargetTotalDue() {
+    const regFee = parseFloat((document.getElementById('dues-reg-fee')?.value || '0').replace(/,/g, '')) || 0;
+    const currFee = parseFloat((document.getElementById('dues-curriculum-fee')?.value || '0').replace(/,/g, '')) || 0;
+    const courseFee = parseFloat((document.getElementById('dues-course-fee')?.value || '0').replace(/,/g, '')) || 0;
+    targetTotalDueAmount = Math.round(regFee + currFee + courseFee);
+}
+
+function onInstallmentMonthsCountChange(countVal) {
+    const count = parseInt(countVal || 3);
+    calculateTargetTotalDue();
+    generateDefaultInstallmentSchedule(count);
+}
+
+function generateDefaultInstallmentSchedule(count) {
+    currentInstallmentSchedule = [];
+    if (count <= 0) return;
+
+    const baseAmount = Math.floor(targetTotalDueAmount / count);
+    const remainder = targetTotalDueAmount - (baseAmount * count);
+
+    const today = new Date();
+
+    for (let i = 0; i < count; i++) {
+        const dueDate = new Date(today);
+        dueDate.setDate(today.getDate() + (i * 30));
+        const dueDateStr = dueDate.toISOString().split('T')[0];
+
+        const monthAmt = (i === count - 1) ? baseAmount + remainder : baseAmount;
+
+        const todayStr = new Date().toISOString().split('T')[0];
+        const isPastDate = new Date(dueDateStr) < new Date(todayStr);
+
+        currentInstallmentSchedule.push({
+            month_index: i + 1,
+            due_date: dueDateStr,
+            amount: monthAmt,
+            paid_amount: 0,
+            status: 'unpaid',
+            is_locked: isPastDate && i < count - 1
+        });
+    }
+
+    renderInstallmentScheduleInputs();
+}
+
+function renderInstallmentScheduleInputs() {
+    const container = document.getElementById('dues-months-schedule-container');
+    if (!container) return;
+
+    container.innerHTML = '';
+
+    const todayStr = new Date().toISOString().split('T')[0];
+
+    currentInstallmentSchedule.forEach((item, index) => {
+        const isPastDate = new Date(item.due_date) < new Date(todayStr);
+        const isLocked = item.status === 'paid' || (isPastDate && index < currentInstallmentSchedule.length - 1);
+        item.is_locked = isLocked;
+
+        const row = document.createElement('div');
+        row.style.cssText = 'display: grid; grid-template-columns: 110px 1fr 1fr auto; gap: 10px; align-items: center; background: var(--bg-card); padding: 10px; border-radius: var(--border-radius-sm); border: 1px solid var(--border-color);';
+
+        row.innerHTML = `
+            <span style="font-size: 12px; font-weight: bold; color: var(--text-primary);">
+                قسط الشهر ${item.month_index} ${item.is_locked ? '<i class="fa-solid fa-lock" style="color:#dc2626; font-size:11px;" title="تاريخ متجاوز / غير قابل للتعديل"></i>' : ''}
+            </span>
+            <div>
+                <label style="font-size: 10px; color: var(--text-muted); display: block;">المبلغ (IQD)</label>
+                <input type="text" class="month-inst-amount" data-index="${index}" value="${item.amount.toLocaleString()}" ${item.is_locked ? 'disabled readonly style="background:var(--bg-main); opacity:0.7;"' : ''} style="width: 100%; padding: 6px; font-size: 12px; font-weight: bold;">
+            </div>
+            <div>
+                <label style="font-size: 10px; color: var(--text-muted); display: block;">تاريخ الاستحقاق</label>
+                <input type="date" class="month-inst-date" data-index="${index}" value="${item.due_date}" ${item.is_locked ? 'disabled readonly style="background:var(--bg-main); opacity:0.7;"' : ''} style="width: 100%; padding: 6px; font-size: 12px;">
+            </div>
+            <div style="font-size: 11px;">
+                ${item.is_locked ? '<span class="badge badge-secondary" style="font-size:10px;">مقفل 🔒</span>' : '<span class="badge badge-info" style="font-size:10px;">مستحق</span>'}
+            </div>
+        `;
+
+        container.appendChild(row);
+    });
+
+    container.querySelectorAll('.month-inst-amount').forEach(input => {
+        input.addEventListener('input', (e) => {
+            const idx = parseInt(e.target.getAttribute('data-index'));
+            const newRaw = e.target.value.replace(/,/g, '');
+            const newAmt = Math.max(0, parseFloat(newRaw) || 0);
+            redistributeInstallments(idx, newAmt);
+        });
+        input.addEventListener('blur', () => {
+            renderInstallmentScheduleInputs();
+        });
+    });
+
+    container.querySelectorAll('.month-inst-date').forEach(input => {
+        input.addEventListener('change', (e) => {
+            const idx = parseInt(e.target.getAttribute('data-index'));
+            if (currentInstallmentSchedule[idx]) {
+                currentInstallmentSchedule[idx].due_date = e.target.value;
+            }
+        });
+    });
+
+    updateInstallmentScheduleSumBadge();
+}
+
+function redistributeInstallments(editedIndex, newAmount) {
+    calculateTargetTotalDue();
+    const count = currentInstallmentSchedule.length;
+    const oldAmount = currentInstallmentSchedule[editedIndex].amount;
+    const diff = newAmount - oldAmount; // positive = increased, negative = decreased
+
+    currentInstallmentSchedule[editedIndex].amount = newAmount;
+
+    if (diff === 0) {
+        updateInstallmentScheduleSumBadge();
+        return;
+    }
+
+    // Find unlocked target indices AFTER editedIndex (> editedIndex)
+    let targetIndices = [];
+    for (let i = editedIndex + 1; i < count; i++) {
+        if (!currentInstallmentSchedule[i].is_locked) {
+            targetIndices.push(i);
+        }
+    }
+
+    // If no unlocked future indices exist, check unlocked preceding indices (< editedIndex) that are NOT past due date
+    if (targetIndices.length === 0) {
+        for (let i = editedIndex - 1; i >= 0; i--) {
+            if (!currentInstallmentSchedule[i].is_locked) {
+                targetIndices.push(i);
+            }
+        }
+    }
+
+    if (targetIndices.length > 0) {
+        const perTargetAdj = -diff / targetIndices.length;
+
+        targetIndices.forEach(idx => {
+            let updated = currentInstallmentSchedule[idx].amount + perTargetAdj;
+            if (updated < 0) updated = 0;
+            currentInstallmentSchedule[idx].amount = Math.round(updated);
+        });
+
+        // Fine tune remainder to make sum match target exactly
+        const currentSum = currentInstallmentSchedule.reduce((sum, item) => sum + item.amount, 0);
+        const adjustment = targetTotalDueAmount - currentSum;
+        if (adjustment !== 0 && targetIndices.length > 0) {
+            const lastTargetIdx = targetIndices[targetIndices.length - 1];
+            currentInstallmentSchedule[lastTargetIdx].amount += adjustment;
+            if (currentInstallmentSchedule[lastTargetIdx].amount < 0) {
+                currentInstallmentSchedule[lastTargetIdx].amount = 0;
+            }
+        }
+    }
+
+    // Update DOM inputs without losing cursor focus
+    const container = document.getElementById('dues-months-schedule-container');
+    if (container) {
+        container.querySelectorAll('.month-inst-amount').forEach(input => {
+            const idx = parseInt(input.getAttribute('data-index'));
+            if (idx !== editedIndex && currentInstallmentSchedule[idx]) {
+                input.value = currentInstallmentSchedule[idx].amount.toLocaleString();
+            }
+        });
+    }
+
+    updateInstallmentScheduleSumBadge();
+}
+
+function updateInstallmentScheduleSumBadge() {
+    const badge = document.getElementById('dues-schedule-sum-badge');
+    if (!badge) return;
+
+    calculateTargetTotalDue();
+    const currentSum = currentInstallmentSchedule.reduce((sum, item) => sum + item.amount, 0);
+
+    if (Math.abs(currentSum - targetTotalDueAmount) <= 1) {
+        badge.className = 'badge badge-success';
+        badge.textContent = `مطابق للمبلغ الإجمالي (${targetTotalDueAmount.toLocaleString()} IQD) ✔️`;
+    } else {
+        badge.className = 'badge badge-danger';
+        badge.textContent = `المجموع: ${currentSum.toLocaleString()} (المطلوب: ${targetTotalDueAmount.toLocaleString()}) ⚠️`;
+    }
+}
+
+async function openBaseDuesModal(studentId) {
     const student = studentsList.find(s => s.id === studentId);
     if (!student) return;
 
@@ -2527,11 +2769,31 @@ function openBaseDuesModal(studentId) {
     const planSelect = document.getElementById('dues-payment-plan');
     if (planSelect) planSelect.value = plan;
 
-    const amountInput = document.getElementById('dues-installment-amount');
-    if (amountInput) amountInput.value = Math.round(student.installment_amount || 0).toLocaleString();
-
     const pLecturesInput = document.getElementById('dues-purchased-lectures');
     if (pLecturesInput) pLecturesInput.value = student.purchased_lectures || 12;
+
+    // Fetch student's existing installment schedule if any
+    try {
+        const res = await fetch(`/api/students/${studentId}`);
+        const data = await res.json();
+        if (res.ok && data.installments && data.installments.length > 0) {
+            currentInstallmentSchedule = data.installments.map(inst => ({
+                month_index: parseInt(inst.month_index),
+                due_date: inst.due_date ? inst.due_date.split('T')[0] : '',
+                amount: Math.round(parseFloat(inst.amount || 0)),
+                paid_amount: Math.round(parseFloat(inst.paid_amount || 0)),
+                status: inst.status || 'unpaid',
+                is_locked: inst.status === 'paid'
+            }));
+            const monthsSelect = document.getElementById('dues-months-count');
+            if (monthsSelect) monthsSelect.value = currentInstallmentSchedule.length;
+        } else {
+            currentInstallmentSchedule = [];
+        }
+    } catch (e) {
+        console.error(e);
+        currentInstallmentSchedule = [];
+    }
 
     toggleInstallmentInput(plan);
 
@@ -2643,9 +2905,11 @@ function checkAdminDuesAlerts(students) {
             const purchased = parseInt(s.purchased_lectures || 12);
             const used = parseInt(s.used_lectures || 0);
             const remaining = Math.max(0, purchased - used);
-            const instAmount = parseFloat(s.installment_amount || 0);
+            const nextInst = s.next_installment;
+            const instAmount = nextInst ? parseFloat(nextInst.amount || 0) : parseFloat(s.installment_amount || 0);
+            const nextDueDate = nextInst && nextInst.due_date ? nextInst.due_date.split('T')[0] : '';
             
-            // Trigger alert when remaining lectures in cycle <= 3
+            // Trigger alert when remaining lectures <= 3 or next installment is active
             if (remaining <= 3) {
                 const isCritical = remaining === 0;
                 allDuesAlerts.push({
@@ -2654,6 +2918,7 @@ function checkAdminDuesAlerts(students) {
                     remainingLectures: remaining,
                     purchasedLectures: purchased,
                     amount: instAmount,
+                    nextDueDate: nextDueDate,
                     isCritical: isCritical
                 });
             }
@@ -2779,8 +3044,8 @@ function filterAndRenderNotifications() {
                             <strong style="color: ${item.remainingLectures === 0 ? 'var(--danger)' : 'var(--warning)'};">${item.remainingLectures} متبقية (تم استخدام ${item.usedLectures} من أصل ${item.purchasedLectures})</strong>
                         </div>
                         <div style="display: flex; justify-content: space-between;">
-                            <span style="color: var(--text-secondary);">المبلغ المطلوب تسديده:</span>
-                            <strong style="color: var(--danger); font-size: 14px;">${item.amount.toLocaleString()} IQD</strong>
+                            <span style="color: var(--text-secondary);">مبلغ القسط القادم:</span>
+                            <strong style="color: var(--danger); font-size: 14px;">${item.amount.toLocaleString()} IQD ${item.nextDueDate ? `<small style="font-weight:normal; color:var(--text-muted); font-size:11px;">(استحقاق: ${item.nextDueDate})</small>` : ''}</strong>
                         </div>
                     </div>
                 </div>

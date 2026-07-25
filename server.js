@@ -1028,6 +1028,13 @@ app.get('/api/students', requireAuth, requireRole(['manager', 'admin', 'teacher'
                    GREATEST(0, COALESCE(s.purchased_lectures, 12) - COALESCE((SELECT COUNT(*)::integer FROM attendance WHERE student_id = s.id AND status IN ('present', 'absent')), 0)) AS remaining_lectures,
                    COALESCE((SELECT COUNT(*)::integer FROM attendance WHERE student_id = s.id), 0) AS attendance_count,
                    (
+                       SELECT json_build_object('amount', amount, 'due_date', due_date, 'month_index', month_index)
+                       FROM student_installments 
+                       WHERE student_id = s.id AND status != 'paid' 
+                       ORDER BY month_index ASC 
+                       LIMIT 1
+                   ) AS next_installment,
+                   (
                        SELECT c.name 
                        FROM course_students cs
                        JOIN courses c ON cs.course_id = c.id
@@ -1136,6 +1143,12 @@ app.get('/api/students/:id', requireAuth, async (req, res) => {
             [studentId]
         );
 
+        // Fetch student installments schedule
+        const installmentsRes = await db.query(
+            'SELECT * FROM student_installments WHERE student_id = $1 ORDER BY month_index ASC',
+            [studentId]
+        );
+
         // Fetch total attendance sessions recorded for warning logic
         const attendanceCountRes = await db.query(
             'SELECT COUNT(*) FROM attendance WHERE student_id = $1',
@@ -1147,6 +1160,7 @@ app.get('/api/students/:id', requireAuth, async (req, res) => {
             student: studentRes.rows[0],
             courses: coursesRes.rows,
             payments: paymentsRes.rows,
+            installments: installmentsRes.rows,
             attendanceCount: attendanceCount
         });
     } catch (err) {
@@ -1279,14 +1293,18 @@ app.put('/api/students/:id/admin', requireAuth, requireRole(['manager', 'admin']
 
 // PUT: Update student financial dues (Admin & Manager only)
 app.put('/api/students/:id/dues', requireAuth, requireRole(['manager', 'admin', 'teacher']), async (req, res) => {
-    const { reg_fee, curriculum_fee, course_fee, payment_plan, installment_amount, purchased_lectures } = req.body;
+    const { reg_fee, curriculum_fee, course_fee, payment_plan, installment_amount, purchased_lectures, installments } = req.body;
 
     const rFee = parseFloat(reg_fee || 0);
     const cFee = parseFloat(curriculum_fee || 0);
     const coFee = parseFloat(course_fee || 0);
     const plan = payment_plan === 'installment' ? 'installment' : 'cash';
-    const instAmount = parseFloat(installment_amount || 0);
+    let instAmount = parseFloat(installment_amount || 0);
     const pLectures = parseInt(purchased_lectures || 12);
+
+    if (plan === 'installment' && Array.isArray(installments) && installments.length > 0) {
+        instAmount = parseFloat(installments[0].amount || 0);
+    }
 
     const client = await db.pool.connect();
     try {
@@ -1303,6 +1321,28 @@ app.put('/api/students/:id/dues', requireAuth, requireRole(['manager', 'admin', 
         if (result.rows.length === 0) {
             await client.query('ROLLBACK');
             return res.status(404).json({ error: 'Student profile not found.' });
+        }
+
+        // Save monthly installments schedule if payment plan is installment
+        if (plan === 'installment' && Array.isArray(installments) && installments.length > 0) {
+            // Delete existing unpaid installments to update schedule
+            await client.query(`DELETE FROM student_installments WHERE student_id = $1 AND status = 'unpaid'`, [req.params.id]);
+
+            for (const inst of installments) {
+                if (inst.status !== 'paid') {
+                    await client.query(`
+                        INSERT INTO student_installments (student_id, month_index, due_date, amount, paid_amount, status)
+                        VALUES ($1, $2, $3, $4, $5, $6)
+                    `, [
+                        req.params.id,
+                        parseInt(inst.month_index),
+                        inst.due_date,
+                        parseFloat(inst.amount || 0),
+                        parseFloat(inst.paid_amount || 0),
+                        inst.status || 'unpaid'
+                    ]);
+                }
+            }
         }
 
         // Recalculate total_due (including custom dues)
@@ -2662,6 +2702,21 @@ async function initCourseDates() {
                 created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
             );
         `);
+
+        // Verify student_installments table
+        await client.query(`
+            CREATE TABLE IF NOT EXISTS student_installments (
+                id SERIAL PRIMARY KEY,
+                student_id INTEGER REFERENCES students(id) ON DELETE CASCADE,
+                month_index INTEGER NOT NULL,
+                due_date DATE NOT NULL,
+                amount NUMERIC(10, 2) NOT NULL DEFAULT 0.00,
+                paid_amount NUMERIC(10, 2) NOT NULL DEFAULT 0.00,
+                status VARCHAR(20) DEFAULT 'unpaid' CHECK (status IN ('unpaid', 'partially_paid', 'paid')),
+                created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+            );
+        `);
+        console.log('student_installments table verified/created.');
         // Verify/add users.name, courses.teacher_id, courses.is_active, and courses.created_at columns
         await client.query(`
             ALTER TABLE users ADD COLUMN IF NOT EXISTS name VARCHAR(255);

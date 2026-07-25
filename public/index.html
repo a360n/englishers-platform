@@ -1394,6 +1394,37 @@
                                         id="sd-financial-balance" style="font-weight:700; color:var(--danger);">0</span>
                                     IQD</div>
                             </div>
+
+                            <!-- Installment Schedule Breakdown in Student Profile -->
+                            <div id="sd-installments-schedule-box" style="margin-top: 15px; display: none;">
+                                <div style="background: rgba(59, 130, 246, 0.06); border: 1px solid rgba(59, 130, 246, 0.2); border-radius: var(--border-radius-sm); padding: 12px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+                                    <div>
+                                        <span style="font-size: 12px; font-weight: bold; color: var(--text-secondary);">مبلغ القسط القادم:</span>
+                                        <strong id="sd-next-inst-amount" style="font-size: 14px; color: var(--primary-color); margin-right: 4px;">-</strong>
+                                    </div>
+                                    <div>
+                                        <span style="font-size: 12px; font-weight: bold; color: var(--text-secondary);">تاريخ استحقاق القسط:</span>
+                                        <strong id="sd-next-inst-date" style="font-size: 13px; color: var(--text-primary); margin-right: 4px;">-</strong>
+                                    </div>
+                                </div>
+                                
+                                <h5 style="margin: 10px 0 6px 0; font-size: 12px; color: var(--text-secondary);">جدول وتوزيع الأقساط الشهرية:</h5>
+                                <div class="table-responsive">
+                                    <table class="attendance-table" style="width: 100%; font-size: 11px; text-align: center;">
+                                        <thead>
+                                            <tr>
+                                                <th>القسط</th>
+                                                <th>مبلغ القسط</th>
+                                                <th>تاريخ الاستحقاق</th>
+                                                <th>الحالة</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="sd-installments-table-body">
+                                            <!-- Dynamic installments list -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -1481,12 +1512,30 @@
                             <option value="installment">دفع بنظام الأقساط الشهرية</option>
                         </select>
                     </div>
-                    <div class="form-group" id="dues-installment-amount-group"
-                        style="margin-bottom: 5px; display: none;">
-                        <label for="dues-installment-amount">مبلغ القسط الشهري (IQD)</label>
-                        <input type="text" id="dues-installment-amount" value="0">
-                        <small style="color:var(--text-muted); display:block; margin-top:4px;">سيتم احتساب الدفعات بناءً
-                            على هذا المبلغ لكل 12 محاضرة</small>
+
+                    <!-- Installment Months & Schedule Box -->
+                    <div id="dues-installment-section" style="display: none; background: rgba(59, 130, 246, 0.04); border: 1.5px solid rgba(59, 130, 246, 0.2); border-radius: var(--border-radius-md); padding: 16px; margin-bottom: 15px;">
+                        <div class="form-group" style="margin-bottom: 14px;">
+                            <label for="dues-months-count" style="font-weight: bold; color: var(--primary-color);">اختر عدد أشهُر القسط *</label>
+                            <select id="dues-months-count" onchange="onInstallmentMonthsCountChange(this.value)">
+                                <option value="2">شهرين (2 قسط)</option>
+                                <option value="3" selected>3 أشهر (3 أقساط)</option>
+                                <option value="4">4 أشهر (4 أقساط)</option>
+                                <option value="5">5 أشهر (5 أقساط)</option>
+                                <option value="6">6 أشهر (6 أقساط)</option>
+                                <option value="7">7 أشهر (7 أقساط)</option>
+                                <option value="8">8 أشهر (8 أقساط)</option>
+                            </select>
+                        </div>
+                        
+                        <div id="dues-schedule-summary" style="margin-bottom: 12px; font-size: 12px; font-weight: bold; display: flex; justify-content: space-between; align-items: center;">
+                            <span>توزيع مبالغ الأقساط الشهرية:</span>
+                            <span id="dues-schedule-sum-badge" class="badge badge-success">مطابق للمبلغ الإجمالي ✔️</span>
+                        </div>
+
+                        <div id="dues-months-schedule-container" style="display: flex; flex-direction: column; gap: 10px;">
+                            <!-- Dynamic monthly installment inputs -->
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer">
