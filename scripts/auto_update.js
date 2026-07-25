@@ -101,12 +101,36 @@ async function runAutoUpdate() {
         console.log('[INFO] جاري فحص المستودع وسحب التحديثات (git pull)...');
 
         let pullOutput = '';
+        let stashed = false;
+
         try {
-            pullOutput = execSync('git pull', { encoding: 'utf8', timeout: 30000 });
+            // Check if there are unstaged or uncommitted local changes
+            const statusOutput = execSync('git status --porcelain', { encoding: 'utf8', timeout: 5000 }).trim();
+            if (statusOutput.length > 0) {
+                console.log('[INFO] تم اكتشاف تعديلات محليّة غير محفوظة، جاري حفظها مؤقتاً (git stash)...');
+                execSync('git stash push -u -m "auto_update_stash"', { encoding: 'utf8', timeout: 10000 });
+                stashed = true;
+            }
+
+            pullOutput = execSync('git pull --autostash', { encoding: 'utf8', timeout: 30000 });
             console.log(pullOutput.trim());
         } catch (gitErr) {
-            console.log('[WARNING] تعذر تنفيذ git pull أو حدث انقطاع مؤقت:', gitErr.message);
-            process.exit(0);
+            try {
+                // Fallback standard pull
+                pullOutput = execSync('git pull', { encoding: 'utf8', timeout: 30000 });
+                console.log(pullOutput.trim());
+            } catch (fallbackErr) {
+                console.log('[WARNING] تعذر سحب التحديثات من المستودع:', fallbackErr.message);
+            }
+        } finally {
+            if (stashed) {
+                try {
+                    execSync('git stash pop', { encoding: 'utf8', timeout: 10000 });
+                    console.log('[INFO] تم إرجاع التعديلات المحلّية المؤقتة بنجاح.');
+                } catch (stashPopErr) {
+                    // Ignore stash pop collision if any
+                }
+            }
         }
 
         const normalizedOutput = pullOutput.toLowerCase().trim();
