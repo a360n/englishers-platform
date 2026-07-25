@@ -2017,15 +2017,22 @@ function toggleCustomDescField() {
 }
 
 async function deleteStudentFromModal() {
-    if (!activeStudentModalId) return;
-    const student = studentsList.find(s => s.id == activeStudentModalId);
-    const nameStr = student ? student.name : 'هذا الطالب';
+    const studentIdInput = document.getElementById('sd-student-id');
+    const studentId = studentIdInput ? studentIdInput.value : null;
+
+    if (!studentId) {
+        alert('تعذر تحديد معرف الطالب المراد حذفه.');
+        return;
+    }
+
+    const student = studentsList.find(s => s.id == studentId);
+    const nameStr = student ? student.name : (document.getElementById('sd-name')?.textContent || 'هذا الطالب');
 
     const confirmed = confirm(`هل أنت تأكد من حذف الطالب (${nameStr}) إدارياً؟\n\nسيتم إلغاء قيده وإزالته من قائمة الطلاب والكورسات المنسوب لها مع الحفاظ الكامل على كافة السجلات والوصولات المالية.`);
     if (!confirmed) return;
 
     try {
-        const res = await fetch(`/api/students/${activeStudentModalId}`, {
+        const res = await fetch(`/api/students/${studentId}`, {
             method: 'DELETE'
         });
         const data = await res.json();
