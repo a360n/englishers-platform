@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Englishers Club - جاري تشغيل المنصة وتحديث البيانات</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Cairo', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%);
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #f8fafc;
+            overflow: hidden;
+        }
+
+        .splash-card {
+            background: rgba(30, 41, 59, 0.75);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 24px;
+            padding: 48px 40px;
+            width: 90%;
+            max-width: 480px;
+            text-align: center;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 40px rgba(99, 102, 241, 0.2);
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .logo-container {
+            margin-bottom: 24px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .logo-img {
+            max-width: 200px;
+            height: auto;
+            filter: drop-shadow(0 10px 15px rgba(0,0,0,0.4));
+        }
+
+        .spinner-outer {
+            width: 76px;
+            height: 76px;
+            margin: 0 auto 24px auto;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .spinner-ring {
+            width: 100%;
+            height: 100%;
+            border: 4px solid rgba(99, 102, 241, 0.15);
+            border-top: 4px solid #6366f1;
+            border-right: 4px solid #a855f7;
+            border-radius: 50%;
+            animation: spin 1.2s cubic-bezier(0.68, -0.55, 0.27, 1.55) infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .spinner-icon {
+            position: absolute;
+            font-size: 24px;
+            color: #6366f1;
+            animation: pulse 1.5s ease-in-out infinite alternate;
+        }
+
+        @keyframes pulse {
+            from { transform: scale(0.9); opacity: 0.7; }
+            to { transform: scale(1.1); opacity: 1; }
+        }
+
+        h2 {
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            background: linear-gradient(135deg, #fff 0%, #cbd5e1 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        p.subtitle {
+            font-size: 13px;
+            color: #94a3b8;
+            margin-bottom: 28px;
+        }
+
+        .status-box {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            padding: 14px 18px;
+            font-size: 13px;
+            color: #38bdf8;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            min-height: 48px;
+        }
+
+        .progress-bar-bg {
+            width: 100%;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 20px;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            width: 30%;
+            background: linear-gradient(90deg, #6366f1, #a855f7, #38bdf8);
+            border-radius: 10px;
+            animation: indeterminate 2s ease-in-out infinite;
+        }
+
+        @keyframes indeterminate {
+            0% { width: 0%; margin-right: 0%; }
+            50% { width: 70%; margin-right: 15%; }
+            100% { width: 100%; margin-right: 0%; }
+        }
+    </style>
+</head>
+<body>
+    <div class="splash-card">
+        <div class="logo-container">
+            <img src="/horizontal logo.png" alt="Englishers Club" class="logo-img" onerror="this.src='https://via.placeholder.com/200x60?text=ENGLISHERS+CLUB'">
+        </div>
+
+        <div class="spinner-outer">
+            <div class="spinner-ring"></div>
+            <i class="fa-solid fa-bolt spinner-icon"></i>
+        </div>
+
+        <h2>منصة نادي إنكليشرز الإدارية</h2>
+        <p class="subtitle">جاري التحديث وتجهيز السيرفر الرئيسي...</p>
+
+        <div class="status-box" id="status-box">
+            <i class="fa-solid fa-circle-notch fa-spin" id="status-icon"></i>
+            <span id="status-text">جاري فحص اتصال الإنترنت وسحب التحديثات...</span>
+        </div>
+
+        <div class="progress-bar-bg">
+            <div class="progress-bar-fill"></div>
+        </div>
+    </div>
+
+    <script>
+        let isRedirecting = false;
+
+        async function pollServer() {
+            if (isRedirecting) return;
+            try {
+                const res = await fetch('http://localhost:3000/api/auth/me', { method: 'GET' });
+                if (res.ok || res.status === 401) {
+                    isRedirecting = true;
+                    const statusText = document.getElementById('status-text');
+                    const statusIcon = document.getElementById('status-icon');
+                    statusIcon.className = 'fa-solid fa-circle-check';
+                    statusIcon.style.color = '#10b981';
+                    statusText.textContent = 'اكتمل التحديث والتشغيل! جاري فتح المنصة...';
+                    
+                    setTimeout(() => {
+                        window.location.href = 'http://localhost:3000';
+                    }, 400);
+                    return;
+                }
+            } catch (e) {
+                // Server port 3000 not listening yet, retry
+            }
+            setTimeout(pollServer, 500);
+        }
+
+        pollServer();
+    </script>
+</body>
+</html>

@@ -1,10 +1,45 @@
-const { execSync } = require('child_process');
+const fs = require('fs');
+const http = require('http');
+const path = require('path');
+const { exec, execSync } = require('child_process');
 const dns = require('dns');
 const https = require('https');
 
 console.log('========================================================');
 console.log('  ENGLISHERS CLUB - SMART AUTO UPDATE CHECKER');
 console.log('========================================================');
+
+// Start temporary splash server on port 3001 and open browser
+const splashHtmlPath = path.join(__dirname, '..', 'public', 'splash.html');
+const logoPath = path.join(__dirname, '..', 'horizontal logo.png');
+
+let splashServer = null;
+try {
+    splashServer = http.createServer((req, res) => {
+        if (req.url === '/horizontal%20logo.png' || req.url === '/horizontal logo.png') {
+            if (fs.existsSync(logoPath)) {
+                res.writeHead(200, { 'Content-Type': 'image/png' });
+                return res.end(fs.readFileSync(logoPath));
+            }
+        }
+        res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+        res.end(fs.readFileSync(splashHtmlPath));
+    });
+
+    splashServer.listen(3001, () => {
+        console.log('[INFO] تم فتح صفحة التحميل الذكية على المتصفح (http://localhost:3001)...');
+        if (process.platform === 'darwin') {
+            exec('open http://localhost:3001');
+        } else if (process.platform === 'win32') {
+            exec('start http://localhost:3001');
+        } else {
+            exec('xdg-open http://localhost:3001');
+        }
+    });
+} catch (e) {
+    console.log('[INFO] Splash server note:', e.message);
+}
+
 console.log('[INFO] جاري فحص الاتصال بالشبكة والإنترنت (مهلة 10 ثوانٍ)...');
 
 // Function to check internet connectivity with a 10s timeout
