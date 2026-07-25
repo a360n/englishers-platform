@@ -495,20 +495,64 @@ app.put('/api/courses/:id', requireAuth, requireRole(['manager', 'admin', 'teach
         });
     }
 
+    const client = await db.pool.connect();
     try {
-        const result = await db.query(
+        await client.query('BEGIN');
+
+        const result = await client.query(
             `UPDATE courses 
              SET name = $1, teacher = $2, schedule_type = $3, time_slot = $4, month_num = $5, curriculum = $6, start_date = $7 
              WHERE id = $8 RETURNING *`,
             [name.trim(), teacher.trim(), schedule_type, time_slot.trim(), parseInt(month_num), curriculum.trim(), start_date, req.params.id]
         );
+
         if (result.rows.length === 0) {
+            await client.query('ROLLBACK');
             return res.status(404).json({ error: 'Course not found.' });
         }
-        res.json(result.rows[0]);
+
+        const course = result.rows[0];
+        const courseId = req.params.id;
+
+        // Check if course has any recorded attendance
+        const attRes = await client.query(
+            'SELECT COUNT(*)::integer FROM attendance WHERE course_id = $1',
+            [courseId]
+        );
+        const attendanceCount = parseInt(attRes.rows[0].count || 0);
+
+        // Check if course has any active students
+        const stuRes = await client.query(
+            'SELECT COUNT(*)::integer FROM course_students WHERE course_id = $1 AND COALESCE(is_active, true) = true',
+            [courseId]
+        );
+        const studentCount = parseInt(stuRes.rows[0].count || 0);
+
+        // If course has NO attendance records OR NO active students -> Shift/Re-generate course dates to new start_date!
+        if (attendanceCount === 0 || studentCount === 0) {
+            // Delete old dates for this course
+            await client.query('DELETE FROM course_dates WHERE course_id = $1', [courseId]);
+
+            // Seed 12 new dates starting from start_date
+            const startDateStr = typeof course.start_date === 'string' ? course.start_date.split('T')[0] : formatDateToString(course.start_date);
+            const dates = getCourseDatesArray(startDateStr, course.schedule_type, 12);
+            for (const d of dates) {
+                await client.query(
+                    `INSERT INTO course_dates (course_id, date, time_slot, schedule_type) 
+                     VALUES ($1, $2, $3, $4) ON CONFLICT DO NOTHING`,
+                    [courseId, d, course.time_slot, course.schedule_type]
+                );
+            }
+        }
+
+        await client.query('COMMIT');
+        res.json(course);
     } catch (err) {
+        await client.query('ROLLBACK');
         console.error(err);
         res.status(500).json({ error: 'Internal server error' });
+    } finally {
+        client.release();
     }
 });
 

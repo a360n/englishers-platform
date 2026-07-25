@@ -522,6 +522,9 @@ function setupEventListeners() {
             if (res.ok) {
                 closeCourseModal();
                 fetchCourses();
+                if (id && activeCourseId == id && document.getElementById('course-details-modal').classList.contains('active')) {
+                    openCourseDetailsModal(id);
+                }
             } else {
                 alert(data.error || 'حدث خطأ أثناء حفظ الكورس.');
             }
