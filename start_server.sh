@@ -3,17 +3,31 @@
 # Navigate to script directory
 cd "$(dirname "$0")"
 
-echo "========================================================"
-echo "        ENGLISHERS CLUB - MAC/LINUX SERVER LAUNCHER"
-echo "========================================================"
-echo
+while true; do
+    echo "========================================================"
+    echo "        ENGLISHERS CLUB - SERVER LAUNCHER"
+    echo "========================================================"
+    echo
 
-# Check if Node is installed
-if ! command -v node &> /dev/null
-then
-    echo "[ERROR] Node.js could not be found. Please install it."
-    exit 1
-fi
+    # Check if Node is installed
+    if ! command -v node &> /dev/null
+    then
+        echo "[ERROR] Node.js could not be found. Please install it."
+        exit 1
+    fi
+
+    # Run Smart Auto-Updater (Checks network 10s -> git pull -> restarts launcher if updated)
+    node scripts/auto_update.js
+    AUTO_UPDATE_STATUS=$?
+
+    if [ $AUTO_UPDATE_STATUS -eq 42 ]; then
+        echo "[INFO] Restarting server launcher with updated codebase in 2 seconds..."
+        sleep 2
+        continue
+    fi
+
+    break
+done
 
 # Try to start Postgres App on macOS if installed
 if [ -d "/Applications/Postgres.app" ]; then

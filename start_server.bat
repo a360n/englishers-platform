@@ -2,6 +2,8 @@
 title Englishers Club Server Launcher
 cd /d "%~dp0"
 
+:START_LAUNCHER
+cls
 echo ========================================================
 echo         ENGLISHERS CLUB - SERVER LAUNCHER
 echo ========================================================
@@ -16,6 +18,16 @@ if %errorlevel% neq 0 (
     exit /b
 )
 
+:: Run Smart Auto-Updater (Checks network 10s -> git pull -> restarts launcher if updated)
+node scripts/auto_update.js
+if %errorlevel% equ 42 (
+    echo.
+    echo [INFO] Restarting server launcher with updated codebase in 2 seconds...
+    timeout /t 2 >nul
+    goto START_LAUNCHER
+)
+
+echo.
 :: Get LAN IP
 for /f "delims=" %%i in ('node scripts/get_ip.js') do set LAN_IP=%%i
 
