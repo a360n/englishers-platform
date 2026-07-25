@@ -1918,10 +1918,10 @@ async function openStudentDetailsModal(id) {
             lectureBalanceEl.innerHTML = `<span style="color:${remaining <= 3 ? '#dc2626' : 'var(--primary-color)'}; font-weight:bold;">${remaining} محاضرة متبقية</span> <small style="color:var(--text-muted); font-weight:normal;">(تم استخدام ${used} من أصل ${purchased})</small>`;
         }
 
-        // Show/hide Personal Edit Button (Manager and Admin only)
+        // Show/hide Personal Edit & Delete Buttons (Manager and Admin only)
         const editBtnContainer = document.getElementById('manager-edit-btn-container');
         if (editBtnContainer) {
-            editBtnContainer.style.display = currentUser && (currentUser.role === 'manager' || currentUser.role === 'admin') ? 'block' : 'none';
+            editBtnContainer.style.display = currentUser && (currentUser.role === 'manager' || currentUser.role === 'admin') ? 'flex' : 'none';
         }
         toggleStudentPersonalEdit(false);
 
@@ -2013,6 +2013,33 @@ function toggleCustomDescField() {
     } else {
         group.style.display = 'none';
         document.getElementById('pay-custom-description').removeAttribute('required');
+    }
+}
+
+async function deleteStudentFromModal() {
+    if (!activeStudentModalId) return;
+    const student = studentsList.find(s => s.id == activeStudentModalId);
+    const nameStr = student ? student.name : 'هذا الطالب';
+
+    const confirmed = confirm(`هل أنت تأكد من حذف الطالب (${nameStr}) إدارياً؟\n\nسيتم إلغاء قيده وإزالته من قائمة الطلاب والكورسات المنسوب لها مع الحفاظ الكامل على كافة السجلات والوصولات المالية.`);
+    if (!confirmed) return;
+
+    try {
+        const res = await fetch(`/api/students/${activeStudentModalId}`, {
+            method: 'DELETE'
+        });
+        const data = await res.json();
+
+        if (res.ok) {
+            alert(data.message || 'تم حذف الطالب بنجاح.');
+            closeStudentDetailsModal();
+            fetchStudents(); // Refresh student list
+        } else {
+            alert(data.error || 'حدث خطأ أثناء حذف الطالب.');
+        }
+    } catch (err) {
+        console.error(err);
+        alert('حدث خطأ أثناء الاتصال بالسيرفر.');
     }
 }
 

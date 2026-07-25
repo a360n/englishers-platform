@@ -1033,6 +1033,7 @@ app.get('/api/students', requireAuth, requireRole(['manager', 'admin', 'teacher'
                        JOIN courses c ON cs.course_id = c.id
                        WHERE cs.student_id = s.id 
                          AND COALESCE(c.is_active, true) = true
+                         AND COALESCE(cs.is_active, true) = true
                        ORDER BY c.id DESC
                        LIMIT 1
                    ) AS current_course_name,
@@ -1042,6 +1043,7 @@ app.get('/api/students', requireAuth, requireRole(['manager', 'admin', 'teacher'
                        JOIN courses c ON cs.course_id = c.id
                        WHERE cs.student_id = s.id 
                          AND COALESCE(c.is_active, true) = true
+                         AND COALESCE(cs.is_active, true) = true
                    ) AS active_courses_count,
                    (
                        SELECT COUNT(*)::integer 
@@ -1049,12 +1051,52 @@ app.get('/api/students', requireAuth, requireRole(['manager', 'admin', 'teacher'
                        WHERE cs.student_id = s.id
                    ) AS total_courses_count
             FROM students s 
+            WHERE COALESCE(s.is_deleted, false) = false
             ORDER BY s.id DESC
         `);
         res.json(result.rows);
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+// DELETE: Soft delete student and remove from all active courses (Manager & Admin only)
+app.delete('/api/students/:id', requireAuth, requireRole(['manager', 'admin']), async (req, res) => {
+    const studentId = req.params.id;
+    const client = await db.pool.connect();
+    try {
+        await client.query('BEGIN');
+
+        // Check if student exists
+        const studentCheck = await client.query('SELECT name FROM students WHERE id = $1 AND COALESCE(is_deleted, false) = false', [studentId]);
+        if (studentCheck.rows.length === 0) {
+            await client.query('ROLLBACK');
+            return res.status(404).json({ error: 'الطالب غير موجود أو تم حذفه مسبقاً.' });
+        }
+
+        const studentName = studentCheck.rows[0].name;
+
+        // Soft delete student record (preserves financial receipts and dues)
+        await client.query(
+            'UPDATE students SET is_deleted = TRUE, is_frozen = TRUE WHERE id = $1',
+            [studentId]
+        );
+
+        // Remove student from all active course assignments
+        await client.query(
+            'UPDATE course_students SET is_active = FALSE, removed_at = CURRENT_TIMESTAMP WHERE student_id = $1',
+            [studentId]
+        );
+
+        await client.query('COMMIT');
+        res.json({ message: `تم حذف الطالب (${studentName}) إدارياً وإزالته من كافة الكورسات بنجاح مع الحفاظ الكامل على كافة السجلات والوصولات المالية.` });
+    } catch (err) {
+        await client.query('ROLLBACK');
+        console.error('Error soft-deleting student:', err);
+        res.status(500).json({ error: 'حدث خطأ أثناء عملية حذف الطالب.' });
+    } finally {
+        client.release();
     }
 });
 
@@ -2580,14 +2622,15 @@ function getCourseDatesArray(startDateStr, scheduleType, numDays = 12) {
 async function initCourseDates() {
     const client = await db.pool.connect();
     try {
-        // Verify/add photo_path, is_frozen, and purchased_lectures columns in students table
+        // Verify/add photo_path, is_frozen, purchased_lectures, and is_deleted columns in students table
         await client.query(`
             ALTER TABLE students ADD COLUMN IF NOT EXISTS photo_path VARCHAR(555);
             ALTER TABLE students ADD COLUMN IF NOT EXISTS is_frozen BOOLEAN DEFAULT FALSE;
             ALTER TABLE students ADD COLUMN IF NOT EXISTS purchased_lectures INTEGER DEFAULT 12;
+            ALTER TABLE students ADD COLUMN IF NOT EXISTS is_deleted BOOLEAN DEFAULT FALSE;
         `);
         await client.query("UPDATE students SET purchased_lectures = 12 WHERE purchased_lectures IS NULL");
-        console.log('students.photo_path, is_frozen, and purchased_lectures columns verified/created.');
+        console.log('students.photo_path, is_frozen, purchased_lectures, and is_deleted columns verified/created.');
 
         // Verify/add created_at, is_active, and removed_at in course_students table
         await client.query(`

@@ -1207,11 +1207,13 @@
                                 </li>
                             </ul>
 
-                            <!-- Manager Edit Button (Conditional) -->
-                            <div id="manager-edit-btn-container" style="display: none; margin-top: 15px;">
+                            <!-- Manager Edit & Delete Buttons (Conditional) -->
+                            <div id="manager-edit-btn-container" style="display: none; margin-top: 15px; flex-wrap: wrap; gap: 8px;">
                                 <button type="button" class="btn btn-outline" onclick="toggleStudentPersonalEdit(true)"
-                                    style="width: 100%; padding: 8px; font-size: 13px; color: var(--primary-color); border-color: var(--primary-color);">تعديل
+                                    style="flex: 1; min-width: 140px; padding: 8px; font-size: 13px; color: var(--primary-color); border-color: var(--primary-color);">تعديل
                                     البيانات الشخصية ✏️</button>
+                                <button type="button" class="btn btn-danger" onclick="deleteStudentFromModal()"
+                                    style="padding: 8px 14px; font-size: 13px;">حذف الطالب إدارياً <i class="fa-solid fa-user-xmark"></i></button>
                             </div>
                         </div>
 
