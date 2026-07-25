@@ -505,7 +505,8 @@ function setupEventListeners() {
             time_slot: timeSlot,
             start_date: document.getElementById('course-start-date').value,
             month_num: document.getElementById('course-month').value,
-            curriculum: curriculumVal
+            curriculum: curriculumVal,
+            created_at: document.getElementById('course-creation-date').value
         };
 
         const method = id ? 'PUT' : 'POST';
@@ -1222,6 +1223,8 @@ function openAddCourseModal() {
     
     // Set default values
     document.getElementById('course-start-date').value = new Date().toISOString().split('T')[0];
+    const creationInput = document.getElementById('course-creation-date');
+    if (creationInput) creationInput.value = new Date().toISOString().split('T')[0];
     document.getElementById('course-time-start').value = '10:00';
     document.getElementById('course-time-end').value = '12:00';
 
@@ -1249,9 +1252,13 @@ function openEditCourseModal(id) {
     document.getElementById('course-teacher').value = course.teacher;
     document.getElementById('course-schedule').value = course.schedule_type;
     
-    // Set start date
+    // Set start date and creation date
     if (course.start_date) {
         document.getElementById('course-start-date').value = course.start_date.split('T')[0];
+    }
+    const editCreationInput = document.getElementById('course-creation-date');
+    if (editCreationInput) {
+        editCreationInput.value = course.created_at ? course.created_at.split('T')[0] : new Date().toISOString().split('T')[0];
     }
     validateCourseStartDatePattern();
     
@@ -1404,6 +1411,10 @@ async function openCourseDetailsModal(id) {
         // Render Header details
         document.getElementById('cd-teacher').textContent = course.teacher;
         document.getElementById('cd-curriculum').textContent = course.curriculum;
+        const cdCreatedAtEl = document.getElementById('cd-created-at');
+        if (cdCreatedAtEl) {
+            cdCreatedAtEl.textContent = course.created_at ? course.created_at.split('T')[0] : 'غير محدد';
+        }
         document.getElementById('cd-time').textContent = course.time_slot;
         document.getElementById('cd-schedule').textContent = course.schedule_type === 'even' ? 'زوجي (سبت/اثنين/أربعاء)' : 'فردي (أحد/ثلاثاء/خميس)';
         const cdMonthEl = document.getElementById('cd-month');

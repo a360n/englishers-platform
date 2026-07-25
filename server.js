@@ -437,7 +437,7 @@ async function updateCourseMonthNum(courseId, client) {
 
 // POST: Create a course (Admin & Manager only)
 app.post('/api/courses', requireAuth, requireRole(['manager', 'admin', 'teacher']), async (req, res) => {
-    const { name, teacher, schedule_type, time_slot, month_num, curriculum, start_date } = req.body;
+    const { name, teacher, schedule_type, time_slot, month_num, curriculum, start_date, created_at } = req.body;
     if (!name || !teacher || !schedule_type || !time_slot || !month_num || !curriculum) {
         return res.status(400).json({ error: 'All fields are required.' });
     }
@@ -449,13 +449,15 @@ app.post('/api/courses', requireAuth, requireRole(['manager', 'admin', 'teacher'
         });
     }
 
+    const courseCreatedAt = created_at || new Date().toISOString().split('T')[0];
+
     const client = await db.pool.connect();
     try {
         await client.query('BEGIN');
         const result = await client.query(
-            `INSERT INTO courses (name, teacher, schedule_type, time_slot, month_num, curriculum, start_date, is_active) 
-             VALUES ($1, $2, $3, $4, $5, $6, $7, true) RETURNING *`,
-            [name.trim(), teacher.trim(), schedule_type, time_slot.trim(), parseInt(month_num), curriculum.trim(), start_date || new Date()]
+            `INSERT INTO courses (name, teacher, schedule_type, time_slot, month_num, curriculum, start_date, created_at, is_active) 
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, true) RETURNING *`,
+            [name.trim(), teacher.trim(), schedule_type, time_slot.trim(), parseInt(month_num), curriculum.trim(), start_date || new Date(), courseCreatedAt]
         );
         const course = result.rows[0];
 
@@ -483,7 +485,7 @@ app.post('/api/courses', requireAuth, requireRole(['manager', 'admin', 'teacher'
 
 // PUT: Update a course (Admin & Manager only)
 app.put('/api/courses/:id', requireAuth, requireRole(['manager', 'admin', 'teacher']), async (req, res) => {
-    const { name, teacher, schedule_type, time_slot, month_num, curriculum, start_date } = req.body;
+    const { name, teacher, schedule_type, time_slot, month_num, curriculum, start_date, created_at } = req.body;
     if (!name || !teacher || !schedule_type || !time_slot || !month_num || !curriculum || !start_date) {
         return res.status(400).json({ error: 'All fields are required.' });
     }
@@ -495,15 +497,17 @@ app.put('/api/courses/:id', requireAuth, requireRole(['manager', 'admin', 'teach
         });
     }
 
+    const courseCreatedAt = created_at || new Date().toISOString().split('T')[0];
+
     const client = await db.pool.connect();
     try {
         await client.query('BEGIN');
 
         const result = await client.query(
             `UPDATE courses 
-             SET name = $1, teacher = $2, schedule_type = $3, time_slot = $4, month_num = $5, curriculum = $6, start_date = $7 
-             WHERE id = $8 RETURNING *`,
-            [name.trim(), teacher.trim(), schedule_type, time_slot.trim(), parseInt(month_num), curriculum.trim(), start_date, req.params.id]
+             SET name = $1, teacher = $2, schedule_type = $3, time_slot = $4, month_num = $5, curriculum = $6, start_date = $7, created_at = $8 
+             WHERE id = $9 RETURNING *`,
+            [name.trim(), teacher.trim(), schedule_type, time_slot.trim(), parseInt(month_num), curriculum.trim(), start_date, courseCreatedAt, req.params.id]
         );
 
         if (result.rows.length === 0) {
@@ -2615,14 +2619,16 @@ async function initCourseDates() {
                 created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
             );
         `);
-        // Verify/add users.name, courses.teacher_id, and courses.is_active columns
+        // Verify/add users.name, courses.teacher_id, courses.is_active, and courses.created_at columns
         await client.query(`
             ALTER TABLE users ADD COLUMN IF NOT EXISTS name VARCHAR(255);
             ALTER TABLE courses ADD COLUMN IF NOT EXISTS teacher_id INTEGER REFERENCES users(id) ON DELETE SET NULL;
             ALTER TABLE courses ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT TRUE;
+            ALTER TABLE courses ADD COLUMN IF NOT EXISTS created_at DATE DEFAULT CURRENT_DATE;
         `);
         await client.query("UPDATE courses SET is_active = TRUE WHERE is_active IS NULL");
-        console.log('users.name, courses.teacher_id, and courses.is_active columns verified/created.');
+        await client.query("UPDATE courses SET created_at = CURRENT_DATE WHERE created_at IS NULL");
+        console.log('users.name, courses.teacher_id, courses.is_active, and courses.created_at columns verified/created.');
 
         // Ensure default 'teacher' has name set if null
         await client.query("UPDATE users SET name = 'أ. معلم افتراضي' WHERE username = 'teacher' AND name IS NULL");
