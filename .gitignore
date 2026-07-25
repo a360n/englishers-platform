@@ -15,3 +15,6 @@ receipts/admin/*.pdf
 
 # Student uploaded photos
 public/uploads/
+
+# Developer unencrypted source backup (Keep private)
+.src_backup/
