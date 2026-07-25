@@ -2554,6 +2554,14 @@ app.post('/api/testing/seed-mock-data', requireAuth, async (req, res) => {
             );
             const studentId = stuRes.rows[0].id;
 
+            // Create login user account for student (username: stu_PHONE or stu_NATIONALID)
+            const cleanUsername = `stu_${s.national_id}`;
+            const studentPasswordHash = await bcrypt.hash('123456', 10);
+            await client.query(
+                `INSERT INTO users (username, password, role, student_id, name) VALUES ($1, $2, 'student', $3, $4) ON CONFLICT DO NOTHING`,
+                [cleanUsername, studentPasswordHash, studentId, s.name]
+            );
+
             // Assign to course (Even index -> Course 1, Odd index -> Course 2)
             const targetCourseId = (i % 2 === 0) ? course1.id : course2.id;
             await client.query(
