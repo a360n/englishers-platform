@@ -10,9 +10,10 @@ console.log('========================================================');
 const rootDir = path.join(__dirname, '..');
 const serverJsPath = path.join(rootDir, 'server.js');
 const serverJscPath = path.join(rootDir, 'server.jsc');
+const tempSourcePath = path.join(rootDir, '.temp_server_build.js');
 const appJsPath = path.join(rootDir, 'public', 'js', 'app.js');
 
-// Preserve original source code in .src_backup
+// Preserve original source code in .src_backup directory
 const backupDir = path.join(rootDir, '.src_backup');
 if (!fs.existsSync(backupDir)) {
     fs.mkdirSync(backupDir, { recursive: true });
@@ -27,15 +28,29 @@ if (!fs.existsSync(path.join(backupDir, 'app.js'))) {
 
 console.log('[1/3] 🔐 جاري تشفير وتجميع سيرفر المنصة إلى V8 Bytecode (server.jsc)...');
 
-// Compile source server.js to V8 bytecode
+// Write temporary source file in rootDir so relative requires resolve correctly
+const serverSource = fs.readFileSync(path.join(backupDir, 'server.js'), 'utf8');
+fs.writeFileSync(tempSourcePath, serverSource, 'utf8');
+
+// Compile temporary source file to V8 bytecode
 bytenode.compileFile({
-    filename: path.join(backupDir, 'server.js'),
+    filename: tempSourcePath,
     output: serverJscPath
 });
+
+// Clean up temporary build file
+if (fs.existsSync(tempSourcePath)) {
+    fs.unlinkSync(tempSourcePath);
+}
+
+// Clean up test files if present
+if (fs.existsSync(path.join(rootDir, 'test.js'))) fs.unlinkSync(path.join(rootDir, 'test.js'));
+if (fs.existsSync(path.join(rootDir, 'test.jsc'))) fs.unlinkSync(path.join(rootDir, 'test.jsc'));
+
 console.log('[SUCCESS] تم توليد الكود الثنائي المشفر (server.jsc) بنجاح!');
 
-// Create 4-line loader for server.js
-const loaderCode = `const bytenode = require('bytenode');\nconst path = require('path');\nbytenode.runBytecodeFile(path.join(__dirname, 'server.jsc'));\n`;
+// Create CommonJS loader code for server.js
+const loaderCode = `require('bytenode');\nrequire('./server.jsc');\n`;
 fs.writeFileSync(serverJsPath, loaderCode, 'utf8');
 console.log('[SUCCESS] تم إعداد محمل السيرفر الثنائي (server.js loader) بنجاح!');
 
