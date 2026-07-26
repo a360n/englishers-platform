@@ -1205,7 +1205,44 @@
                                     <div class="profile-details-value" id="sd-current-course" style="font-weight:bold;">
                                         -</div>
                                 </li>
+
+                                <!-- Admin & Manager Only Account Info Item -->
+                                <li id="sd-account-item" class="profile-details-item" style="display: none; background: rgba(79, 70, 229, 0.07); padding: 10px 14px; border-radius: 10px; border: 1px dashed var(--primary-color); margin-top: 10px; flex-direction: column; gap: 6px; align-items: stretch;">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                                        <span style="font-size: 12px; font-weight: bold; color: var(--primary-color); display: flex; align-items: center; gap: 5px;">
+                                            <i class="fa-solid fa-user-lock"></i> بيانات حساب دخول الطالب
+                                        </span>
+                                        <button type="button" class="btn btn-sm btn-outline" onclick="toggleEditStudentAccountForm(true)" style="font-size: 11px; padding: 3px 8px; border-color: var(--primary-color); color: var(--primary-color);">
+                                            تعديل الحساب 🔑
+                                        </button>
+                                    </div>
+                                    <div style="display: flex; justify-content: space-between; align-items: center; font-size: 12px; margin-top: 4px;">
+                                        <span style="color: var(--text-muted);">اسم المستخدم (اليوزر):</span>
+                                        <span id="sd-account-username" style="font-weight: bold; font-family: monospace; color: var(--text-primary); direction: ltr;">-</span>
+                                    </div>
+                                    <div style="display: flex; justify-content: space-between; align-items: center; font-size: 12px;">
+                                        <span style="color: var(--text-muted);">كلمة المرور:</span>
+                                        <span style="font-weight: bold; font-family: monospace; color: var(--text-muted); letter-spacing: 2px;">••••••••</span>
+                                    </div>
+                                </li>
                             </ul>
+
+                            <!-- Admin Account Quick Edit Box -->
+                            <div id="sd-account-edit-box" style="display: none; background: rgba(79, 70, 229, 0.08); padding: 12px; border-radius: 10px; margin-top: 10px; border: 1px solid var(--primary-color); width: 100%; text-align: right;">
+                                <div style="font-size: 12px; font-weight: bold; color: var(--primary-color); margin-bottom: 8px;">تعديل حساب دخول الطالب (اليوزر والباسورد):</div>
+                                <div class="form-group" style="margin-bottom: 8px;">
+                                    <label style="font-size: 11px; font-weight: bold;">اسم المستخدم الجديد (اليوزر)</label>
+                                    <input type="text" id="sd-edit-username" placeholder="اسم المستخدم بالإنكليزية..." style="width: 100%; padding: 6px 10px; font-size: 12px; border-radius: 6px; border: 1px solid var(--border-color); direction: ltr; background: var(--bg-card); color: var(--text-primary);">
+                                </div>
+                                <div class="form-group" style="margin-bottom: 10px;">
+                                    <label style="font-size: 11px; font-weight: bold;">كلمة المرور الجديدة</label>
+                                    <input type="password" id="sd-edit-password" placeholder="كلمة المرور الجديدة (اتركها فارغة لإبقائها كما هي)" style="width: 100%; padding: 6px 10px; font-size: 12px; border-radius: 6px; border: 1px solid var(--border-color); direction: ltr; background: var(--bg-card); color: var(--text-primary);">
+                                </div>
+                                <div style="display: flex; gap: 6px; justify-content: flex-end;">
+                                    <button type="button" class="btn btn-sm btn-secondary" onclick="toggleEditStudentAccountForm(false)" style="padding: 4px 10px; font-size: 11px;">إلغاء</button>
+                                    <button type="button" class="btn btn-sm btn-primary" onclick="saveStudentAccountEdit()" style="padding: 4px 12px; font-size: 11px;">حفظ الحساب 💾</button>
+                                </div>
+                            </div>
 
                             <!-- Manager Edit & Delete Buttons (Conditional) -->
                             <div id="manager-edit-btn-container" style="display: none; margin-top: 15px; flex-wrap: wrap; gap: 8px;">
