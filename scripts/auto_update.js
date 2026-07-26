@@ -56,7 +56,7 @@ try {
     });
 
     splashServer.listen(3001, () => {
-        const openUrl = `http://${lanIp}:3001`;
+        const openUrl = 'http://127.0.0.1:3001';
         console.log(`[INFO] تم فتح صفحة التحميل الذكية على المتصفح (${openUrl})...`);
         if (process.platform === 'darwin') {
             exec(`open ${openUrl}`);

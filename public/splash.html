@@ -170,8 +170,7 @@
 
     <script>
         let isRedirecting = false;
-        const targetHost = (window.location.hostname && window.location.hostname !== 'localhost') ? window.location.hostname : '127.0.0.1';
-        const targetUrl = `http://${targetHost}:3000`;
+        const targetUrl = 'http://127.0.0.1:3000';
 
         async function pollServer() {
             if (isRedirecting) return;
