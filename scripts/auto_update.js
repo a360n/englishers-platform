@@ -9,6 +9,16 @@ console.log('========================================================');
 console.log('  ENGLISHERS CLUB - SMART AUTO UPDATE CHECKER');
 console.log('========================================================');
 
+// Ensure bytenode and required packages are installed
+try {
+    require('bytenode');
+} catch (e) {
+    console.log('[INFO] جاري تثبيت الحزم المطلوبة للنظام (npm install)...');
+    try {
+        execSync('npm install', { stdio: 'inherit', timeout: 60000 });
+    } catch (err) {}
+}
+
 // Start temporary splash server on port 3001 and open browser
 const splashHtmlPath = path.join(__dirname, '..', 'public', 'splash.html');
 const logoPath = path.join(__dirname, '..', 'horizontal logo.png');

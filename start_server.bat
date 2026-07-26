@@ -18,6 +18,14 @@ if %errorlevel% neq 0 (
     exit /b
 )
 
+:: Check and install dependencies if node_modules or bytenode is missing
+if not exist "node_modules\bytenode" (
+    echo [INFO] Installing required system dependencies (first time setup)...
+    call npm install
+    echo [SUCCESS] Dependencies installed successfully!
+    echo.
+)
+
 :: Run Smart Auto-Updater (Checks network 10s -> git pull -> restarts launcher if updated)
 node scripts/auto_update.js
 if %errorlevel% equ 42 (

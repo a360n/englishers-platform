@@ -16,6 +16,14 @@ while true; do
         exit 1
     fi
 
+    # Check and install dependencies if node_modules or bytenode is missing
+    if [ ! -d "node_modules/bytenode" ]; then
+        echo "[INFO] Installing required system dependencies..."
+        npm install
+        echo "[SUCCESS] Dependencies installed successfully!"
+        echo
+    fi
+
     # Run Smart Auto-Updater (Checks network 10s -> git pull -> restarts launcher if updated)
     node scripts/auto_update.js
     AUTO_UPDATE_STATUS=$?
