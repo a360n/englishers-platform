@@ -170,11 +170,13 @@
 
     <script>
         let isRedirecting = false;
+        const targetHost = (window.location.hostname && window.location.hostname !== 'localhost') ? window.location.hostname : '127.0.0.1';
+        const targetUrl = `http://${targetHost}:3000`;
 
         async function pollServer() {
             if (isRedirecting) return;
             try {
-                const res = await fetch('http://localhost:3000/api/auth/me', { method: 'GET' });
+                const res = await fetch(`${targetUrl}/api/auth/me`, { method: 'GET' });
                 if (res.ok || res.status === 401) {
                     isRedirecting = true;
                     const statusText = document.getElementById('status-text');
@@ -184,7 +186,7 @@
                     statusText.textContent = 'اكتمل التحديث والتشغيل! جاري فتح المنصة...';
                     
                     setTimeout(() => {
-                        window.location.href = 'http://localhost:3000';
+                        window.location.href = targetUrl;
                     }, 400);
                     return;
                 }
