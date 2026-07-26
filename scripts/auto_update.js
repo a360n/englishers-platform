@@ -1,16 +1,12 @@
 const fs = require('fs');
-const http = require('http');
 const path = require('path');
-const { exec, execSync } = require('child_process');
+const { execSync } = require('child_process');
 const dns = require('dns');
 const https = require('https');
-const getLocalIp = require('./get_ip');
 
 console.log('========================================================');
 console.log('  ENGLISHERS CLUB - SMART AUTO UPDATE CHECKER');
 console.log('========================================================');
-
-const lanIp = getLocalIp();
 
 // Ensure bytenode and required packages are installed
 try {
@@ -23,38 +19,6 @@ try {
     } catch (err) {
         console.log('[WARNING] Could not auto-run npm install:', err.message);
     }
-}
-
-// Start temporary splash server on port 3001 and open browser
-const splashHtmlPath = path.join(__dirname, '..', 'public', 'splash.html');
-const logoPath = path.join(__dirname, '..', 'horizontal logo.png');
-
-let splashServer = null;
-try {
-    splashServer = http.createServer((req, res) => {
-        if (req.url === '/horizontal%20logo.png' || req.url === '/horizontal logo.png') {
-            if (fs.existsSync(logoPath)) {
-                res.writeHead(200, { 'Content-Type': 'image/png' });
-                return res.end(fs.readFileSync(logoPath));
-            }
-        }
-        res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
-        res.end(fs.readFileSync(splashHtmlPath));
-    });
-
-    splashServer.listen(3001, () => {
-        const openUrl = `http://${lanIp}:3001`;
-        console.log(`[INFO] تم فتح صفحة التحميل الذكية على المتصفح (${openUrl})...`);
-        if (process.platform === 'darwin') {
-            exec(`open ${openUrl}`);
-        } else if (process.platform === 'win32') {
-            exec(`start ${openUrl}`);
-        } else {
-            exec(`xdg-open ${openUrl}`);
-        }
-    });
-} catch (e) {
-    console.log('[INFO] Splash server note:', e.message);
 }
 
 console.log('[INFO] جاري فحص الاتصال بالشبكة والإنترنت (مهلة 10 ثوانٍ)...');

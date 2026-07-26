@@ -33,6 +33,9 @@ echo.
 echo [INFO] Starting Node.js server...
 echo.
 
+REM Automatically open browser directly to port 3000 after 2 seconds
+start /b cmd /c "timeout /t 2 >nul && start http://%LAN_IP%:3000"
+
 REM Start Node Express server
 call node server.js
 

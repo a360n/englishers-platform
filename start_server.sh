@@ -52,5 +52,15 @@ echo "[INFO] Other devices on this Wi-Fi network can connect to:"
 echo "       http://$LAN_IP:3000"
 echo
 
+# Open default browser directly to port 3000
+(
+  sleep 2
+  if command -v open &> /dev/null; then
+      open "http://$LAN_IP:3000"
+  elif command -v xdg-open &> /dev/null; then
+      xdg-open "http://$LAN_IP:3000"
+  fi
+) &
+
 # Run Express server
 node server.js
