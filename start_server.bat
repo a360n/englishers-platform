@@ -18,8 +18,8 @@ if %errorlevel% neq 0 (
     exit /b
 )
 
-:: Check and install dependencies if node_modules or bytenode is missing
-if not exist "node_modules\bytenode" (
+:: Check and install dependencies if node_modules or bytenode package is missing
+if not exist "node_modules\bytenode\package.json" (
     echo [INFO] Installing required system dependencies (first time setup)...
     call npm install
     echo [SUCCESS] Dependencies installed successfully!
@@ -27,8 +27,10 @@ if not exist "node_modules\bytenode" (
 )
 
 :: Run Smart Auto-Updater (Checks network 10s -> git pull -> restarts launcher if updated)
-node scripts/auto_update.js
-if %errorlevel% equ 42 (
+node scripts\auto_update.js
+set UPDATE_CODE=%errorlevel%
+
+if %UPDATE_CODE% equ 42 (
     echo.
     echo [INFO] Restarting server launcher with updated codebase in 2 seconds...
     timeout /t 2 >nul
@@ -37,7 +39,7 @@ if %errorlevel% equ 42 (
 
 echo.
 :: Get LAN IP
-for /f "delims=" %%i in ('node scripts/get_ip.js') do set LAN_IP=%%i
+for /f "delims=" %%i in ('node scripts\get_ip.js') do set LAN_IP=%%i
 
 echo [INFO] Resolving network connection...
 echo [SUCCESS] Server local LAN IP Address: %LAN_IP%
@@ -48,10 +50,16 @@ echo [INFO] Starting Postgres database service check...
 echo [INFO] Starting Node.js server...
 echo.
 
-:: Wait for port 3000 to be active before opening the browser (prevents connection refused error)
+:: Wait for port 3000 to be active before opening the browser
 start /b cmd /c "for /l %%x in (1,1,30) do (netstat -ano | findstr :3000 >nul && (start http://%LAN_IP%:3000 && exit) || (timeout /t 1 >nul))"
 
 :: Start Node Express server
 node server.js
+
+if %errorlevel% neq 0 (
+    echo.
+    echo [ERROR] Server exited with error code %errorlevel%.
+    pause
+)
 
 pause

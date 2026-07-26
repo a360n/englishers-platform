@@ -15,8 +15,11 @@ try {
 } catch (e) {
     console.log('[INFO] جاري تثبيت الحزم المطلوبة للنظام (npm install)...');
     try {
-        execSync('npm install', { stdio: 'inherit', timeout: 60000 });
-    } catch (err) {}
+        const npmCmd = process.platform === 'win32' ? 'npm.cmd' : 'npm';
+        execSync(`${npmCmd} install`, { stdio: 'inherit', timeout: 120000, shell: true });
+    } catch (err) {
+        console.log('[WARNING] Could not auto-run npm install:', err.message);
+    }
 }
 
 // Start temporary splash server on port 3001 and open browser
