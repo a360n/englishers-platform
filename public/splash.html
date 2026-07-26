@@ -173,28 +173,37 @@
         const targetHost = window.location.hostname || '127.0.0.1';
         const targetUrl = `http://${targetHost}:3000`;
 
+        function doRedirect() {
+            if (isRedirecting) return;
+            isRedirecting = true;
+            const statusText = document.getElementById('status-text');
+            const statusIcon = document.getElementById('status-icon');
+            if (statusIcon) {
+                statusIcon.className = 'fa-solid fa-circle-check';
+                statusIcon.style.color = '#10b981';
+            }
+            if (statusText) {
+                statusText.textContent = 'اكتمل التحديث والتشغيل! جاري فتح المنصة...';
+            }
+            setTimeout(() => {
+                window.location.href = targetUrl;
+            }, 200);
+        }
+
         async function pollServer() {
             if (isRedirecting) return;
             try {
-                const res = await fetch(`${targetUrl}/api/auth/me`, { method: 'GET' });
-                if (res.ok || res.status === 401) {
-                    isRedirecting = true;
-                    const statusText = document.getElementById('status-text');
-                    const statusIcon = document.getElementById('status-icon');
-                    statusIcon.className = 'fa-solid fa-circle-check';
-                    statusIcon.style.color = '#10b981';
-                    statusText.textContent = 'اكتمل التحديث والتشغيل! جاري فتح المنصة...';
-                    
-                    setTimeout(() => {
-                        window.location.href = targetUrl;
-                    }, 400);
-                    return;
-                }
+                await fetch(`${targetUrl}/favicon.ico`, { mode: 'no-cors' });
+                doRedirect();
+                return;
             } catch (e) {
                 // Server port 3000 not listening yet, retry
             }
-            setTimeout(pollServer, 500);
+            setTimeout(pollServer, 300);
         }
+
+        // Safety fallback: Redirect after max 3 seconds unconditionally
+        setTimeout(doRedirect, 3000);
 
         pollServer();
     </script>
