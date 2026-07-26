@@ -1,16 +1,13 @@
 const fs = require('fs');
 const path = require('path');
-const bytenode = require('bytenode');
 const JavaScriptObfuscator = require('javascript-obfuscator');
 
 console.log('========================================================');
-console.log('  ENGLISHERS CLUB - OBFUSCATION & BYTECODE BUILDER');
+console.log('  ENGLISHERS CLUB - HEAVY OBFUSCATION BUILDER');
 console.log('========================================================');
 
 const rootDir = path.join(__dirname, '..');
 const serverJsPath = path.join(rootDir, 'server.js');
-const serverJscPath = path.join(rootDir, 'server.jsc');
-const tempSourcePath = path.join(rootDir, '.temp_server_build.js');
 const appJsPath = path.join(rootDir, 'public', 'js', 'app.js');
 
 // Preserve original source code in .src_backup directory
@@ -26,11 +23,9 @@ if (!fs.existsSync(path.join(backupDir, 'app.js'))) {
     fs.copyFileSync(appJsPath, path.join(backupDir, 'app.js'));
 }
 
-console.log('[1/3] 🔐 جاري تشفير وتعمية سيرفر المنصة (server.js & server.jsc)...');
-
+console.log('[1/2] 🔐 جاري التوافق والتعمية الثقيلة لسيرفر المنصة (server.js)...');
 const serverSource = fs.readFileSync(path.join(backupDir, 'server.js'), 'utf8');
 
-// 1. Heavy Obfuscation of server source
 const obfuscatedServer = JavaScriptObfuscator.obfuscate(serverSource, {
     compact: true,
     controlFlowFlattening: false,
@@ -41,47 +36,10 @@ const obfuscatedServer = JavaScriptObfuscator.obfuscate(serverSource, {
     stringArrayThreshold: 0.85
 }).getObfuscatedCode();
 
-// Write temporary source file in rootDir to compile V8 Bytecode
-fs.writeFileSync(tempSourcePath, serverSource, 'utf8');
+fs.writeFileSync(serverJsPath, obfuscatedServer, 'utf8');
+console.log('[SUCCESS] تم تعمية وتشفير كود السيرفر بنجاح (توافقية 100% مع كافة إصدارات Node)!');
 
-try {
-    bytenode.compileFile({
-        filename: tempSourcePath,
-        output: serverJscPath
-    });
-    console.log('[SUCCESS] تم توليد الكود الثنائي المشفر (server.jsc) بنجاح!');
-} catch (e) {
-    console.log('[WARNING] Could not compile bytenode file:', e.message);
-}
-
-if (fs.existsSync(tempSourcePath)) {
-    fs.unlinkSync(tempSourcePath);
-}
-
-// Write robust loader in server.js with fallback to obfuscated code for cross-Node version compatibility
-const loaderCode = `
-let loaded = false;
-try {
-    const bytenode = require('bytenode');
-    const path = require('path');
-    const jscPath = path.join(__dirname, 'server.jsc');
-    if (require('fs').existsSync(jscPath)) {
-        require(jscPath);
-        loaded = true;
-    }
-} catch (e) {
-    // If bytenode or bytecode fails due to Node version difference, fallback to obfuscated code
-}
-
-if (!loaded) {
-    ${obfuscatedServer}
-}
-`;
-
-fs.writeFileSync(serverJsPath, loaderCode, 'utf8');
-console.log('[SUCCESS] تم تعمية وتشفير كود السيرفر وتجهيز الفولباك العابر للإصدارات بنجاح!');
-
-console.log('[2/3] 🔐 جاري تعمية كود الواجهة الأمامية (public/js/app.js)...');
+console.log('[2/2] 🔐 جاري تعمية كود الواجهة الأمامية (public/js/app.js)...');
 const appSource = fs.readFileSync(path.join(backupDir, 'app.js'), 'utf8');
 
 const obfuscatedApp = JavaScriptObfuscator.obfuscate(appSource, {
@@ -99,6 +57,11 @@ const obfuscatedApp = JavaScriptObfuscator.obfuscate(appSource, {
 
 fs.writeFileSync(appJsPath, obfuscatedApp, 'utf8');
 console.log('[SUCCESS] تم تعمية وتشفير كود الواجهة بنجاح!');
+
+// Clean up server.jsc if exists
+if (fs.existsSync(path.join(rootDir, 'server.jsc'))) {
+    fs.unlinkSync(path.join(rootDir, 'server.jsc'));
+}
 
 console.log('\n========================================================');
 console.log('  🎉 اكتمل البناء وتشفير الكود بنجاح 100%! جاهز للرفع.');
