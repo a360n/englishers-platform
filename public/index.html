@@ -71,11 +71,11 @@
                             <input type="text" id="reg-name" placeholder="الاسم الثلاثي واللقب" required>
                         </div>
                         <div class="form-group">
-                            <label for="reg-national-id">رقم الهوية / البطاقة الموحدة (١٢ رقماً بالإنكليزية)</label>
-                            <input type="text" id="reg-national-id" placeholder="الرقم الوطني المكون من 12 رقماً"
+                            <label for="reg-national-id">رقم الهوية / البطاقة الموحدة (اختياري)</label>
+                            <input type="text" id="reg-national-id" placeholder="اختياري - سيتم توليد رقم عشوائي إن تُرك فارغاً"
                                 pattern="[0-9]{12}"
                                 title="يجب أن يتكون رقم البطاقة الوطنية من 12 رقماً باللغة الإنكليزية فقط"
-                                inputmode="numeric" required>
+                                inputmode="numeric">
                         </div>
                     </div>
 
@@ -1752,10 +1752,9 @@
                         </div>
 
                         <div class="form-group" style="margin-bottom: 12px;">
-                            <label style="font-size:12px; font-weight:bold;">رقم الهوية الوطنية (12 رقماً بالإنكليزية)
-                                *</label>
-                            <input type="text" id="admin-reg-national-id" maxlength="12" required
-                                placeholder="مثال: 100020003004"
+                            <label style="font-size:12px; font-weight:bold;">رقم الهوية الوطنية (اختياري - 12 رقماً بالإنكليزية)</label>
+                            <input type="text" id="admin-reg-national-id" maxlength="12"
+                                placeholder="اختياري - سيتم توليد رقم عشوائي إن تُرك فارغاً"
                                 style="width:100%; padding: 8px; font-size:13px; border:1px solid var(--border-color); border-radius:var(--border-radius-sm); background:var(--bg-card); color:var(--text-primary);">
                         </div>
 
