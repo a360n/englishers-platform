@@ -1,9 +1,8 @@
 @echo off
+setlocal enabledelayedexpansion
 title Englishers Club Server Launcher
 cd /d "%~dp0"
 
-:START_LAUNCHER
-cls
 echo ========================================================
 echo         ENGLISHERS CLUB - SERVER LAUNCHER
 echo ========================================================
@@ -27,18 +26,20 @@ if not exist "node_modules\bytenode\package.json" (
 )
 
 REM Run Smart Auto-Updater
-node scripts\auto_update.js
-set UPDATE_CODE=%errorlevel%
+call node scripts\auto_update.js
+set EXIT_STATUS=%errorlevel%
 
-if %UPDATE_CODE% equ 42 (
+if "%EXIT_STATUS%"=="42" (
     echo.
     echo [INFO] Restarting server launcher with updated codebase in 2 seconds...
     timeout /t 2 >nul
-    goto START_LAUNCHER
+    call start_server.bat
+    exit /b
 )
 
 echo.
 REM Get LAN IP
+set LAN_IP=127.0.0.1
 for /f "delims=" %%i in ('node scripts\get_ip.js') do set LAN_IP=%%i
 
 echo [INFO] Resolving network connection...
@@ -49,11 +50,11 @@ echo.
 echo [INFO] Starting Node.js server...
 echo.
 
-REM Wait for port 3000 to be active before opening the browser
-start /b cmd /c "for /l %%x in (1,1,30) do (netstat -ano | findstr :3000 >nul && (start http://%LAN_IP%:3000 && exit) || (timeout /t 1 >nul))"
+REM Open browser once server starts
+start /b cmd /c "timeout /t 3 >nul && start http://localhost:3000"
 
 REM Start Node Express server
-node server.js
+call node server.js
 
 if %errorlevel% neq 0 (
     echo.
