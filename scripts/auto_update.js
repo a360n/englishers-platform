@@ -1,6 +1,7 @@
 const fs = require('fs');
 const http = require('http');
 const path = require('path');
+const os = require('os');
 const { exec, execSync } = require('child_process');
 const dns = require('dns');
 const https = require('https');
@@ -8,6 +9,21 @@ const https = require('https');
 console.log('========================================================');
 console.log('  ENGLISHERS CLUB - SMART AUTO UPDATE CHECKER');
 console.log('========================================================');
+
+// Helper to get local IPv4 address
+function getLanIp() {
+    const interfaces = os.networkInterfaces();
+    for (const name of Object.keys(interfaces)) {
+        for (const iface of interfaces[name]) {
+            if (iface.family === 'IPv4' && !iface.internal) {
+                return iface.address;
+            }
+        }
+    }
+    return '127.0.0.1';
+}
+
+const lanIp = getLanIp();
 
 // Ensure bytenode and required packages are installed
 try {
@@ -40,13 +56,14 @@ try {
     });
 
     splashServer.listen(3001, () => {
-        console.log('[INFO] تم فتح صفحة التحميل الذكية على المتصفح (http://localhost:3001)...');
+        const openUrl = `http://${lanIp}:3001`;
+        console.log(`[INFO] تم فتح صفحة التحميل الذكية على المتصفح (${openUrl})...`);
         if (process.platform === 'darwin') {
-            exec('open http://localhost:3001');
+            exec(`open ${openUrl}`);
         } else if (process.platform === 'win32') {
-            exec('start http://localhost:3001');
+            exec(`start ${openUrl}`);
         } else {
-            exec('xdg-open http://localhost:3001');
+            exec(`xdg-open ${openUrl}`);
         }
     });
 } catch (e) {
