@@ -24,7 +24,7 @@ while true; do
         echo
     fi
 
-    # Run Smart Auto-Updater (Checks network 10s -> git pull -> restarts launcher if updated)
+    # Run Smart Auto-Updater
     node scripts/auto_update.js
     AUTO_UPDATE_STATUS=$?
 
@@ -51,21 +51,6 @@ echo "[INFO] Server local LAN IP Address: $LAN_IP"
 echo "[INFO] Other devices on this Wi-Fi network can connect to:"
 echo "       http://$LAN_IP:3000"
 echo
-
-# Open default browser once the server port is active
-(
-  for i in {1..30}; do
-    if nc -z localhost 3000 &>/dev/null; then
-      if command -v open &> /dev/null; then
-          open "http://$LAN_IP:3000"
-      elif command -v xdg-open &> /dev/null; then
-          xdg-open "http://$LAN_IP:3000"
-      fi
-      exit 0
-    fi
-    sleep 1
-  done
-) &
 
 # Run Express server
 node server.js

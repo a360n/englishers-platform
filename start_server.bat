@@ -33,9 +33,6 @@ echo.
 echo [INFO] Starting Node.js server...
 echo.
 
-REM Automatically open browser using the exact LAN IP address (192.168.x.x:3000) after 3 seconds
-start /b cmd /c "timeout /t 3 >nul && start http://%LAN_IP%:3000"
-
 REM Start Node Express server
 call node server.js
 
