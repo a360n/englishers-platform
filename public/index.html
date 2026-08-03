@@ -428,7 +428,10 @@
                                     قطع وصل دفع جديد</h3>
                                 <form id="payment-creation-form">
                                     <div class="form-group">
-                                        <label for="pay-student-select">اختر الطالب المعني</label>
+                                         <label for="pay-student-search" style="font-weight: bold; color: var(--primary-color);">البحث عن الطالب واختياره *</label>
+                                         <input type="text" id="pay-student-search" oninput="filterStudentDropdown('pay-student-search', 'pay-student-select')"
+                                             placeholder="🔍 اكتب اسم الطالب أو هويته الوطنية أو رقم الهاتف للبحث الفوري..."
+                                             style="width: 100%; margin-bottom: 8px; padding: 10px 12px; font-size: 13px; border: 1.5px solid var(--primary-color); border-radius: var(--border-radius-sm); background: var(--bg-card); color: var(--text-primary);">
                                         <select id="pay-student-select" required>
                                             <!-- Dynamically populated list of students -->
                                         </select>
