@@ -568,32 +568,58 @@ tr:hover td {
     border-radius: var(--border-radius-md);
     box-shadow: var(--shadow-sm);
     border: 1px solid var(--border-color);
+    position: relative;
+    direction: rtl;
 }
 
 .attendance-table {
     border-collapse: separate;
     border-spacing: 0;
+    width: max-content;
+    direction: rtl;
 }
 
 .attendance-table th, .attendance-table td {
-    border-right: 1px solid var(--border-color);
-    min-width: 100px;
+    border-left: 1px solid var(--border-color);
+    border-bottom: 1px solid var(--border-color);
+    min-width: 110px;
     text-align: center;
+    background-color: var(--bg-card);
 }
 
+/* Fix/Sticky Student Names Column on the RIGHT in RTL */
 .attendance-table th:first-child, .attendance-table td:first-child {
     position: sticky;
-    left: 0;
+    right: 0;
     background-color: var(--bg-card);
-    z-index: 2;
+    z-index: 10;
     min-width: 220px;
-    text-align: left;
-    border-right: 2px solid var(--border-color);
+    text-align: right;
+    border-left: 3px solid var(--primary-color);
+    box-shadow: -4px 0 8px rgba(0, 0, 0, 0.08);
+    padding: 10px 14px;
 }
 
 .attendance-table th:first-child {
     background-color: #F8FAFC;
-    z-index: 3;
+    z-index: 11;
+}
+
+/* 12-Lecture Separator Divider Styling */
+.attendance-table .lecture-divider-col {
+    border-left: 4px solid var(--primary-color) !important;
+}
+.attendance-table th.lecture-divider-col {
+    background: linear-gradient(180deg, rgba(79, 70, 229, 0.06) 0%, var(--bg-card) 100%);
+}
+
+/* Today's Column Highlight Styling */
+.attendance-table th.today-lecture-col {
+    background-color: rgba(79, 70, 229, 0.14) !important;
+    border-bottom: 3px solid var(--primary-color) !important;
+}
+.attendance-table td.today-lecture-col {
+    background-color: rgba(79, 70, 229, 0.05) !important;
 }
 
 .attendance-btn {
