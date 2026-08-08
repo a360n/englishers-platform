@@ -1671,6 +1671,74 @@
         </div>
     </div>
 
+    <!-- MODAL: Discount Management -->
+    <div id="discount-modal" class="modal-overlay">
+        <div class="modal-container" style="max-width: 650px;">
+            <div class="modal-header">
+                <h3 class="modal-title" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="fa-solid fa-tags" style="color: #f59e0b;"></i> خصم / تخفيض من مستحقات الطالب
+                </h3>
+                <button class="modal-close" onclick="closeDiscountModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group" style="margin-bottom: 15px; background: rgba(245, 158, 11, 0.08); border: 1px solid rgba(245, 158, 11, 0.25); border-radius: var(--border-radius-md); padding: 14px 16px;">
+                    <div style="font-size: 14px; font-weight: bold; margin-bottom: 8px;">
+                        الطالب المعني: <strong id="discount-student-name" style="color: var(--primary-color);"></strong>
+                    </div>
+                    <div style="display: flex; gap: 15px; font-size: 12px; flex-wrap: wrap;">
+                        <span>إجمالي المستحقات: <strong id="discount-total-due" style="color: var(--text-primary);">0 IQD</strong></span>
+                        <span>إجمالي المدفوع: <strong id="discount-total-paid" style="color: var(--success);">0 IQD</strong></span>
+                        <span>المتبقي المطلوب: <strong id="discount-net-balance" style="color: var(--danger);">0 IQD</strong></span>
+                    </div>
+                </div>
+
+                <form id="student-discount-form" onsubmit="submitStudentDiscount(event)" style="border-bottom: 1px solid var(--border-color); padding-bottom: 20px; margin-bottom: 20px;">
+                    <input type="hidden" id="discount-student-id">
+                    <div class="form-row">
+                        <div class="form-group" style="flex: 1.5;">
+                            <label for="discount-reason" style="font-weight: bold;">سبب أو بيان الخصم *</label>
+                            <input type="text" id="discount-reason" placeholder="مثال: خصم تفوق دراسي، تخفيض إداري، خصم أشقاء" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="discount-amount" style="font-weight: bold;">مبلغ الخصم (IQD) *</label>
+                            <input type="text" id="discount-amount" placeholder="مثال: 25,000" required>
+                        </div>
+                    </div>
+                    <div class="form-row" style="margin-top: 15px;">
+                        <button type="submit" class="btn btn-warning" style="background-color: #f59e0b; border-color: #d97706; color: white; width: 100%; font-weight: bold; font-size: 13px; padding: 10px;">
+                            تطبيق الخصم وتخفيض المستحقات <i class="fa-solid fa-tags"></i>
+                        </button>
+                    </div>
+                </form>
+
+                <!-- List of current discounts applied to student -->
+                <div id="discounts-list-container" style="display: none;">
+                    <h4 style="margin-bottom: 12px; color: var(--text-primary); font-size: 14px; display: flex; align-items: center; gap: 6px;">
+                        <i class="fa-solid fa-list-check"></i> الخصومات المطبقة على الطالب حالياً:
+                    </h4>
+                    <div class="table-responsive">
+                        <table class="attendance-table" style="width: 100%; font-size: 12px;">
+                            <thead>
+                                <tr>
+                                    <th>بيان الخصم</th>
+                                    <th>مبلغ التخفيض</th>
+                                    <th>تاريخ الخصم</th>
+                                    <th>الإجراء</th>
+                                </tr>
+                            </thead>
+                            <tbody id="discounts-list-body">
+                                <!-- Dynamic discounts -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline" onclick="closeDiscountModal()">إغلاق</button>
+            </div>
+        </div>
+    </div>
+
     <!-- MODAL: Club Policy & Rules -->
     <div id="policy-modal" class="modal-overlay" style="z-index: 120;">
         <div class="modal-container" style="max-width: 700px;">
