@@ -654,46 +654,126 @@
                     <!-- TAB: REPORTS & EXPORTS (ADMIN / MANAGER VIEW) -->
                     <!-- ========================================== -->
                     <div id="tab-reports" class="tab-content" style="display:none;">
-                        <h3
-                            style="margin-bottom:20px; color:var(--primary-color); border-bottom: 2px solid var(--border-color); padding-bottom: 10px;">
-                            مركز تصدير التقارير الإدارية</h3>
-                        <p style="font-size:14px; color:var(--text-secondary); margin-bottom:30px;">يمكنك تصدير كافة
-                            جداول البيانات من المنصة إلى صيغة ملفات CSV (المتوافقة مع Excel) بضغطة زر واحدة لحفظها
-                            محلياً.</p>
+                        <h3 style="margin-bottom:10px; color:var(--primary-color); border-bottom: 2px solid var(--border-color); padding-bottom: 10px; display: flex; align-items: center; gap: 10px;">
+                            <i class="fa-solid fa-file-export"></i> مركز تصدير البيانات والتقارير الإدارية
+                        </h3>
+                        <p style="font-size:14px; color:var(--text-secondary); margin-bottom:25px;">
+                            يمكنك تصدير وتنزيل كافة بيانات النادي المحددة حسب نطاق زمني معين (من وإلى أو تحديد كامل البيانات)، وتوليد التقارير بصيغة ملفات <strong>CSV الممتازة لبرنامج Excel</strong> أو <strong>مستندات PDF الرسمية الجاهزة للطباعة والحفظ</strong>.
+                        </p>
 
-                        <div class="dashboard-grid">
-                            <div class="card-stat"
-                                style="text-align: center; align-items: center; justify-content: center; padding: 30px;">
-                                <i class="fa-solid fa-graduation-cap"
-                                    style="font-size:40px; color:var(--primary-color); margin-bottom:15px;"></i>
-                                <div class="stat-label">جدول الكورسات</div>
-                                <div class="stat-desc">تصدير كافة معلومات الدورات والمدرسين والمناهج وأوقاتها</div>
-                                <a href="/api/export/courses" class="btn btn-secondary btn-sm"
-                                    style="margin-top:15px;">تصدير الكورسات CSV <i class="fa-solid fa-download"></i></a>
+                        <div style="display: flex; flex-direction: column; gap: 20px;">
+
+                            <!-- CARD 1: COURSES EXPORT -->
+                            <div class="card" style="padding: 20px; border-radius: var(--border-radius-md); background: var(--bg-card); border: 1px solid var(--border-color); box-shadow: var(--shadow-sm);">
+                                <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 15px; margin-bottom: 15px; border-bottom: 1px solid var(--border-color); padding-bottom: 12px;">
+                                    <div style="display: flex; align-items: center; gap: 12px;">
+                                        <div style="width: 44px; height: 44px; border-radius: 10px; background: rgba(79, 70, 229, 0.1); color: var(--primary-color); display: flex; align-items: center; justify-content: center; font-size: 20px;">
+                                            <i class="fa-solid fa-graduation-cap"></i>
+                                        </div>
+                                        <div>
+                                            <h4 style="margin: 0; font-size: 15px; color: var(--primary-color);">تصدير جدول الكورسات والدورات التعليمية</h4>
+                                            <p style="margin: 3px 0 0 0; font-size: 12px; color: var(--text-secondary);">تصدير سجلات الكورسات، أوقاتها، أسماء الأساتذة والمنهج الدراسي</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div style="display: flex; align-items: flex-end; gap: 12px; flex-wrap: wrap;">
+                                    <div class="form-group" style="flex: 1; min-width: 140px; margin: 0;">
+                                        <label style="font-size: 11px; font-weight: bold; margin-bottom: 4px; display: block;">من تاريخ:</label>
+                                        <input type="date" id="export-courses-from" style="width: 100%; padding: 7px 10px; font-size: 12px; border: 1px solid var(--border-color); border-radius: var(--border-radius-sm); background: var(--bg-main); color: var(--text-primary);">
+                                    </div>
+                                    <div class="form-group" style="flex: 1; min-width: 140px; margin: 0;">
+                                        <label style="font-size: 11px; font-weight: bold; margin-bottom: 4px; display: block;">إلى تاريخ:</label>
+                                        <input type="date" id="export-courses-to" style="width: 100%; padding: 7px 10px; font-size: 12px; border: 1px solid var(--border-color); border-radius: var(--border-radius-sm); background: var(--bg-main); color: var(--text-primary);">
+                                    </div>
+                                    <button type="button" class="btn btn-outline" onclick="clearExportDates('export-courses-from', 'export-courses-to')" style="padding: 7px 12px; font-size: 11px;" title="إعادة تعيين وتصدير الكل">
+                                        تصدير الكل (الجميع) 🔄
+                                    </button>
+                                    <div style="display: flex; gap: 8px;">
+                                        <button type="button" class="btn btn-success" onclick="triggerExport('courses', 'csv')" style="padding: 7px 14px; font-size: 12px; font-weight: bold;">
+                                            تصدير CSV 📊
+                                        </button>
+                                        <button type="button" class="btn btn-primary" onclick="triggerExport('courses', 'pdf')" style="padding: 7px 14px; font-size: 12px; font-weight: bold;">
+                                            تصدير PDF 📄
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
 
-                            <div class="card-stat"
-                                style="text-align: center; align-items: center; justify-content: center; padding: 30px;">
-                                <i class="fa-solid fa-users"
-                                    style="font-size:40px; color:var(--primary-color); margin-bottom:15px;"></i>
-                                <div class="stat-label">معلومات الطلاب</div>
-                                <div class="stat-desc">تصدير استمارات الطلاب والتقييمات الإدارية والمستحقات المترتبة
-                                    عليهم</div>
-                                <a href="/api/export/students" class="btn btn-secondary btn-sm"
-                                    style="margin-top:15px;">تصدير الطلاب CSV <i class="fa-solid fa-download"></i></a>
+                            <!-- CARD 2: STUDENTS EXPORT -->
+                            <div class="card" style="padding: 20px; border-radius: var(--border-radius-md); background: var(--bg-card); border: 1px solid var(--border-color); box-shadow: var(--shadow-sm);">
+                                <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 15px; margin-bottom: 15px; border-bottom: 1px solid var(--border-color); padding-bottom: 12px;">
+                                    <div style="display: flex; align-items: center; gap: 12px;">
+                                        <div style="width: 44px; height: 44px; border-radius: 10px; background: rgba(16, 185, 129, 0.1); color: var(--success); display: flex; align-items: center; justify-content: center; font-size: 20px;">
+                                            <i class="fa-solid fa-users"></i>
+                                        </div>
+                                        <div>
+                                            <h4 style="margin: 0; font-size: 15px; color: var(--primary-color);">تصدير معلومات واستمارات الطلاب</h4>
+                                            <p style="margin: 3px 0 0 0; font-size: 12px; color: var(--text-secondary);">تصدير بيانات الطلاب الشخصية، أرقام الهواتف، المستحقات والمدفوعات</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div style="display: flex; align-items: flex-end; gap: 12px; flex-wrap: wrap;">
+                                    <div class="form-group" style="flex: 1; min-width: 140px; margin: 0;">
+                                        <label style="font-size: 11px; font-weight: bold; margin-bottom: 4px; display: block;">من تاريخ التسجيل:</label>
+                                        <input type="date" id="export-students-from" style="width: 100%; padding: 7px 10px; font-size: 12px; border: 1px solid var(--border-color); border-radius: var(--border-radius-sm); background: var(--bg-main); color: var(--text-primary);">
+                                    </div>
+                                    <div class="form-group" style="flex: 1; min-width: 140px; margin: 0;">
+                                        <label style="font-size: 11px; font-weight: bold; margin-bottom: 4px; display: block;">إلى تاريخ التسجيل:</label>
+                                        <input type="date" id="export-students-to" style="width: 100%; padding: 7px 10px; font-size: 12px; border: 1px solid var(--border-color); border-radius: var(--border-radius-sm); background: var(--bg-main); color: var(--text-primary);">
+                                    </div>
+                                    <button type="button" class="btn btn-outline" onclick="clearExportDates('export-students-from', 'export-students-to')" style="padding: 7px 12px; font-size: 11px;" title="إعادة تعيين وتصدير الكل">
+                                        تصدير الكل (الجميع) 🔄
+                                    </button>
+                                    <div style="display: flex; gap: 8px;">
+                                        <button type="button" class="btn btn-success" onclick="triggerExport('students', 'csv')" style="padding: 7px 14px; font-size: 12px; font-weight: bold;">
+                                            تصدير CSV 📊
+                                        </button>
+                                        <button type="button" class="btn btn-primary" onclick="triggerExport('students', 'pdf')" style="padding: 7px 14px; font-size: 12px; font-weight: bold;">
+                                            تصدير PDF 📄
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
 
-                            <div class="card-stat"
-                                style="text-align: center; align-items: center; justify-content: center; padding: 30px;">
-                                <i class="fa-solid fa-file-invoice-dollar"
-                                    style="font-size:40px; color:var(--primary-color); margin-bottom:15px;"></i>
-                                <div class="stat-label">الوصولات والمدفوعات</div>
-                                <div class="stat-desc">تصدير سجل المعاملات المالية بالكامل من دفعيات وتواريخها
-                                    وتوقيعاتها الأمنية</div>
-                                <a href="/api/export/payments" class="btn btn-secondary btn-sm"
-                                    style="margin-top:15px;">تصدير المدفوعات CSV <i
-                                        class="fa-solid fa-download"></i></a>
+                            <!-- CARD 3: PAYMENTS EXPORT -->
+                            <div class="card" style="padding: 20px; border-radius: var(--border-radius-md); background: var(--bg-card); border: 1px solid var(--border-color); box-shadow: var(--shadow-sm);">
+                                <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 15px; margin-bottom: 15px; border-bottom: 1px solid var(--border-color); padding-bottom: 12px;">
+                                    <div style="display: flex; align-items: center; gap: 12px;">
+                                        <div style="width: 44px; height: 44px; border-radius: 10px; background: rgba(245, 158, 11, 0.1); color: #d97706; display: flex; align-items: center; justify-content: center; font-size: 20px;">
+                                            <i class="fa-solid fa-file-invoice-dollar"></i>
+                                        </div>
+                                        <div>
+                                            <h4 style="margin: 0; font-size: 15px; color: var(--primary-color);">تصدير سجل الوصولات والمدفوعات المالية</h4>
+                                            <p style="margin: 3px 0 0 0; font-size: 12px; color: var(--text-secondary);">تصدير حركة المقبوضات والمدفوعات اليومية مع التفاصيل المخصصة والتوقيعات</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div style="display: flex; align-items: flex-end; gap: 12px; flex-wrap: wrap;">
+                                    <div class="form-group" style="flex: 1; min-width: 140px; margin: 0;">
+                                        <label style="font-size: 11px; font-weight: bold; margin-bottom: 4px; display: block;">من تاريخ الدفع:</label>
+                                        <input type="date" id="export-payments-from" style="width: 100%; padding: 7px 10px; font-size: 12px; border: 1px solid var(--border-color); border-radius: var(--border-radius-sm); background: var(--bg-main); color: var(--text-primary);">
+                                    </div>
+                                    <div class="form-group" style="flex: 1; min-width: 140px; margin: 0;">
+                                        <label style="font-size: 11px; font-weight: bold; margin-bottom: 4px; display: block;">إلى تاريخ الدفع:</label>
+                                        <input type="date" id="export-payments-to" style="width: 100%; padding: 7px 10px; font-size: 12px; border: 1px solid var(--border-color); border-radius: var(--border-radius-sm); background: var(--bg-main); color: var(--text-primary);">
+                                    </div>
+                                    <button type="button" class="btn btn-outline" onclick="clearExportDates('export-payments-from', 'export-payments-to')" style="padding: 7px 12px; font-size: 11px;" title="إعادة تعيين وتصدير الكل">
+                                        تصدير الكل (الجميع) 🔄
+                                    </button>
+                                    <div style="display: flex; gap: 8px;">
+                                        <button type="button" class="btn btn-success" onclick="triggerExport('payments', 'csv')" style="padding: 7px 14px; font-size: 12px; font-weight: bold;">
+                                            تصدير CSV 📊
+                                        </button>
+                                        <button type="button" class="btn btn-primary" onclick="triggerExport('payments', 'pdf')" style="padding: 7px 14px; font-size: 12px; font-weight: bold;">
+                                            تصدير PDF 📄
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
+
                         </div>
 
                         <!-- Section: Manager-Only Testing & Setup Tools -->
