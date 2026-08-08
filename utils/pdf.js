@@ -27,16 +27,32 @@ function generateReceiptPDF(payment, student, outputPath, type = 'student') {
       const darkGrey = '#333333';
       const lightGrey = '#F4F5F7';
 
-      // Load system Arial fonts on macOS, fallback to standard Helvetica
-      const regularFont = fs.existsSync('/System/Library/Fonts/Supplemental/Arial.ttf')
-         ? '/System/Library/Fonts/Supplemental/Arial.ttf'
-         : 'Helvetica';
-      const boldFont = fs.existsSync('/System/Library/Fonts/Supplemental/Arial Bold.ttf')
-         ? '/System/Library/Fonts/Supplemental/Arial Bold.ttf'
-         : 'Helvetica-Bold';
+      // Load system Arial fonts on macOS/Windows/Linux, fallback to standard Helvetica
+      const possibleRegularFonts = [
+         '/System/Library/Fonts/Supplemental/Arial.ttf',
+         '/Library/Fonts/Arial.ttf',
+         'C:\\Windows\\Fonts\\arial.ttf',
+         'C:\\Windows\\Fonts\\Arial.ttf',
+         '/usr/share/fonts/truetype/msttcorefonts/arial.ttf',
+         '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf'
+      ];
+
+      const possibleBoldFonts = [
+         '/System/Library/Fonts/Supplemental/Arial Bold.ttf',
+         '/Library/Fonts/Arial Bold.ttf',
+         'C:\\Windows\\Fonts\\arialbd.ttf',
+         'C:\\Windows\\Fonts\\Arial Bold.ttf',
+         '/usr/share/fonts/truetype/msttcorefonts/arialbd.ttf',
+         '/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf'
+      ];
+
+      const regularFont = possibleRegularFonts.find(f => fs.existsSync(f)) || 'Helvetica';
+      const boldFont = possibleBoldFonts.find(f => fs.existsSync(f)) || 'Helvetica-Bold';
 
       doc.registerFont('Arial', regularFont);
       doc.registerFont('Arial-Bold', boldFont);
+
+      const rtla = regularFont !== 'Helvetica' ? { features: ['rtla'] } : {};
 
       // Format Date
       const dateObj = new Date(payment.created_at || new Date());
