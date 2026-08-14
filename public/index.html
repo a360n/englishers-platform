@@ -1065,13 +1065,17 @@
                 <!-- Section: Assign student to this course -->
                 <div id="cd-assign-section" style="margin-bottom: 25px; border-bottom: 1.5px solid var(--border-color); padding-bottom: 20px;">
                     <h4 style="margin-bottom: 10px; color:var(--primary-color);">تنسيب طالب جديد للكورس</h4>
-                    <form id="assign-student-form" style="display:flex; gap:15px; align-items: flex-end;">
-                        <div class="form-group" style="flex-grow:1; margin-bottom:0;">
+                    <form id="assign-student-form" style="display:flex; gap:12px; align-items: flex-end; flex-wrap: wrap;">
+                        <div class="form-group" style="flex:2; min-width:220px; margin-bottom:0;">
                             <label for="assign-student-select">اختر من الطلاب المسجلين</label>
                             <input type="text" id="assign-student-search" onkeyup="filterStudentDropdown('assign-student-search', 'assign-student-select')" placeholder="🔍 تصفية بالاسم أو الهاتف أو الهوية الوطنية..." style="margin-bottom: 6px; padding: 6px 10px; font-size: 12px; border: 1px solid var(--border-color); border-radius: var(--border-radius-sm); background: var(--bg-card); color: var(--text-primary);">
                             <select id="assign-student-select" required>
                                 <!-- Option list of students -->
                             </select>
+                        </div>
+                        <div class="form-group" style="flex:1; min-width:140px; margin-bottom:0;">
+                            <label for="assign-student-date">تاريخ الانضمام 📅</label>
+                            <input type="date" id="assign-student-date" required style="padding: 8px 10px; font-size: 12px; border: 1px solid var(--border-color); border-radius: var(--border-radius-sm); background: var(--bg-card); color: var(--text-primary);" title="تاريخ انضمام الطالب للكورس (يحدد المحاضرات المفتوحة للطالب)">
                         </div>
                         <button type="submit" class="btn btn-secondary" style="padding: 10px 20px;">إضافة للكورس <i
                                 class="fa-solid fa-user-plus"></i></button>
@@ -2149,6 +2153,40 @@
                     إغلاق النافذة
                 </button>
             </div>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- MODAL: EDIT STUDENT ENROLLMENT DATE -->
+    <!-- ========================================== -->
+    <div id="edit-enrollment-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-card" style="max-width: 440px; width: 90%; padding: 24px; border-radius: var(--border-radius-md); background: var(--bg-card); border: 1px solid var(--border-color); box-shadow: var(--shadow-lg); text-align: right; position: relative;">
+            <button type="button" class="modal-close-btn" onclick="closeEditEnrollmentModal()" style="position: absolute; top: 15px; left: 15px; background: none; border: none; font-size: 20px; color: var(--text-muted); cursor: pointer;" title="إغلاق">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            <h3 style="margin: 0 0 10px 0; font-size: 17px; color: var(--primary-color); font-weight: 800;">تعديل تاريخ انضمام الطالب للكورس 📅</h3>
+            <p style="font-size: 12px; color: var(--text-secondary); margin-bottom: 18px; line-height: 1.5;">
+                تغيير تاريخ الانضمام سيقوم بفتح المحاضرات المقفلة للطالب ابتداءً من التاريخ المحدد بدون المساس بسجلات الحضور السابقة.
+            </p>
+            <form id="edit-enrollment-form" onsubmit="submitEditEnrollmentDate(event)">
+                <input type="hidden" id="edit-enrollment-student-id">
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label style="font-size: 12px; font-weight: bold;">اسم الطالب:</label>
+                    <input type="text" id="edit-enrollment-student-name" readonly style="width: 100%; padding: 8px 10px; font-size: 13px; font-weight: bold; border: 1px solid var(--border-color); border-radius: var(--border-radius-sm); background: var(--bg-main); color: var(--primary-color);">
+                </div>
+                <div class="form-group" style="margin-bottom: 20px;">
+                    <label style="font-size: 12px; font-weight: bold;">تاريخ الانضمام الجديد للكورس 📅:</label>
+                    <input type="date" id="edit-enrollment-date-input" required style="width: 100%; padding: 8px 10px; font-size: 13px; border: 1px solid var(--border-color); border-radius: var(--border-radius-sm); background: var(--bg-card); color: var(--text-primary);">
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <button type="submit" class="btn btn-primary" style="flex: 1; padding: 10px; font-size: 13px; font-weight: bold;">
+                        تحديث وتفعيل المحاضرات 💾
+                    </button>
+                    <button type="button" class="btn btn-secondary" onclick="closeEditEnrollmentModal()" style="padding: 10px 16px; font-size: 13px;">
+                        إلغاء
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 
