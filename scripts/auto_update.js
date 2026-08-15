@@ -8,14 +8,15 @@ console.log('========================================================');
 console.log('  ENGLISHERS CLUB - SMART AUTO UPDATE CHECKER');
 console.log('========================================================');
 
-// Ensure bytenode and required packages are installed
+// Ensure bytenode, qrcode, and required packages are installed
 try {
     require('bytenode');
+    require('qrcode');
 } catch (e) {
-    console.log('[INFO] جاري تثبيت الحزم المطلوبة للنظام (npm install)...');
+    console.log('[INFO] جاري تثبيت وتحديث الحزم البرمجية الجديدة للمنصة (npm install)...');
     try {
         const npmCmd = process.platform === 'win32' ? 'npm.cmd' : 'npm';
-        execSync(`${npmCmd} install`, { stdio: 'inherit', timeout: 120000, shell: true });
+        execSync(`${npmCmd} install --omit=dev`, { stdio: 'inherit', timeout: 120000, shell: true });
     } catch (err) {
         console.log('[WARNING] Could not auto-run npm install:', err.message);
     }
@@ -125,6 +126,13 @@ async function runAutoUpdate() {
         } else {
             console.log('\n========================================================');
             console.log('[SUCCESS] 🎉 تم تنزيل وسحب تحديثات جديدة للمنصة بنجاح!');
+            console.log('[INFO] جاري تثبيت الحزم وتحديث النظام آلياً...');
+            try {
+                const npmCmd = process.platform === 'win32' ? 'npm.cmd' : 'npm';
+                execSync(`${npmCmd} install --omit=dev`, { stdio: 'inherit', timeout: 120000, shell: true });
+            } catch (installErr) {
+                console.log('[WARNING] npm install warning:', installErr.message);
+            }
             console.log('[INFO] جاري إعادة تشغيل المشغل تلقائياً ليعمل بالنسخة المحدثة...');
             console.log('========================================================\n');
             process.exit(42); // Special exit code 42 signaling update pulled -> restart launcher
