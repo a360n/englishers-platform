@@ -58,6 +58,7 @@ CREATE TABLE courses (
     month_num INTEGER NOT NULL, -- Month 1, 2, etc.
     curriculum VARCHAR(255) NOT NULL,
     start_date DATE NOT NULL DEFAULT CURRENT_DATE,
+    course_type VARCHAR(20) DEFAULT 'in_person', -- 'in_person' or 'online'
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 

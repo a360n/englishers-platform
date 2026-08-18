@@ -325,10 +325,19 @@
                             <div class="card-table-header" style="flex-wrap:wrap; gap:12px; display:flex; align-items:center; justify-content:space-between;">
                                 <div style="display:flex; align-items:center; gap:15px; flex-wrap:wrap;">
                                     <div class="card-table-title">قائمة الدورات والكورسات الدراسية</div>
-                                    <div style="display:flex; gap:6px;">
-                                        <button id="filter-course-all" class="btn btn-sm btn-primary" onclick="setCourseFilter('all')">الكورسات (الكل)</button>
-                                        <button id="filter-course-active" class="btn btn-sm btn-outline" onclick="setCourseFilter('active')">النشطة <span class="badge badge-success" style="font-size:10px; padding:2px 5px;">نشط</span></button>
-                                        <button id="filter-course-inactive" class="btn btn-sm btn-outline" onclick="setCourseFilter('inactive')">غير النشطة <span class="badge badge-secondary" style="font-size:10px; padding:2px 5px;">غير نشط</span></button>
+                                    <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                                        <!-- Filter Group 1: Status -->
+                                        <div style="display:flex; gap:4px; background:var(--bg-main); padding:3px; border-radius:var(--border-radius-sm); border:1px solid var(--border-color);">
+                                            <button id="filter-course-all" class="btn btn-sm btn-primary" onclick="setCourseStatusFilter('all')" style="padding:4px 10px; font-size:12px;">الكورسات (الكل)</button>
+                                            <button id="filter-course-active" class="btn btn-sm btn-outline" onclick="setCourseStatusFilter('active')" style="padding:4px 10px; font-size:12px;">النشطة <span class="badge badge-success" style="font-size:10px; padding:2px 5px;">نشط</span></button>
+                                            <button id="filter-course-inactive" class="btn btn-sm btn-outline" onclick="setCourseStatusFilter('inactive')" style="padding:4px 10px; font-size:12px;">غير النشطة <span class="badge badge-secondary" style="font-size:10px; padding:2px 5px;">غير نشط</span></button>
+                                        </div>
+                                        <!-- Filter Group 2: Type (Online / In-Person) -->
+                                        <div style="display:flex; gap:4px; background:var(--bg-main); padding:3px; border-radius:var(--border-radius-sm); border:1px solid var(--border-color);">
+                                            <button id="filter-course-type-all" class="btn btn-sm btn-primary" onclick="setCourseTypeFilter('all')" style="padding:4px 10px; font-size:12px;">الكل</button>
+                                            <button id="filter-course-type-online" class="btn btn-sm btn-outline" onclick="setCourseTypeFilter('online')" style="padding:4px 10px; font-size:12px;">الاونلاين 🌐</button>
+                                            <button id="filter-course-type-inperson" class="btn btn-sm btn-outline" onclick="setCourseTypeFilter('in_person')" style="padding:4px 10px; font-size:12px;">الحضوري 🏫</button>
+                                        </div>
                                     </div>
                                 </div>
                                 <button class="btn btn-primary btn-sm" onclick="openAddCourseModal()">
@@ -342,6 +351,7 @@
                                             <th>المعرف</th>
                                             <th>اسم الكورس</th>
                                             <th>المعلم</th>
+                                            <th>النوع</th>
                                             <th>الحالة</th>
                                             <th>نمط التوزيع</th>
                                             <th>الوقت</th>
@@ -944,11 +954,20 @@
                         <label for="course-name">اسم الكورس</label>
                         <input type="text" id="course-name" placeholder="مثال: General English Level 1" required>
                     </div>
-                    <div class="form-group">
-                        <label for="course-teacher">اسم المدرس / المعلم</label>
-                        <select id="course-teacher" required>
-                            <!-- Dynamically populated options -->
-                        </select>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="course-teacher">اسم المدرس / المعلم</label>
+                            <select id="course-teacher" required>
+                                <!-- Dynamically populated options -->
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="course-type-select">نوع وتصنيف الدورة</label>
+                            <select id="course-type-select" required>
+                                <option value="in_person" selected>حضوري 🏫</option>
+                                <option value="online">أونلاين (عن بُعد) 🌐</option>
+                            </select>
+                        </div>
                     </div>
                     <div class="form-row">
                         <div class="form-group">
@@ -1049,9 +1068,10 @@
                 </div>
 
                 <!-- Course Active/Inactive Status Switch Bar -->
-                <div id="cd-status-bar" style="display:flex; align-items:center; justify-content:space-between; margin-bottom:18px; background:var(--bg-card); padding:10px 16px; border-radius:var(--border-radius-sm); border:1px solid var(--border-color); box-shadow:var(--shadow-sm);">
-                    <div style="display:flex; align-items:center; gap:10px;">
-                        <span style="font-weight:bold; font-size:13px; color:var(--text-primary);">حالة الكورس الحالية:</span>
+                <div id="cd-status-bar" style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; margin-bottom:18px; background:var(--bg-card); padding:10px 16px; border-radius:var(--border-radius-sm); border:1px solid var(--border-color); box-shadow:var(--shadow-sm);">
+                    <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                        <span style="font-weight:bold; font-size:13px; color:var(--text-primary);">تصنيف وحالة الكورس:</span>
+                        <span id="cd-type-badge"></span>
                         <span id="cd-status-badge"></span>
                     </div>
                     <button id="cd-toggle-status-btn" class="btn btn-sm" onclick="toggleCourseActiveStatus()" style="font-size:12px; padding:6px 14px; display:none;"></button>
