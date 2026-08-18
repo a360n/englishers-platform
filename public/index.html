@@ -389,16 +389,15 @@
                                         style="display:flex; border: 1px solid var(--border-color); border-radius: var(--border-radius-sm); overflow:hidden; background: var(--bg-card);">
                                         <button type="button" class="btn-filter active"
                                             onclick="setStudentFilter('all')"
-                                            style="padding: 8px 16px; font-size: 13px; border:none; background: var(--primary-color); color:#fff; cursor:pointer; font-weight:bold; transition:all 0.2s;">الكل</button>
+                                            style="padding: 8px 14px; font-size: 12px; border:none; background: var(--primary-color); color:#fff; cursor:pointer; font-weight:bold; transition:all 0.2s;">الكل</button>
                                         <button type="button" class="btn-filter" onclick="setStudentFilter('waiting')"
-                                            style="padding: 8px 16px; font-size: 13px; border:none; border-right: 1px solid var(--border-color); background: transparent; color:var(--text-secondary); cursor:pointer; transition:all 0.2s;">قائمة
-                                            الانتظار</button>
+                                            style="padding: 8px 14px; font-size: 12px; border:none; border-right: 1px solid var(--border-color); background: transparent; color:var(--text-secondary); cursor:pointer; transition:all 0.2s;">قائمة الانتظار</button>
                                         <button type="button" class="btn-filter" onclick="setStudentFilter('current')"
-                                            style="padding: 8px 16px; font-size: 13px; border:none; border-right: 1px solid var(--border-color); background: transparent; color:var(--text-secondary); cursor:pointer; transition:all 0.2s;">الطلاب
-                                            الحاليين</button>
+                                            style="padding: 8px 14px; font-size: 12px; border:none; border-right: 1px solid var(--border-color); background: transparent; color:var(--text-secondary); cursor:pointer; transition:all 0.2s;">الطلاب الحاليين</button>
                                         <button type="button" class="btn-filter" onclick="setStudentFilter('graduated')"
-                                            style="padding: 8px 16px; font-size: 13px; border:none; border-right: 1px solid var(--border-color); background: transparent; color:var(--text-secondary); cursor:pointer; transition:all 0.2s;">الطلاب
-                                            الخريجين</button>
+                                            style="padding: 8px 14px; font-size: 12px; border:none; border-right: 1px solid var(--border-color); background: transparent; color:var(--text-secondary); cursor:pointer; transition:all 0.2s;">الطلاب الخريجين 🎓</button>
+                                        <button type="button" class="btn-filter" onclick="setStudentFilter('withdrawn')"
+                                            style="padding: 8px 14px; font-size: 12px; border:none; border-right: 1px solid var(--border-color); background: transparent; color:var(--text-secondary); cursor:pointer; transition:all 0.2s;">الطلاب المنسحبين 🚪</button>
                                     </div>
                                     <input type="text" id="student-search-input"
                                         placeholder="بحث باسم الطالب أو رقم الهاتف..."
@@ -1332,6 +1331,32 @@
                                     <div class="profile-details-label">الكورس الدراسي الحالي</div>
                                     <div class="profile-details-value" id="sd-current-course" style="font-weight:bold;">
                                         -</div>
+                                </li>
+
+                                <!-- Manager & Admin Status Lifecycle Management Item -->
+                                <li id="sd-status-item" class="profile-details-item" style="display: none; background: rgba(0,0,0,0.03); padding: 12px; border-radius: 10px; border: 1px solid var(--border-color); margin-top: 10px; flex-direction: column; gap: 8px; align-items: stretch;">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                                        <span style="font-size: 12px; font-weight: bold; color: var(--primary-color); display: flex; align-items: center; gap: 5px;">
+                                            <i class="fa-solid fa-user-tag"></i> حالة وتصنيف الطالب
+                                        </span>
+                                        <span id="sd-status-badge" class="badge badge-info" style="font-size: 11px;">طالب حالي</span>
+                                    </div>
+
+                                    <!-- Switch: Graduate -->
+                                    <label style="display: flex; align-items: center; justify-content: space-between; font-size: 12px; cursor: pointer; padding: 4px 0; border-top: 1px dashed var(--border-color); padding-top: 6px; margin: 0;">
+                                        <span style="display: flex; align-items: center; gap: 6px; color: #16a34a; font-weight: bold;">
+                                            <i class="fa-solid fa-graduation-cap"></i> خريج 🎓 (تحويل لقائمة الخريجين)
+                                        </span>
+                                        <input type="checkbox" id="sd-switch-graduated" onchange="handleStudentStatusToggle('graduated', this.checked)" style="width: 18px; height: 18px; cursor: pointer; accent-color: #16a34a;">
+                                    </label>
+
+                                    <!-- Switch: Withdrawn -->
+                                    <label style="display: flex; align-items: center; justify-content: space-between; font-size: 12px; cursor: pointer; padding: 4px 0; border-top: 1px dashed var(--border-color); padding-top: 6px; margin: 0;">
+                                        <span style="display: flex; align-items: center; gap: 6px; color: #dc2626; font-weight: bold;">
+                                            <i class="fa-solid fa-door-open"></i> منسحب 🚪 (إيقاف كل الإشعارات)
+                                        </span>
+                                        <input type="checkbox" id="sd-switch-withdrawn" onchange="handleStudentStatusToggle('withdrawn', this.checked)" style="width: 18px; height: 18px; cursor: pointer; accent-color: #dc2626;">
+                                    </label>
                                 </li>
 
                                 <!-- Admin & Manager Only Account Info Item -->

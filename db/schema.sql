@@ -36,7 +36,10 @@ CREATE TABLE students (
     payment_plan VARCHAR(20) DEFAULT 'cash' CHECK (payment_plan IN ('cash', 'installment')),
     installment_amount NUMERIC(10, 2) DEFAULT 0.00,
     photo_path VARCHAR(555),
-    notes TEXT
+    notes TEXT,
+    is_graduated BOOLEAN DEFAULT FALSE,
+    is_withdrawn BOOLEAN DEFAULT FALSE,
+    status VARCHAR(20) DEFAULT 'active' CHECK (status IN ('active', 'waiting', 'graduated', 'withdrawn'))
 );
 
 -- Users table: manages system access
