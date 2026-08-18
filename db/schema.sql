@@ -107,3 +107,17 @@ CREATE TABLE student_custom_dues (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Student Installments table: stores monthly installment schedule, amounts, and customized lecture balance
+CREATE TABLE student_installments (
+    id SERIAL PRIMARY KEY,
+    student_id INTEGER REFERENCES students(id) ON DELETE CASCADE,
+    month_index INTEGER NOT NULL,
+    due_date DATE NOT NULL,
+    amount NUMERIC(10, 2) NOT NULL DEFAULT 0.00,
+    paid_amount NUMERIC(10, 2) NOT NULL DEFAULT 0.00,
+    lectures_count INTEGER DEFAULT 12,
+    status VARCHAR(20) DEFAULT 'unpaid' CHECK (status IN ('unpaid', 'partially_paid', 'paid')),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+
