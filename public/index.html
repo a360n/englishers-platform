@@ -565,7 +565,7 @@
                         <div class="card-table-wrapper" style="padding: 24px; direction: rtl;">
                             
                             <!-- Header & Stats Cards -->
-                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 24px;">
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px;">
                                 <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--border-radius-md); padding: 18px; display: flex; align-items: center; gap: 15px; box-shadow: var(--shadow-sm);">
                                     <div style="width: 48px; height: 48px; border-radius: 12px; background: rgba(239, 68, 68, 0.15); color: var(--danger); display: flex; align-items: center; justify-content: center; font-size: 22px;">
                                         <i class="fa-solid fa-triangle-exclamation"></i>
@@ -583,6 +583,16 @@
                                     <div>
                                         <div style="font-size: 12px; color: var(--text-secondary); font-weight: bold;">قرب انتهاء الشهر (9-10 محاضرات)</div>
                                         <div id="notif-stat-upcoming" style="font-size: 22px; font-weight: 800; color: var(--warning); margin-top: 2px;">0</div>
+                                    </div>
+                                </div>
+
+                                <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--border-radius-md); padding: 18px; display: flex; align-items: center; gap: 15px; box-shadow: var(--shadow-sm);">
+                                    <div style="width: 48px; height: 48px; border-radius: 12px; background: rgba(147, 51, 234, 0.15); color: #9333ea; display: flex; align-items: center; justify-content: center; font-size: 22px;">
+                                        <i class="fa-solid fa-bullhorn"></i>
+                                    </div>
+                                    <div>
+                                        <div style="font-size: 12px; color: var(--text-secondary); font-weight: bold;">لم يتم إبلاغهم بعد</div>
+                                        <div id="notif-stat-unnotified" style="font-size: 22px; font-weight: 800; color: #9333ea; margin-top: 2px;">0</div>
                                     </div>
                                 </div>
 
@@ -606,12 +616,21 @@
                                 </div>
 
                                 <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-                                    <div class="filter-group" style="display:flex; border: 1px solid var(--border-color); border-radius: var(--border-radius-sm); overflow:hidden; background: var(--bg-card);">
-                                        <button type="button" class="btn-notif-filter active" onclick="setNotifFilter('all')" style="padding: 6px 14px; font-size: 12px; border:none; background: var(--primary-color); color:#fff; cursor:pointer; font-weight:bold;">الكل</button>
-                                        <button type="button" class="btn-notif-filter" onclick="setNotifFilter('critical')" style="padding: 6px 14px; font-size: 12px; border:none; border-right: 1px solid var(--border-color); background: transparent; color:var(--text-secondary); cursor:pointer;">المتأخرة حرجة 🚨</button>
-                                        <button type="button" class="btn-notif-filter" onclick="setNotifFilter('upcoming')" style="padding: 6px 14px; font-size: 12px; border:none; border-right: 1px solid var(--border-color); background: transparent; color:var(--text-secondary); cursor:pointer;">قرب الاستحقاق ⚠️</button>
+                                    <!-- Filter Group 1: Urgency -->
+                                    <div style="display: flex; gap: 4px; background: var(--bg-main); padding: 3px; border-radius: var(--border-radius-sm); border: 1px solid var(--border-color);">
+                                        <button type="button" id="filter-notif-urgency-all" class="btn btn-sm btn-primary" onclick="setNotifUrgencyFilter('all')" style="padding: 5px 12px; font-size: 12px;">الكل</button>
+                                        <button type="button" id="filter-notif-urgency-critical" class="btn btn-sm btn-outline" onclick="setNotifUrgencyFilter('critical')" style="padding: 5px 12px; font-size: 12px;">حرجة 🚨</button>
+                                        <button type="button" id="filter-notif-urgency-upcoming" class="btn btn-sm btn-outline" onclick="setNotifUrgencyFilter('upcoming')" style="padding: 5px 12px; font-size: 12px;">قرب الاستحقاق ⚠️</button>
                                     </div>
-                                    <input type="text" id="notif-search-input" onkeyup="filterAndRenderNotifications()" placeholder="بحث باسم الطالب أو رقم الهاتف..." style="max-width:230px; padding: 6px 12px; font-size:12px; margin: 0; border: 1px solid var(--border-color); border-radius: var(--border-radius-sm); background: var(--bg-card); color: var(--text-primary);">
+
+                                    <!-- Filter Group 2: Notice Status -->
+                                    <div style="display: flex; gap: 4px; background: var(--bg-main); padding: 3px; border-radius: var(--border-radius-sm); border: 1px solid var(--border-color);">
+                                        <button type="button" id="filter-notif-status-all" class="btn btn-sm btn-primary" onclick="setNotifStatusFilter('all')" style="padding: 5px 12px; font-size: 12px;">الكل (المبلغين وغيرهم)</button>
+                                        <button type="button" id="filter-notif-status-unnotified" class="btn btn-sm btn-outline" onclick="setNotifStatusFilter('unnotified')" style="padding: 5px 12px; font-size: 12px;">لم يتم إبلاغهم ⏳</button>
+                                        <button type="button" id="filter-notif-status-notified" class="btn btn-sm btn-outline" onclick="setNotifStatusFilter('notified')" style="padding: 5px 12px; font-size: 12px;">تم إبلاغهم 📢</button>
+                                    </div>
+
+                                    <input type="text" id="notif-search-input" onkeyup="filterAndRenderNotifications()" placeholder="بحث باسم الطالب أو رقم الهاتف..." style="max-width:210px; padding: 6px 12px; font-size:12px; margin: 0; border: 1px solid var(--border-color); border-radius: var(--border-radius-sm); background: var(--bg-card); color: var(--text-primary);">
                                 </div>
                             </div>
 

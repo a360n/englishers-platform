@@ -117,6 +117,8 @@ CREATE TABLE student_installments (
     amount NUMERIC(10, 2) NOT NULL DEFAULT 0.00,
     paid_amount NUMERIC(10, 2) NOT NULL DEFAULT 0.00,
     lectures_count INTEGER DEFAULT 12,
+    is_notified BOOLEAN DEFAULT FALSE,
+    notified_at TIMESTAMP WITH TIME ZONE,
     status VARCHAR(20) DEFAULT 'unpaid' CHECK (status IN ('unpaid', 'partially_paid', 'paid')),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
