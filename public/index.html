@@ -1686,6 +1686,104 @@
         </div>
     </div>
 
+    <!-- ========================================== -->
+    <!-- MODAL: STUDENT PAID INSTALLMENTS & RECEIPTS -->
+    <!-- ========================================== -->
+    <div id="student-paid-installments-modal" class="modal-overlay" style="z-index: 130;">
+        <div class="modal-container" style="max-width: 800px; max-height: 90vh; display: flex; flex-direction: column; overflow: hidden;">
+            <div class="modal-header" style="flex-shrink: 0;">
+                <div class="modal-title" id="spim-modal-title">سجل أقساط ومدفوعات الطالب</div>
+                <button class="modal-close" onclick="closeStudentPaidInstallmentsModal()">&times;</button>
+            </div>
+            <div class="modal-body" style="padding: 20px; overflow-y: auto; flex: 1; min-height: 0;">
+                <!-- Student Summary Card -->
+                <div style="background: var(--bg-main); border: 1px solid var(--border-color); border-radius: var(--border-radius-sm); padding: 14px 16px; margin-bottom: 18px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+                    <div>
+                        <h4 id="spim-student-name" style="margin: 0; font-size: 16px; color: var(--primary-color); font-weight: bold;">-</h4>
+                        <div style="font-size: 12px; color: var(--text-muted); margin-top: 3px;">
+                            <span id="spim-student-phone"><i class="fa-solid fa-phone" style="margin-left: 4px;"></i>-</span> | 
+                            <span id="spim-student-course" style="color: var(--secondary-color); font-weight: bold;">-</span>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
+                        <div style="text-align: center;">
+                            <div style="font-size: 11px; color: var(--text-secondary); font-weight: bold;">إجمالي المستحقات</div>
+                            <div id="spim-total-due" style="font-size: 15px; font-weight: 800; color: var(--text-primary);">0 IQD</div>
+                        </div>
+                        <div style="text-align: center;">
+                            <div style="font-size: 11px; color: var(--text-secondary); font-weight: bold;">إجمالي المسدد</div>
+                            <div id="spim-total-paid" style="font-size: 15px; font-weight: 800; color: var(--success);">0 IQD</div>
+                        </div>
+                        <div style="text-align: center;">
+                            <div style="font-size: 11px; color: var(--text-secondary); font-weight: bold;">الرصيد الصافي</div>
+                            <div id="spim-balance" style="font-size: 15px; font-weight: 800; color: var(--danger);">0 IQD</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 1: Monthly Installments Schedule -->
+                <div style="margin-bottom: 22px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                        <h4 style="margin: 0; font-size: 14px; color: var(--primary-color); display: flex; align-items: center; gap: 6px;">
+                            <i class="fa-solid fa-calendar-days" style="color: var(--secondary-color);"></i> جدول خطة الأقساط الشهرية
+                        </h4>
+                        <button type="button" id="spim-btn-edit-dues" class="btn btn-outline btn-sm" style="font-size: 11px; padding: 3px 8px;">
+                            تعديل المستحقات ⚙️
+                        </button>
+                    </div>
+                    <div class="table-responsive" style="border: 1px solid var(--border-color); border-radius: var(--border-radius-sm);">
+                        <table style="width: 100%; border-collapse: collapse; font-size: 13px; text-align: right;">
+                            <thead>
+                                <tr style="background: #F8FAFC;">
+                                    <th style="padding: 10px 14px;">الشهر / القسط</th>
+                                    <th style="padding: 10px 14px;">عدد المحاضرات</th>
+                                    <th style="padding: 10px 14px;">مبلغ القسط</th>
+                                    <th style="padding: 10px 14px;">المسدد</th>
+                                    <th style="padding: 10px 14px;">تاريخ الاستحقاق</th>
+                                    <th style="padding: 10px 14px;">حالة السداد</th>
+                                </tr>
+                            </thead>
+                            <tbody id="spim-installments-tbody">
+                                <!-- Populated dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Section 2: Payments Receipts List -->
+                <div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                        <h4 style="margin: 0; font-size: 14px; color: var(--primary-color); display: flex; align-items: center; gap: 6px;">
+                            <i class="fa-solid fa-receipt" style="color: var(--success);"></i> وصولات الدفع الصادرة والمسجلة للطالب
+                        </h4>
+                        <button type="button" id="spim-btn-add-payment" class="btn btn-primary btn-sm" style="font-size: 11px; padding: 4px 10px;">
+                            <i class="fa-solid fa-plus-circle"></i> قطع وصل جديد
+                        </button>
+                    </div>
+                    <div class="table-responsive" style="border: 1px solid var(--border-color); border-radius: var(--border-radius-sm);">
+                        <table style="width: 100%; border-collapse: collapse; font-size: 13px; text-align: right;">
+                            <thead>
+                                <tr style="background: #F8FAFC;">
+                                    <th style="padding: 10px 14px;">رقم الوصل</th>
+                                    <th style="padding: 10px 14px;">تاريخ ووقت الوصل</th>
+                                    <th style="padding: 10px 14px;">المبلغ المدفوع</th>
+                                    <th style="padding: 10px 14px;">نوع الدفعة / الوصف</th>
+                                    <th style="padding: 10px 14px; text-align: center;">تحميل الوصل</th>
+                                </tr>
+                            </thead>
+                            <tbody id="spim-payments-tbody">
+                                <!-- Populated dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer" style="flex-shrink: 0;">
+                <button type="button" class="btn btn-secondary" onclick="closeStudentPaidInstallmentsModal()">إغلاق</button>
+            </div>
+        </div>
+    </div>
+
     <!-- MODAL: Base Dues Management -->
     <div id="base-dues-modal" class="modal-overlay">
         <div class="modal-container" style="max-height: 85vh; display: flex; flex-direction: column; overflow: hidden;">
