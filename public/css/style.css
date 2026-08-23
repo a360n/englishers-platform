@@ -973,8 +973,8 @@ tr.tr-removed td.sticky-col-name {
 }
 
 /* Stacking layers for nested modals */
-#course-modal, #edit-session-modal, #payment-modal {
-    z-index: 110;
+#course-modal, #edit-session-modal, #payment-modal, #student-details-modal, #student-paid-installments-modal {
+    z-index: 120;
 }
 
 /* Frozen Student Styling */
