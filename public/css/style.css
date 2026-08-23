@@ -587,8 +587,49 @@ tr:hover td {
     background-color: var(--bg-card);
 }
 
-/* Fix/Sticky Student Names Column on the RIGHT in RTL */
-.attendance-table th:first-child, .attendance-table td:first-child {
+/* Sticky Sequence & Student Names Columns on the RIGHT in RTL */
+.attendance-table th.sticky-col-seq, 
+.attendance-table td.sticky-col-seq {
+    position: sticky;
+    right: 0;
+    background-color: var(--bg-card);
+    z-index: 12;
+    width: 44px;
+    min-width: 44px;
+    max-width: 44px;
+    text-align: center;
+    border-left: 1px solid var(--border-color);
+    padding: 10px 4px;
+    font-weight: 800;
+    color: var(--text-secondary);
+}
+
+.attendance-table th.sticky-col-seq {
+    background-color: #F8FAFC;
+    z-index: 13;
+}
+
+.attendance-table th.sticky-col-name, 
+.attendance-table td.sticky-col-name {
+    position: sticky;
+    right: 44px;
+    background-color: var(--bg-card);
+    z-index: 10;
+    min-width: 220px;
+    text-align: right;
+    border-left: 3px solid var(--primary-color);
+    box-shadow: -4px 0 8px rgba(0, 0, 0, 0.08);
+    padding: 10px 14px;
+}
+
+.attendance-table th.sticky-col-name {
+    background-color: #F8FAFC;
+    z-index: 11;
+}
+
+/* Fallback for other generic tables using attendance-table without classes */
+.attendance-table:not(:has(.sticky-col-seq)) th:first-child,
+.attendance-table:not(:has(.sticky-col-seq)) td:first-child {
     position: sticky;
     right: 0;
     background-color: var(--bg-card);
@@ -600,9 +641,20 @@ tr:hover td {
     padding: 10px 14px;
 }
 
-.attendance-table th:first-child {
+.attendance-table:not(:has(.sticky-col-seq)) th:first-child {
     background-color: #F8FAFC;
     z-index: 11;
+}
+
+/* Maintain background colors on sticky cells for frozen and removed students */
+tr.tr-frozen td.sticky-col-seq,
+tr.tr-frozen td.sticky-col-name {
+    background-color: rgba(224, 242, 254, 0.95) !important;
+}
+
+tr.tr-removed td.sticky-col-seq,
+tr.tr-removed td.sticky-col-name {
+    background-color: #fef2f2 !important;
 }
 
 /* 12-Lecture Separator Divider Styling */
@@ -1240,7 +1292,21 @@ tr.tr-removed .btn-attendance {
         padding: 6px 4px;
         font-size: 11px;
     }
-    .attendance-table th:first-child, .attendance-table td:first-child {
+    .attendance-table th.sticky-col-seq, .attendance-table td.sticky-col-seq {
+        width: 36px;
+        min-width: 36px;
+        max-width: 36px;
+        padding: 6px 2px;
+        font-size: 11px;
+    }
+    .attendance-table th.sticky-col-name, .attendance-table td.sticky-col-name {
+        right: 36px;
+        min-width: 140px;
+        padding: 8px 10px;
+        font-size: 11px;
+    }
+    .attendance-table:not(:has(.sticky-col-seq)) th:first-child,
+    .attendance-table:not(:has(.sticky-col-seq)) td:first-child {
         min-width: 140px;
         padding: 8px 10px;
         font-size: 11px;
