@@ -538,12 +538,29 @@ td {
     font-weight: 500;
 }
 
-tr:last-child td {
-    border-bottom: none;
+tbody tr {
+    transition: background-color 0.15s ease-in-out;
 }
 
-tr:hover td {
-    background-color: #FAFAFB;
+tbody tr:hover td {
+    background-color: rgba(238, 125, 82, 0.08) !important;
+}
+
+.attendance-table tbody tr:hover td.sticky-col-seq,
+.attendance-table tbody tr:hover td.sticky-col-name {
+    background-color: rgba(238, 125, 82, 0.12) !important;
+}
+
+tr.tr-frozen:hover td,
+tr.tr-frozen:hover td.sticky-col-seq,
+tr.tr-frozen:hover td.sticky-col-name {
+    background-color: rgba(186, 230, 253, 0.9) !important;
+}
+
+tr.tr-removed:hover td,
+tr.tr-removed:hover td.sticky-col-seq,
+tr.tr-removed:hover td.sticky-col-name {
+    background-color: #fee2e2 !important;
 }
 
 /* Badges */
