@@ -1391,3 +1391,209 @@ tr.tr-removed .btn-attendance {
         padding: 12px 10px;
     }
 }
+
+/* ================================================= */
+/* Custom DatePicker (DD/MM/YYYY) System Styles     */
+/* ================================================= */
+.custom-date-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 100%;
+}
+
+.custom-date-input {
+    width: 100%;
+    padding-left: 36px !important;
+    text-align: right;
+    font-family: inherit;
+    letter-spacing: 0.5px;
+    direction: ltr; /* shows DD/MM/YYYY clearly */
+}
+
+.custom-date-btn {
+    position: absolute;
+    left: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: var(--primary-color);
+    cursor: pointer;
+    font-size: 15px;
+    padding: 4px 6px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    z-index: 2;
+}
+
+.custom-date-btn:hover {
+    color: var(--secondary-color);
+    background: rgba(79, 70, 229, 0.1);
+}
+
+.custom-datepicker-popup {
+    position: fixed;
+    z-index: 999999;
+    background: var(--bg-card);
+    border: 1.5px solid var(--border-color);
+    border-radius: 12px;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.18), 0 2px 6px rgba(0, 0, 0, 0.08);
+    width: 310px;
+    padding: 16px;
+    direction: rtl;
+    font-family: inherit;
+    animation: datePickerFadeIn 0.18s ease-out;
+}
+
+@keyframes datePickerFadeIn {
+    from { opacity: 0; transform: translateY(-6px) scale(0.98); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.cdp-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    gap: 6px;
+}
+
+.cdp-nav-btn {
+    background: var(--bg-main);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    color: var(--text-primary);
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 12px;
+    transition: all 0.15s ease;
+}
+
+.cdp-nav-btn:hover {
+    background: var(--primary-color);
+    color: #fff;
+    border-color: var(--primary-color);
+}
+
+.cdp-selects {
+    display: flex;
+    gap: 6px;
+    flex: 1;
+}
+
+.cdp-select {
+    padding: 4px 6px;
+    font-size: 12px;
+    border-radius: 6px;
+    border: 1px solid var(--border-color);
+    background: var(--bg-main);
+    color: var(--text-primary);
+    cursor: pointer;
+    font-weight: bold;
+    flex: 1;
+}
+
+.cdp-weekdays {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    text-align: center;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.cdp-days {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+}
+
+.cdp-day {
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 600;
+    border-radius: 6px;
+    cursor: pointer;
+    color: var(--text-primary);
+    transition: all 0.12s ease;
+    user-select: none;
+    border: 1px solid transparent;
+}
+
+.cdp-day:hover:not(.cdp-empty):not(.cdp-disabled) {
+    background: rgba(79, 70, 229, 0.15);
+    color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.cdp-day.cdp-selected {
+    background: var(--primary-color) !important;
+    color: #ffffff !important;
+    font-weight: 800;
+    box-shadow: 0 2px 6px rgba(79, 70, 229, 0.35);
+}
+
+.cdp-day.cdp-today {
+    border: 1.5px solid var(--secondary-color);
+    font-weight: 800;
+}
+
+.cdp-day.cdp-empty {
+    cursor: default;
+    opacity: 0;
+}
+
+.cdp-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 12px;
+    padding-top: 10px;
+    border-top: 1px solid var(--border-color);
+}
+
+.cdp-footer-btn {
+    background: none;
+    border: none;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 4px;
+    transition: all 0.15s ease;
+}
+
+.cdp-btn-today {
+    color: var(--primary-color);
+}
+.cdp-btn-today:hover {
+    background: rgba(79, 70, 229, 0.1);
+}
+
+.cdp-btn-clear {
+    color: var(--danger);
+}
+.cdp-btn-clear:hover {
+    background: rgba(239, 68, 68, 0.1);
+}
+
+.cdp-btn-close {
+    color: var(--text-muted);
+}
+.cdp-btn-close:hover {
+    background: rgba(0, 0, 0, 0.05);
+}

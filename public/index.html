@@ -81,8 +81,8 @@
 
                     <div class="form-row">
                         <div class="form-group">
-                            <label for="reg-dob">تاريخ الميلاد</label>
-                            <input type="date" id="reg-dob" required>
+                            <label for="reg-dob">تاريخ الميلاد (يوم/شهر/سنة)</label>
+                            <input type="text" id="reg-dob" class="custom-date-input" placeholder="DD/MM/YYYY" autocomplete="off" maxlength="10" required>
                         </div>
                         <div class="form-group">
                             <label for="reg-pob">محل الولادة (المحافظة)</label>
@@ -450,8 +450,8 @@
                                     </div>
                                     <div class="form-row">
                                         <div class="form-group">
-                                            <label for="pay-date" style="font-weight: bold; color: var(--primary-color);">تاريخ قطع الوصل *</label>
-                                            <input type="date" id="pay-date" required>
+                                            <label for="pay-date" style="font-weight: bold; color: var(--primary-color);">تاريخ قطع الوصل (يوم/شهر/سنة) *</label>
+                                            <input type="text" id="pay-date" class="custom-date-input" placeholder="DD/MM/YYYY" autocomplete="off" maxlength="10" required>
                                         </div>
                                         <div class="form-group">
                                             <label for="pay-time" style="font-weight: bold; color: var(--primary-color);">وقت قطع الوصل *</label>
@@ -721,11 +721,11 @@
                                 <div style="display: flex; align-items: flex-end; gap: 12px; flex-wrap: wrap;">
                                     <div class="form-group" style="flex: 1; min-width: 140px; margin: 0;">
                                         <label style="font-size: 11px; font-weight: bold; margin-bottom: 4px; display: block;">من تاريخ:</label>
-                                        <input type="date" id="export-courses-from" style="width: 100%; padding: 7px 10px; font-size: 12px; border: 1px solid var(--border-color); border-radius: var(--border-radius-sm); background: var(--bg-main); color: var(--text-primary);">
+                                        <input type="text" id="export-courses-from" class="custom-date-input" placeholder="DD/MM/YYYY" autocomplete="off" maxlength="10" style="width: 100%; padding: 7px 10px; font-size: 12px; border: 1px solid var(--border-color); border-radius: var(--border-radius-sm); background: var(--bg-main); color: var(--text-primary);">
                                     </div>
                                     <div class="form-group" style="flex: 1; min-width: 140px; margin: 0;">
                                         <label style="font-size: 11px; font-weight: bold; margin-bottom: 4px; display: block;">إلى تاريخ:</label>
-                                        <input type="date" id="export-courses-to" style="width: 100%; padding: 7px 10px; font-size: 12px; border: 1px solid var(--border-color); border-radius: var(--border-radius-sm); background: var(--bg-main); color: var(--text-primary);">
+                                        <input type="text" id="export-courses-to" class="custom-date-input" placeholder="DD/MM/YYYY" autocomplete="off" maxlength="10" style="width: 100%; padding: 7px 10px; font-size: 12px; border: 1px solid var(--border-color); border-radius: var(--border-radius-sm); background: var(--bg-main); color: var(--text-primary);">
                                     </div>
                                     <button type="button" class="btn btn-outline" onclick="clearExportDates('export-courses-from', 'export-courses-to')" style="padding: 7px 12px; font-size: 11px;" title="إعادة تعيين وتصدير الكل">
                                         تصدير الكل (الجميع) 🔄
@@ -758,11 +758,11 @@
                                 <div style="display: flex; align-items: flex-end; gap: 12px; flex-wrap: wrap;">
                                     <div class="form-group" style="flex: 1; min-width: 140px; margin: 0;">
                                         <label style="font-size: 11px; font-weight: bold; margin-bottom: 4px; display: block;">من تاريخ التسجيل:</label>
-                                        <input type="date" id="export-students-from" style="width: 100%; padding: 7px 10px; font-size: 12px; border: 1px solid var(--border-color); border-radius: var(--border-radius-sm); background: var(--bg-main); color: var(--text-primary);">
+                                        <input type="text" id="export-students-from" class="custom-date-input" placeholder="DD/MM/YYYY" autocomplete="off" maxlength="10" style="width: 100%; padding: 7px 10px; font-size: 12px; border: 1px solid var(--border-color); border-radius: var(--border-radius-sm); background: var(--bg-main); color: var(--text-primary);">
                                     </div>
                                     <div class="form-group" style="flex: 1; min-width: 140px; margin: 0;">
                                         <label style="font-size: 11px; font-weight: bold; margin-bottom: 4px; display: block;">إلى تاريخ التسجيل:</label>
-                                        <input type="date" id="export-students-to" style="width: 100%; padding: 7px 10px; font-size: 12px; border: 1px solid var(--border-color); border-radius: var(--border-radius-sm); background: var(--bg-main); color: var(--text-primary);">
+                                        <input type="text" id="export-students-to" class="custom-date-input" placeholder="DD/MM/YYYY" autocomplete="off" maxlength="10" style="width: 100%; padding: 7px 10px; font-size: 12px; border: 1px solid var(--border-color); border-radius: var(--border-radius-sm); background: var(--bg-main); color: var(--text-primary);">
                                     </div>
                                     <button type="button" class="btn btn-outline" onclick="clearExportDates('export-students-from', 'export-students-to')" style="padding: 7px 12px; font-size: 11px;" title="إعادة تعيين وتصدير الكل">
                                         تصدير الكل (الجميع) 🔄
@@ -795,11 +795,11 @@
                                 <div style="display: flex; align-items: flex-end; gap: 12px; flex-wrap: wrap;">
                                     <div class="form-group" style="flex: 1; min-width: 140px; margin: 0;">
                                         <label style="font-size: 11px; font-weight: bold; margin-bottom: 4px; display: block;">من تاريخ الدفع:</label>
-                                        <input type="date" id="export-payments-from" style="width: 100%; padding: 7px 10px; font-size: 12px; border: 1px solid var(--border-color); border-radius: var(--border-radius-sm); background: var(--bg-main); color: var(--text-primary);">
+                                        <input type="text" id="export-payments-from" class="custom-date-input" placeholder="DD/MM/YYYY" autocomplete="off" maxlength="10" style="width: 100%; padding: 7px 10px; font-size: 12px; border: 1px solid var(--border-color); border-radius: var(--border-radius-sm); background: var(--bg-main); color: var(--text-primary);">
                                     </div>
                                     <div class="form-group" style="flex: 1; min-width: 140px; margin: 0;">
                                         <label style="font-size: 11px; font-weight: bold; margin-bottom: 4px; display: block;">إلى تاريخ الدفع:</label>
-                                        <input type="date" id="export-payments-to" style="width: 100%; padding: 7px 10px; font-size: 12px; border: 1px solid var(--border-color); border-radius: var(--border-radius-sm); background: var(--bg-main); color: var(--text-primary);">
+                                        <input type="text" id="export-payments-to" class="custom-date-input" placeholder="DD/MM/YYYY" autocomplete="off" maxlength="10" style="width: 100%; padding: 7px 10px; font-size: 12px; border: 1px solid var(--border-color); border-radius: var(--border-radius-sm); background: var(--bg-main); color: var(--text-primary);">
                                     </div>
                                     <button type="button" class="btn btn-outline" onclick="clearExportDates('export-payments-from', 'export-payments-to')" style="padding: 7px 12px; font-size: 11px;" title="إعادة تعيين وتصدير الكل">
                                         تصدير الكل (الجميع) 🔄
@@ -1007,8 +1007,8 @@
                             </select>
                         </div>
                         <div class="form-group">
-                            <label for="course-start-date">تاريخ بدء الكورس</label>
-                            <input type="date" id="course-start-date" required onchange="validateCourseStartDatePattern()">
+                            <label for="course-start-date">تاريخ بدء الكورس (يوم/شهر/سنة)</label>
+                            <input type="text" id="course-start-date" class="custom-date-input" placeholder="DD/MM/YYYY" autocomplete="off" maxlength="10" required onchange="validateCourseStartDatePattern()">
                         </div>
                     </div>
                     <div id="course-start-date-warning" style="display:none; margin-top:-6px; margin-bottom:14px; font-size:12px; color:var(--danger); font-weight:bold; background:rgba(239, 68, 68, 0.1); border:1px solid var(--danger); border-radius:6px; padding:6px 12px; direction:rtl;"></div>
@@ -1028,8 +1028,8 @@
                             <input type="number" id="course-month" placeholder="مثال: 1" min="1" required>
                         </div>
                         <div class="form-group">
-                            <label for="course-creation-date">تاريخ إنشاء الكورس</label>
-                            <input type="date" id="course-creation-date" required>
+                            <label for="course-creation-date">تاريخ إنشاء الكورس (يوم/شهر/سنة)</label>
+                            <input type="text" id="course-creation-date" class="custom-date-input" placeholder="DD/MM/YYYY" autocomplete="off" maxlength="10" required>
                         </div>
                     </div>
                     <div class="form-group">
@@ -1123,8 +1123,8 @@
                             </select>
                         </div>
                         <div class="form-group" style="flex:1; min-width:140px; margin-bottom:0;">
-                            <label for="assign-student-date">تاريخ الانضمام 📅</label>
-                            <input type="date" id="assign-student-date" required style="padding: 8px 10px; font-size: 12px; border: 1px solid var(--border-color); border-radius: var(--border-radius-sm); background: var(--bg-card); color: var(--text-primary);" title="تاريخ انضمام الطالب للكورس (يحدد المحاضرات المفتوحة للطالب)">
+                            <label for="assign-student-date">تاريخ الانضمام (يوم/شهر/سنة) 📅</label>
+                            <input type="text" id="assign-student-date" class="custom-date-input" placeholder="DD/MM/YYYY" autocomplete="off" maxlength="10" required style="padding: 8px 10px; font-size: 12px; border: 1px solid var(--border-color); border-radius: var(--border-radius-sm); background: var(--bg-card); color: var(--text-primary);" title="تاريخ انضمام الطالب للكورس (يحدد المحاضرات المفتوحة للطالب)">
                         </div>
                         <button type="submit" class="btn btn-secondary" style="padding: 10px 20px;">إضافة للكورس <i
                                 class="fa-solid fa-user-plus"></i></button>
@@ -1142,8 +1142,8 @@
                                 style="padding: 8px 10px;">
                         </div>
                         <div class="form-group" style="flex:1.5; min-width:150px; margin-bottom:0;">
-                            <label for="extend-start-date">تاريخ البدء للتمديد</label>
-                            <input type="date" id="extend-start-date" required style="padding: 8px 10px;" onchange="validateExtendStartDatePattern()">
+                            <label for="extend-start-date">تاريخ البدء للتمديد (يوم/شهر/سنة)</label>
+                            <input type="text" id="extend-start-date" class="custom-date-input" placeholder="DD/MM/YYYY" autocomplete="off" maxlength="10" required style="padding: 8px 10px;" onchange="validateExtendStartDatePattern()">
                         </div>
                         <div class="form-group" style="flex:1.5; min-width:150px; margin-bottom:0;">
                             <label for="extend-schedule">نمط التوزيع للأيام المضافة</label>
@@ -1199,8 +1199,8 @@
                 <input type="hidden" id="edit-session-old-date">
                 <div class="modal-body">
                     <div class="form-group">
-                        <label for="edit-session-date">تاريخ المحاضرة</label>
-                        <input type="date" id="edit-session-date" required>
+                        <label for="edit-session-date">تاريخ المحاضرة (يوم/شهر/سنة)</label>
+                        <input type="text" id="edit-session-date" class="custom-date-input" placeholder="DD/MM/YYYY" autocomplete="off" maxlength="10" required>
                     </div>
                     <div class="form-row">
                         <div class="form-group">
@@ -1257,8 +1257,8 @@
                     <div id="postpone-specific-fields"
                         style="display: none; margin-top: 15px; border-top: 1px dashed var(--border-color); padding-top: 15px;">
                         <div class="form-group">
-                            <label for="postpone-new-date">التاريخ الجديد للمحاضرة</label>
-                            <input type="date" id="postpone-new-date">
+                            <label for="postpone-new-date">التاريخ الجديد للمحاضرة (يوم/شهر/سنة)</label>
+                            <input type="text" id="postpone-new-date" class="custom-date-input" placeholder="DD/MM/YYYY" autocomplete="off" maxlength="10">
                         </div>
                         <div class="form-row">
                             <div class="form-group">
@@ -1452,8 +1452,8 @@
                                         style="width:100%; padding: 8px; font-size:13px; border:1px solid var(--border-color); border-radius:var(--border-radius-sm); background:var(--bg-card); color:var(--text-primary);">
                                 </div>
                                 <div class="form-group" style="margin-bottom: 12px;">
-                                    <label style="font-size:12px; font-weight:bold;">تاريخ الميلاد</label>
-                                    <input type="date" id="edit-stu-dob" required
+                                    <label style="font-size:12px; font-weight:bold;">تاريخ الميلاد (يوم/شهر/سنة)</label>
+                                    <input type="text" id="edit-stu-dob" class="custom-date-input" placeholder="DD/MM/YYYY" autocomplete="off" maxlength="10" required
                                         style="width:100%; padding: 8px; font-size:13px; border:1px solid var(--border-color); border-radius:var(--border-radius-sm); background:var(--bg-card); color:var(--text-primary);">
                                 </div>
                                 <div class="form-group" style="margin-bottom: 12px;">
@@ -1693,8 +1693,8 @@
                     </div>
                     <div class="form-row">
                         <div class="form-group">
-                            <label for="edit-payment-date" style="font-weight: bold;">تاريخ قطع الوصل *</label>
-                            <input type="date" id="edit-payment-date" required>
+                            <label for="edit-payment-date" style="font-weight: bold;">تاريخ قطع الوصل (يوم/شهر/سنة) *</label>
+                            <input type="text" id="edit-payment-date" class="custom-date-input" placeholder="DD/MM/YYYY" autocomplete="off" maxlength="10" required>
                         </div>
                         <div class="form-group">
                             <label for="edit-payment-time" style="font-weight: bold;">وقت قطع الوصل *</label>
@@ -2190,8 +2190,8 @@
                         </div>
 
                         <div class="form-group" style="margin-bottom: 12px;">
-                            <label style="font-size:12px; font-weight:bold;">تاريخ الميلاد *</label>
-                            <input type="date" id="admin-reg-dob" required
+                            <label style="font-size:12px; font-weight:bold;">تاريخ الميلاد (يوم/شهر/سنة) *</label>
+                            <input type="text" id="admin-reg-dob" class="custom-date-input" placeholder="DD/MM/YYYY" autocomplete="off" maxlength="10" required
                                 style="width:100%; padding: 8px; font-size:13px; border:1px solid var(--border-color); border-radius:var(--border-radius-sm); background:var(--bg-card); color:var(--text-primary);">
                         </div>
 
@@ -2406,8 +2406,8 @@
                     <input type="text" id="edit-enrollment-student-name" readonly style="width: 100%; padding: 8px 10px; font-size: 13px; font-weight: bold; border: 1px solid var(--border-color); border-radius: var(--border-radius-sm); background: var(--bg-main); color: var(--primary-color);">
                 </div>
                 <div class="form-group" style="margin-bottom: 20px;">
-                    <label style="font-size: 12px; font-weight: bold;">تاريخ الانضمام الجديد للكورس 📅:</label>
-                    <input type="date" id="edit-enrollment-date-input" required style="width: 100%; padding: 8px 10px; font-size: 13px; border: 1px solid var(--border-color); border-radius: var(--border-radius-sm); background: var(--bg-card); color: var(--text-primary);">
+                    <label style="font-size: 12px; font-weight: bold;">تاريخ الانضمام الجديد للكورس (يوم/شهر/سنة) 📅:</label>
+                    <input type="text" id="edit-enrollment-date-input" class="custom-date-input" placeholder="DD/MM/YYYY" autocomplete="off" maxlength="10" required style="width: 100%; padding: 8px 10px; font-size: 13px; border: 1px solid var(--border-color); border-radius: var(--border-radius-sm); background: var(--bg-card); color: var(--text-primary);">
                 </div>
                 <div style="display: flex; gap: 10px;">
                     <button type="submit" class="btn btn-primary" style="flex: 1; padding: 10px; font-size: 13px; font-weight: bold;">
