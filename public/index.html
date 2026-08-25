@@ -1343,6 +1343,14 @@
                                     <div class="profile-details-value" id="sd-current-course" style="font-weight:bold;">
                                         -</div>
                                 </li>
+                                <li class="profile-details-item" style="background: rgba(79, 70, 229, 0.05); padding: 10px 12px; border-radius: 8px; border: 1px solid rgba(79, 70, 229, 0.15); margin-top: 6px;">
+                                    <div class="profile-details-label" style="color: var(--primary-color); font-weight: bold; display: flex; align-items: center; gap: 5px;">
+                                        <i class="fa-solid fa-clock-rotate-left"></i> رصيد المحاضرات المتبقي
+                                    </div>
+                                    <div class="profile-details-value" id="sd-lectures-summary-sidebar" style="font-weight: 800; font-size: 13px; color: var(--primary-color);">
+                                        -
+                                    </div>
+                                </li>
 
                                 <!-- Manager & Admin Status Lifecycle Management Item -->
                                 <li id="sd-status-item" class="profile-details-item" style="display: none; background: rgba(0,0,0,0.03); padding: 12px; border-radius: 10px; border: 1px solid var(--border-color); margin-top: 10px; flex-direction: column; gap: 8px; align-items: stretch;">
@@ -1582,8 +1590,42 @@
                                     class="fa-solid fa-save"></i></button>
                         </form>
 
-                        <!-- Student courses and financials summary in details -->
+                        <!-- Student Lectures Balance Summary Box -->
                         <div style="margin-top: 25px; border-top: 2px solid var(--border-color); padding-top: 15px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 8px;">
+                                <h4 style="color: var(--primary-color); margin: 0; display: flex; align-items: center; gap: 6px;">
+                                    <i class="fa-solid fa-graduation-cap" style="color: var(--secondary-color);"></i> رصيد واستهلاك المحاضرات الكلي
+                                </h4>
+                                <span id="sd-payment-plan-badge" class="badge badge-info" style="font-size: 11px;">نظام الدفع: -</span>
+                            </div>
+                            
+                            <div style="background: var(--bg-main); border: 1px solid var(--border-color); border-radius: var(--border-radius-sm); padding: 14px; display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; text-align: center;">
+                                <div style="background: var(--bg-card); padding: 10px 8px; border-radius: 6px; border: 1px solid var(--border-color);">
+                                    <div style="font-size: 11px; color: var(--text-secondary); font-weight: bold; margin-bottom: 4px;">إجمالي الرصيد المشترى</div>
+                                    <div id="sd-lectures-total" style="font-size: 16px; font-weight: 800; color: var(--text-primary);">-</div>
+                                </div>
+                                <div style="background: var(--bg-card); padding: 10px 8px; border-radius: 6px; border: 1px solid var(--border-color);">
+                                    <div style="font-size: 11px; color: var(--text-secondary); font-weight: bold; margin-bottom: 4px;">المستهلكة (المحضورة)</div>
+                                    <div id="sd-lectures-used" style="font-size: 16px; font-weight: 800; color: var(--warning);">-</div>
+                                </div>
+                                <div style="background: var(--bg-card); padding: 10px 8px; border-radius: 6px; border: 1px solid var(--border-color);">
+                                    <div style="font-size: 11px; color: var(--text-secondary); font-weight: bold; margin-bottom: 4px;">الرصيد المتبقي الكلي</div>
+                                    <div id="sd-lectures-remaining" style="font-size: 16px; font-weight: 800; color: var(--success);">-</div>
+                                </div>
+                            </div>
+
+                            <!-- Progress bar for lecture consumption -->
+                            <div style="margin-top: 10px; background: rgba(0,0,0,0.06); border-radius: 10px; height: 8px; overflow: hidden; position: relative;">
+                                <div id="sd-lectures-progress-bar" style="height: 100%; width: 0%; background: var(--primary-color); border-radius: 10px; transition: width 0.3s ease;"></div>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; font-size: 11px; color: var(--text-muted); margin-top: 4px;">
+                                <span id="sd-lectures-progress-label">استهلاك: 0%</span>
+                                <span id="sd-lectures-status-text">الرصيد سارٍ</span>
+                            </div>
+                        </div>
+
+                        <!-- Student courses and financials summary in details -->
+                        <div style="margin-top: 20px; border-top: 1px dashed var(--border-color); padding-top: 15px;">
                             <h4 style="color:var(--primary-color); margin-bottom:10px;">الوضع المالي للطالب</h4>
                             <div
                                 style="display:flex; justify-content:space-between; background-color: var(--bg-main); padding: 12px; border-radius: var(--border-radius-sm);">
