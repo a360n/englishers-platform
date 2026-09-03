@@ -1065,123 +1065,208 @@
 
     <!-- Modal: Course Details & Attendance Sheet & Student Assignments -->
     <div id="course-details-modal" class="modal-overlay">
-        <div class="modal-container" style="max-width: 900px;">
-            <div class="modal-header">
-                <div class="modal-title" id="course-details-modal-title">تفاصيل الكورس وسجل الحضور والغياب</div>
+        <div class="modal-container cd-modal-expanded">
+            <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center;">
+                <div class="modal-title" id="course-details-modal-title" style="font-size: 16px; font-weight: 800; display: flex; align-items: center; gap: 8px;">
+                    <i class="fa-solid fa-graduation-cap" style="color: var(--secondary-color);"></i> تفاصيل الكورس وسجل الحضور والغياب
+                </div>
                 <button class="modal-close" onclick="closeCourseDetailsModal()">&times;</button>
             </div>
-            <div class="modal-body">
-                <!-- Course basic info summary -->
-                <div
-                    style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; background-color:var(--bg-main); padding: 15px; border-radius: var(--border-radius-sm);">
-                    <div style="font-size:13px; color:var(--text-secondary);">
-                        <p><strong>المعلم:</strong> <span id="cd-teacher"></span></p>
-                        <p><strong>المنهج الدراسي:</strong> <span id="cd-curriculum"></span></p>
-                        <p><strong>تاريخ الإنشاء:</strong> <span id="cd-created-at" style="font-weight:bold; color:var(--text-primary);"></span></p>
+            <div class="modal-body" style="padding: 18px 22px;">
+                <!-- Modern Course Hero Dashboard Card -->
+                <div class="cd-hero-card">
+                    <div class="cd-hero-top">
+                        <div class="cd-badges-cluster">
+                            <span id="cd-status-badge"></span>
+                            <span id="cd-type-badge"></span>
+                            <span id="cd-month" class="badge" style="background: rgba(28, 33, 63, 0.08); color: var(--primary-color); font-weight: 800; border: 1px solid rgba(28, 33, 63, 0.15); font-size: 12px; padding: 4px 10px;"></span>
+                        </div>
+                        <div class="cd-actions-cluster">
+                            <button id="cd-toggle-status-btn" class="btn btn-sm" onclick="toggleCourseActiveStatus()" style="font-size: 12px; padding: 6px 14px; display: none;"></button>
+                            <div id="cd-admin-actions" style="display: flex; gap: 8px; align-items: center;">
+                                <button class="btn btn-outline-secondary btn-sm" onclick="openEditCourseModal(activeCourseId)" title="تعديل بيانات الكورس" style="font-size: 12px; padding: 6px 12px; display: flex; align-items: center; gap: 6px;">
+                                    <i class="fa-solid fa-pen-to-square"></i> تعديل
+                                </button>
+                                <button class="btn btn-outline-danger btn-sm" onclick="deleteCourse(activeCourseId)" title="حذف الكورس" style="font-size: 12px; padding: 6px 10px;">
+                                    <i class="fa-solid fa-trash-can"></i>
+                                </button>
+                            </div>
+                        </div>
                     </div>
-                    <div
-                        style="font-size:13px; color:var(--text-secondary); text-align: right; margin-right: 20px; margin-left: auto;">
-                        <p><strong>التوزيع الأسبوعي:</strong> <span id="cd-schedule"></span></p>
-                        <p><strong>الوقت:</strong> <span id="cd-time"></span></p>
-                        <p><strong>الشهر الحالي بالدورة:</strong> <span id="cd-month"
-                                style="font-weight:bold; color:var(--primary-color);"></span></p>
+
+                    <!-- Mini Stat Chips Grid -->
+                    <div class="cd-chips-grid">
+                        <div class="cd-stat-chip">
+                            <div class="cd-chip-icon" style="color: #4f46e5; background: #eef2ff;"><i class="fa-solid fa-chalkboard-user"></i></div>
+                            <div class="cd-chip-info">
+                                <span class="cd-chip-label">المعلم</span>
+                                <strong class="cd-chip-value" id="cd-teacher">-</strong>
+                            </div>
+                        </div>
+                        <div class="cd-stat-chip">
+                            <div class="cd-chip-icon" style="color: #0891b2; background: #ecfeff;"><i class="fa-solid fa-book-open"></i></div>
+                            <div class="cd-chip-info">
+                                <span class="cd-chip-label">المنهج الدراسي</span>
+                                <strong class="cd-chip-value" id="cd-curriculum">-</strong>
+                            </div>
+                        </div>
+                        <div class="cd-stat-chip">
+                            <div class="cd-chip-icon" style="color: #d97706; background: #fffbeb;"><i class="fa-solid fa-calendar-week"></i></div>
+                            <div class="cd-chip-info">
+                                <span class="cd-chip-label">التوزيع الأسبوعي</span>
+                                <strong class="cd-chip-value" id="cd-schedule">-</strong>
+                            </div>
+                        </div>
+                        <div class="cd-stat-chip">
+                            <div class="cd-chip-icon" style="color: #059669; background: #ecfdf5;"><i class="fa-solid fa-clock"></i></div>
+                            <div class="cd-chip-info">
+                                <span class="cd-chip-label">التوقيت اليومي</span>
+                                <strong class="cd-chip-value" id="cd-time" style="direction: ltr; display: inline-block;">-</strong>
+                            </div>
+                        </div>
+                        <div class="cd-stat-chip">
+                            <div class="cd-chip-icon" style="color: #64748b; background: #f8fafc;"><i class="fa-solid fa-calendar-days"></i></div>
+                            <div class="cd-chip-info">
+                                <span class="cd-chip-label">تاريخ الإنشاء</span>
+                                <strong class="cd-chip-value" id="cd-created-at">-</strong>
+                            </div>
+                        </div>
                     </div>
-                    <div id="cd-admin-actions" style="display:flex; gap:10px; align-items:center;">
-                        <button class="btn btn-secondary btn-sm" onclick="openEditCourseModal(activeCourseId)"
-                            style="padding:8px 16px; font-size:13px;">تعديل الكورس <i
-                                class="fa-solid fa-edit"></i></button>
-                        <button class="btn btn-danger btn-sm" onclick="deleteCourse(activeCourseId)"
-                            style="padding:8px 16px; font-size:13px;">حذف الكورس <i
-                                class="fa-solid fa-trash"></i></button>
+
+                    <!-- Alert banner if frozen -->
+                    <div id="cd-frozen-banner" style="display: none; padding: 10px 14px; background: #fef3c7; color: #92400e; border: 1px solid #fde68a; border-radius: var(--border-radius-sm); font-weight: bold; font-size: 12px; margin-top: 12px; text-align: center; direction: rtl;">
+                        <i class="fa-solid fa-lock" style="margin-left: 6px; font-size: 14px;"></i> هذا الكورس غير نشط حالياً، تم تجميد إمكانيات تسجيل وتعديل الحضور والغياب للجميع.
                     </div>
                 </div>
 
-                <!-- Course Active/Inactive Status Switch Bar -->
-                <div id="cd-status-bar" style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; margin-bottom:18px; background:var(--bg-card); padding:10px 16px; border-radius:var(--border-radius-sm); border:1px solid var(--border-color); box-shadow:var(--shadow-sm);">
-                    <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
-                        <span style="font-weight:bold; font-size:13px; color:var(--text-primary);">تصنيف وحالة الكورس:</span>
-                        <span id="cd-type-badge"></span>
-                        <span id="cd-status-badge"></span>
-                    </div>
-                    <button id="cd-toggle-status-btn" class="btn btn-sm" onclick="toggleCourseActiveStatus()" style="font-size:12px; padding:6px 14px; display:none;"></button>
+                <!-- Sub-Tabs Navigation Bar -->
+                <div class="cd-tabs-nav">
+                    <button type="button" class="cd-tab-btn active" id="cd-tab-btn-attendance" onclick="switchCourseModalTab('attendance')">
+                        <i class="fa-solid fa-clipboard-user"></i>
+                        <span>سجل الحضور والغياب</span>
+                        <span class="cd-tab-badge" id="cd-students-count-badge">0</span>
+                    </button>
+                    <button type="button" class="cd-tab-btn" id="cd-tab-btn-assign" onclick="switchCourseModalTab('assign')">
+                        <i class="fa-solid fa-user-plus"></i>
+                        <span>تنسيب طالب جديد</span>
+                    </button>
+                    <button type="button" class="cd-tab-btn" id="cd-tab-btn-extend" onclick="switchCourseModalTab('extend')">
+                        <i class="fa-solid fa-calendar-plus"></i>
+                        <span>إضافة وتمديد محاضرات</span>
+                    </button>
                 </div>
 
-                <!-- Frozen Course Alert Banner -->
-                <div id="cd-frozen-banner" style="display:none; padding:12px 16px; background:#fef3c7; color:#92400e; border:1px solid #fde68a; border-radius:var(--border-radius-sm); font-weight:bold; font-size:13px; margin-bottom:18px; text-align:center; direction:rtl;">
-                    <i class="fa-solid fa-lock" style="margin-left:6px; font-size:15px;"></i> هذا الكورس غير نشط حالياً، تم تجميد إمكانيات تسجيل وتعديل الحضور والغياب للجميع.
-                </div>
-
-                <!-- Section: Assign student to this course -->
-                <div id="cd-assign-section" style="margin-bottom: 25px; border-bottom: 1.5px solid var(--border-color); padding-bottom: 20px;">
-                    <h4 style="margin-bottom: 10px; color:var(--primary-color);">تنسيب طالب جديد للكورس</h4>
-                    <form id="assign-student-form" style="display:flex; gap:12px; align-items: flex-end; flex-wrap: wrap;">
-                        <div class="form-group" style="flex:2; min-width:220px; margin-bottom:0;">
-                            <label for="assign-student-select">اختر من الطلاب المسجلين</label>
-                            <input type="text" id="assign-student-search" onkeyup="filterStudentDropdown('assign-student-search', 'assign-student-select')" placeholder="🔍 تصفية بالاسم أو الهاتف أو الهوية الوطنية..." style="margin-bottom: 6px; padding: 6px 10px; font-size: 12px; border: 1px solid var(--border-color); border-radius: var(--border-radius-sm); background: var(--bg-card); color: var(--text-primary);">
-                            <select id="assign-student-select" required>
-                                <!-- Option list of students -->
-                            </select>
+                <!-- TAB 1: Attendance Sheet (Active / Main View) -->
+                <div id="cd-tab-attendance" class="cd-tab-pane">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 10px;">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <h4 style="color: var(--primary-color); margin-bottom: 0; font-size: 15px;">
+                                <i class="fa-solid fa-table-cells" style="color: var(--secondary-color); margin-left: 4px;"></i> جدول الحضور والغياب
+                            </h4>
+                            <span style="font-size: 11px; color: var(--text-muted);">(اسحب الجدول أفقياً للاطلاع على جميع المحاضرات)</span>
                         </div>
-                        <div class="form-group" style="flex:1; min-width:140px; margin-bottom:0;">
-                            <label for="assign-student-date">تاريخ الانضمام (يوم/شهر/سنة) 📅</label>
-                            <input type="text" id="assign-student-date" class="custom-date-input" placeholder="DD/MM/YYYY" autocomplete="off" maxlength="10" required style="padding: 8px 10px; font-size: 12px; border: 1px solid var(--border-color); border-radius: var(--border-radius-sm); background: var(--bg-card); color: var(--text-primary);" title="تاريخ انضمام الطالب للكورس (يحدد المحاضرات المفتوحة للطالب)">
-                        </div>
-                        <button type="submit" class="btn btn-secondary" style="padding: 10px 20px;">إضافة للكورس <i
-                                class="fa-solid fa-user-plus"></i></button>
-                    </form>
-                </div>
-
-                <!-- Section: Extend Course Days -->
-                <div id="cd-extend-section" style="margin-bottom: 25px; border-bottom: 1.5px solid var(--border-color); padding-bottom: 20px;">
-                    <h4 style="margin-bottom: 10px; color:var(--primary-color);">إضافة محاضرات (أيام) جديدة للدورة</h4>
-                    <form id="extend-course-form"
-                        style="display:flex; flex-wrap:wrap; gap:15px; align-items: flex-end;">
-                        <div class="form-group" style="flex:1; min-width:100px; margin-bottom:0;">
-                            <label for="extend-num-days">عدد الأيام</label>
-                            <input type="number" id="extend-num-days" value="12" min="1" required
-                                style="padding: 8px 10px;">
-                        </div>
-                        <div class="form-group" style="flex:1.5; min-width:150px; margin-bottom:0;">
-                            <label for="extend-start-date">تاريخ البدء للتمديد (يوم/شهر/سنة)</label>
-                            <input type="text" id="extend-start-date" class="custom-date-input" placeholder="DD/MM/YYYY" autocomplete="off" maxlength="10" required style="padding: 8px 10px;" onchange="validateExtendStartDatePattern()">
-                        </div>
-                        <div class="form-group" style="flex:1.5; min-width:150px; margin-bottom:0;">
-                            <label for="extend-schedule">نمط التوزيع للأيام المضافة</label>
-                            <select id="extend-schedule" required style="padding: 8px 10px;" onchange="handleExtendScheduleChange()">
-                                <option value="even">زوجي (سبت/اثنين/أربعاء)</option>
-                                <option value="odd">فردي (أحد/ثلاثاء/خميس)</option>
-                            </select>
-                        </div>
-                        <div class="form-group" style="flex:1; min-width:100px; margin-bottom:0;">
-                            <label for="extend-time-start">وقت البدء</label>
-                            <input type="time" id="extend-time-start" required style="padding: 8px 10px;">
-                        </div>
-                        <div class="form-group" style="flex:1; min-width:100px; margin-bottom:0;">
-                            <label for="extend-time-end">وقت الانتهاء</label>
-                            <input type="time" id="extend-time-end" required style="padding: 8px 10px;">
-                        </div>
-                        <div id="extend-start-date-warning" style="display:none; width: 100%; margin-top:8px; font-size:12px; color:var(--danger); font-weight:bold; background:rgba(239, 68, 68, 0.1); border:1px solid var(--danger); border-radius:6px; padding:6px 12px; direction:rtl;"></div>
-                        <button type="submit" class="btn btn-secondary"
-                            style="padding: 10px 20px; white-space:nowrap;">إضافة محاضرات <i
-                                class="fa-solid fa-calendar-plus"></i></button>
-                    </form>
-                </div>
-
-                <!-- Section: Attendance Sheet -->
-                <div style="margin-bottom: 15px;">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-                        <h4 style="color:var(--primary-color); margin-bottom:0;">جدول الحضور والغياب (Attendance Sheet)
-                        </h4>
-                        <div style="display:flex; gap:10px; align-items:center;">
-                            <button class="btn btn-success btn-sm" onclick="saveAttendanceSheet()"
-                                style="padding:6px 12px; font-size:12px;">حفظ الحضور والغياب <i
-                                    class="fa-solid fa-floppy-disk"></i></button>
-                        </div>
+                        <button class="btn btn-success" onclick="saveAttendanceSheet()"
+                            style="padding: 8px 18px; font-size: 13px; font-weight: 700; box-shadow: 0 2px 6px rgba(16, 185, 129, 0.25); display: flex; align-items: center; gap: 8px;">
+                            <i class="fa-solid fa-floppy-disk"></i> حفظ الحضور والغياب
+                        </button>
                     </div>
 
                     <!-- Attendance Grid -->
                     <div class="attendance-grid-container" id="attendance-sheet-wrapper">
                         <!-- Dynamic attendance table will be rendered here -->
+                    </div>
+                </div>
+
+                <!-- TAB 2: Assign Student -->
+                <div id="cd-tab-assign" class="cd-tab-pane" style="display: none;">
+                    <div id="cd-assign-section" class="cd-action-card">
+                        <div class="cd-card-header">
+                            <div>
+                                <h4 style="margin: 0; color: var(--primary-color); font-size: 15px;">
+                                    <i class="fa-solid fa-user-plus" style="color: var(--secondary-color); margin-left: 6px;"></i> تنسيب طالب جديد إلى هذه الدورة
+                                </h4>
+                                <p style="margin: 4px 0 0 0; font-size: 12px; color: var(--text-secondary);">
+                                    اختر الطالب وحدد تاريخ التحاقه ليبدأ تسجيل حضوره اعتباراً من ذلك التاريخ.
+                                </p>
+                            </div>
+                        </div>
+
+                        <form id="assign-student-form" style="display: flex; flex-direction: column; gap: 15px; margin-top: 15px;">
+                            <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+                                <div class="form-group" style="flex: 2; min-width: 260px; margin-bottom: 0;">
+                                    <label for="assign-student-select">بحث واختيار الطالب المسجل</label>
+                                    <input type="text" id="assign-student-search" onkeyup="filterStudentDropdown('assign-student-search', 'assign-student-select')" placeholder="🔍 تصفية بالاسم أو الهاتف أو الهوية الوطنية..." style="margin-bottom: 8px; padding: 8px 12px; font-size: 13px; border: 1.5px solid var(--border-color); border-radius: var(--border-radius-sm); background: var(--bg-card); color: var(--text-primary); width: 100%;">
+                                    <select id="assign-student-select" required style="padding: 10px 12px; font-size: 13px; border: 1.5px solid var(--border-color); border-radius: var(--border-radius-sm); width: 100%;">
+                                        <!-- Option list of students -->
+                                    </select>
+                                </div>
+                                <div class="form-group" style="flex: 1; min-width: 180px; margin-bottom: 0;">
+                                    <label for="assign-student-date">تاريخ الانضمام للكورس (يوم/شهر/سنة) 📅</label>
+                                    <input type="text" id="assign-student-date" class="custom-date-input" placeholder="DD/MM/YYYY" autocomplete="off" maxlength="10" required style="padding: 10px 12px; font-size: 13px; border: 1.5px solid var(--border-color); border-radius: var(--border-radius-sm); background: var(--bg-card); color: var(--text-primary); width: 100%;" title="تاريخ انضمام الطالب للكورس (يحدد المحاضرات المفتوحة للطالب)">
+                                    <small style="display: block; margin-top: 6px; font-size: 11px; color: var(--text-muted);">
+                                        💡 المحاضرات السابقة لهذا التاريخ ستكون مغلقة تلقائياً للطالب.
+                                    </small>
+                                </div>
+                            </div>
+
+                            <div style="display: flex; justify-content: flex-end; margin-top: 5px;">
+                                <button type="submit" class="btn btn-primary" style="padding: 10px 24px; font-size: 13.5px; font-weight: 700; display: flex; align-items: center; gap: 8px;">
+                                    <i class="fa-solid fa-user-check"></i> تأكيد تنسيب الطالب للدورة
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- TAB 3: Extend Lectures -->
+                <div id="cd-tab-extend" class="cd-tab-pane" style="display: none;">
+                    <div id="cd-extend-section" class="cd-action-card">
+                        <div class="cd-card-header">
+                            <div>
+                                <h4 style="margin: 0; color: var(--primary-color); font-size: 15px;">
+                                    <i class="fa-solid fa-calendar-plus" style="color: var(--secondary-color); margin-left: 6px;"></i> إضافة محاضرات (أيام) جديدة لجدول الدورة
+                                </h4>
+                                <p style="margin: 4px 0 0 0; font-size: 12px; color: var(--text-secondary);">
+                                    يتم اقتراح تاريخ البدء تلقائياً ليتوافق مع النمط الأسبوعي للكورس دون أي تعارض.
+                                </p>
+                            </div>
+                        </div>
+
+                        <form id="extend-course-form" style="margin-top: 15px;">
+                            <div style="display: flex; flex-wrap: wrap; gap: 15px; align-items: flex-end;">
+                                <div class="form-group" style="flex: 1; min-width: 110px; margin-bottom: 0;">
+                                    <label for="extend-num-days">عدد الأيام</label>
+                                    <input type="number" id="extend-num-days" value="12" min="1" required style="padding: 9px 12px; font-size: 13px; font-weight: bold; width: 100%;">
+                                </div>
+                                <div class="form-group" style="flex: 1.5; min-width: 170px; margin-bottom: 0;">
+                                    <label for="extend-start-date">تاريخ البدء للتمديد (يوم/شهر/سنة)</label>
+                                    <input type="text" id="extend-start-date" class="custom-date-input" placeholder="DD/MM/YYYY" autocomplete="off" maxlength="10" required style="padding: 9px 12px; font-size: 13px; font-weight: bold; width: 100%;" onchange="validateExtendStartDatePattern()">
+                                </div>
+                                <div class="form-group" style="flex: 1.5; min-width: 180px; margin-bottom: 0;">
+                                    <label for="extend-schedule">نمط التوزيع للأيام</label>
+                                    <select id="extend-schedule" required style="padding: 9px 12px; font-size: 13px; width: 100%;" onchange="handleExtendScheduleChange()">
+                                        <option value="even">زوجي (سبت/اثنين/أربعاء)</option>
+                                        <option value="odd">فردي (أحد/ثلاثاء/خميس)</option>
+                                    </select>
+                                </div>
+                                <div class="form-group" style="flex: 1; min-width: 110px; margin-bottom: 0;">
+                                    <label for="extend-time-start">وقت البدء</label>
+                                    <input type="time" id="extend-time-start" required style="padding: 9px 12px; font-size: 13px; width: 100%;">
+                                </div>
+                                <div class="form-group" style="flex: 1; min-width: 110px; margin-bottom: 0;">
+                                    <label for="extend-time-end">وقت الانتهاء</label>
+                                    <input type="time" id="extend-time-end" required style="padding: 9px 12px; font-size: 13px; width: 100%;">
+                                </div>
+                            </div>
+
+                            <div id="extend-start-date-warning" style="display: none; width: 100%; margin-top: 10px; font-size: 12px; color: var(--danger); font-weight: bold; background: rgba(239, 68, 68, 0.1); border: 1px solid var(--danger); border-radius: 6px; padding: 8px 12px; direction: rtl;"></div>
+
+                            <div style="display: flex; justify-content: flex-end; margin-top: 15px;">
+                                <button type="submit" class="btn btn-primary" style="padding: 10px 24px; font-size: 13.5px; font-weight: 700; display: flex; align-items: center; gap: 8px;">
+                                    <i class="fa-solid fa-calendar-check"></i> حفظ وتمديد المحاضرات
+                                </button>
+                            </div>
+                        </form>
                     </div>
                 </div>
             </div>

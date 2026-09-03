@@ -1600,3 +1600,188 @@ tr.tr-removed .btn-attendance {
 .cdp-btn-close:hover {
     background: rgba(0, 0, 0, 0.05);
 }
+
+/* ========================================================
+   COURSE DETAILS MODAL - MODERN UI/UX REDESIGN
+   ======================================================== */
+.cd-modal-expanded {
+    max-width: 1120px !important;
+    width: 96vw !important;
+}
+
+.cd-hero-card {
+    background: #ffffff;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-md);
+    padding: 16px 20px;
+    margin-bottom: 16px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.cd-hero-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 14px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.cd-badges-cluster {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.cd-actions-cluster {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.cd-chips-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+    gap: 10px;
+}
+
+.cd-stat-chip {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 8px 12px;
+    transition: all 0.2s ease;
+}
+
+.cd-stat-chip:hover {
+    border-color: #cbd5e1;
+    background: #f1f5f9;
+}
+
+.cd-chip-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    flex-shrink: 0;
+}
+
+.cd-chip-info {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.cd-chip-label {
+    font-size: 11px;
+    color: var(--text-secondary);
+    font-weight: 600;
+}
+
+.cd-chip-value {
+    font-size: 12.5px;
+    color: var(--text-primary);
+    font-weight: 700;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Modal Inner Sub-Tabs Navigation */
+.cd-tabs-nav {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    border-bottom: 2px solid #e2e8f0;
+    margin-bottom: 16px;
+    padding-bottom: 0;
+}
+
+.cd-tab-btn {
+    background: transparent;
+    border: none;
+    border-bottom: 3px solid transparent;
+    padding: 10px 16px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-secondary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s ease;
+    border-radius: 6px 6px 0 0;
+    margin-bottom: -2px;
+}
+
+.cd-tab-btn:hover {
+    color: var(--primary-color);
+    background: rgba(28, 33, 63, 0.04);
+}
+
+.cd-tab-btn.active {
+    color: var(--primary-color);
+    border-bottom-color: var(--secondary-color);
+    background: rgba(230, 57, 70, 0.06);
+}
+
+.cd-tab-badge {
+    background: #e2e8f0;
+    color: var(--text-primary);
+    font-size: 11px;
+    font-weight: 800;
+    padding: 2px 7px;
+    border-radius: 10px;
+}
+
+.cd-tab-btn.active .cd-tab-badge {
+    background: var(--secondary-color);
+    color: #ffffff;
+}
+
+.cd-tab-pane {
+    animation: fadeIn 0.25s ease;
+}
+
+.cd-action-card {
+    background: #ffffff;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-md);
+    padding: 20px 24px;
+    box-shadow: var(--shadow-sm);
+}
+
+.cd-card-header {
+    border-bottom: 1px solid #f1f5f9;
+    padding-bottom: 12px;
+}
+
+.btn-outline-secondary {
+    background: transparent;
+    border: 1px solid #cbd5e1;
+    color: var(--text-primary);
+}
+.btn-outline-secondary:hover {
+    background: #f1f5f9;
+    border-color: #94a3b8;
+}
+
+.btn-outline-danger {
+    background: transparent;
+    border: 1px solid #fca5a5;
+    color: #dc2626;
+}
+.btn-outline-danger:hover {
+    background: #fef2f2;
+    border-color: #ef4444;
+}
+
