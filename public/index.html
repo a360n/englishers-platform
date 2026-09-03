@@ -1368,278 +1368,110 @@
 
     <!-- Modal: Student Profile Details & Administration Evaluation -->
     <div id="student-details-modal" class="modal-overlay">
-        <div class="modal-container" style="max-width: 850px;">
-            <div class="modal-header">
-                <div class="modal-title">ملف معلومات الطالب والتقييم الإداري</div>
+        <div class="modal-container sd-modal-expanded">
+            <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center;">
+                <div class="modal-title" style="font-size: 16px; font-weight: 800; display: flex; align-items: center; gap: 8px;">
+                    <i class="fa-solid fa-address-card" style="color: var(--secondary-color);"></i> ملف معلومات الطالب والتقييم الإداري
+                </div>
                 <button class="modal-close" onclick="closeStudentDetailsModal()">&times;</button>
             </div>
-            <div class="modal-body" style="padding: 24px;">
-                <div class="student-profile-layout">
-
-                    <!-- Profile Personal Info -->
-                    <div class="profile-sidebar-card" style="max-height: 700px; overflow-y: auto;">
-                        <div class="profile-avatar" id="sd-avatar-container" title="انقر لتكبير الصورة 🔍"
-                            style="overflow: hidden; padding: 0; display: flex; align-items: center; justify-content: center; cursor: pointer;"
-                            onclick="expandCurrentAvatar('sd-avatar-img')">
-                            <img id="sd-avatar-img" src=""
-                                style="width: 100%; height: 100%; object-fit: cover; display: none;">
-                            <span id="sd-avatar-initial">أ</span>
-                        </div>
-                        <h4 class="profile-name" id="sd-name">اسم الطالب</h4>
-                        <span class="badge badge-info profile-role-badge" id="sd-level">المستوى A1</span>
-
-                        <!-- View Container -->
-                        <div id="student-details-view-container" style="width: 100%;">
-                            <ul class="profile-details-list">
-                                <li class="profile-details-item">
-                                    <div class="profile-details-label">رقم الهاتف</div>
-                                    <div class="profile-details-value" id="sd-phone">0770</div>
-                                </li>
-                                <li class="profile-details-item">
-                                    <div class="profile-details-label">رقم الهوية الوطنية</div>
-                                    <div class="profile-details-value" id="sd-national-id">-</div>
-                                </li>
-                                <li class="profile-details-item">
-                                    <div class="profile-details-label">تاريخ الميلاد (محل الولادة)</div>
-                                    <div class="profile-details-value" id="sd-dob-pob">-</div>
-                                </li>
-                                <li class="profile-details-item">
-                                    <div class="profile-details-label">التحصيل الدراسي</div>
-                                    <div class="profile-details-value" id="sd-qualification">-</div>
-                                </li>
-                                <li class="profile-details-item">
-                                    <div class="profile-details-label">العنوان بالتفصيل</div>
-                                    <div class="profile-details-value" id="sd-address">-</div>
-                                </li>
-                                <li class="profile-details-item">
-                                    <div class="profile-details-label">الغاية من التعلم</div>
-                                    <div class="profile-details-value" id="sd-purpose">-</div>
-                                </li>
-                                <li class="profile-details-item">
-                                    <div class="profile-details-label">الفترة المناسبة / الدراسة</div>
-                                    <div class="profile-details-value" id="sd-period-type">-</div>
-                                </li>
-                                <li class="profile-details-item">
-                                    <div class="profile-details-label">كيف عرف النادي</div>
-                                    <div class="profile-details-value" id="sd-referral">-</div>
-                                </li>
-                                <li class="profile-details-item">
-                                    <div class="profile-details-label">الكورس الدراسي الحالي</div>
-                                    <div class="profile-details-value" id="sd-current-course" style="font-weight:bold;">
-                                        -</div>
-                                </li>
-                                <li class="profile-details-item" style="background: rgba(79, 70, 229, 0.05); padding: 10px 12px; border-radius: 8px; border: 1px solid rgba(79, 70, 229, 0.15); margin-top: 6px;">
-                                    <div class="profile-details-label" style="color: var(--primary-color); font-weight: bold; display: flex; align-items: center; gap: 5px;">
-                                        <i class="fa-solid fa-clock-rotate-left"></i> رصيد المحاضرات المتبقي
-                                    </div>
-                                    <div class="profile-details-value" id="sd-lectures-summary-sidebar" style="font-weight: 800; font-size: 13px; color: var(--primary-color);">
-                                        -
-                                    </div>
-                                </li>
-
-                                <!-- Manager & Admin Status Lifecycle Management Item -->
-                                <li id="sd-status-item" class="profile-details-item" style="display: none; background: rgba(0,0,0,0.03); padding: 12px; border-radius: 10px; border: 1px solid var(--border-color); margin-top: 10px; flex-direction: column; gap: 8px; align-items: stretch;">
-                                    <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
-                                        <span style="font-size: 12px; font-weight: bold; color: var(--primary-color); display: flex; align-items: center; gap: 5px;">
-                                            <i class="fa-solid fa-user-tag"></i> حالة وتصنيف الطالب
-                                        </span>
-                                        <span id="sd-status-badge" class="badge badge-info" style="font-size: 11px;">طالب حالي</span>
-                                    </div>
-
-                                    <!-- Switch: Graduate -->
-                                    <label style="display: flex; align-items: center; justify-content: space-between; font-size: 12px; cursor: pointer; padding: 4px 0; border-top: 1px dashed var(--border-color); padding-top: 6px; margin: 0;">
-                                        <span style="display: flex; align-items: center; gap: 6px; color: #16a34a; font-weight: bold;">
-                                            <i class="fa-solid fa-graduation-cap"></i> خريج 🎓 (تحويل لقائمة الخريجين)
-                                        </span>
-                                        <input type="checkbox" id="sd-switch-graduated" onchange="handleStudentStatusToggle('graduated', this.checked)" style="width: 18px; height: 18px; cursor: pointer; accent-color: #16a34a;">
-                                    </label>
-
-                                    <!-- Switch: Withdrawn -->
-                                    <label style="display: flex; align-items: center; justify-content: space-between; font-size: 12px; cursor: pointer; padding: 4px 0; border-top: 1px dashed var(--border-color); padding-top: 6px; margin: 0;">
-                                        <span style="display: flex; align-items: center; gap: 6px; color: #dc2626; font-weight: bold;">
-                                            <i class="fa-solid fa-door-open"></i> منسحب 🚪 (إيقاف كل الإشعارات)
-                                        </span>
-                                        <input type="checkbox" id="sd-switch-withdrawn" onchange="handleStudentStatusToggle('withdrawn', this.checked)" style="width: 18px; height: 18px; cursor: pointer; accent-color: #dc2626;">
-                                    </label>
-                                </li>
-
-                                <!-- Admin & Manager Only Account Info Item -->
-                                <li id="sd-account-item" class="profile-details-item" style="display: none; background: rgba(79, 70, 229, 0.07); padding: 10px 14px; border-radius: 10px; border: 1px dashed var(--primary-color); margin-top: 10px; flex-direction: column; gap: 6px; align-items: stretch;">
-                                    <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
-                                        <span style="font-size: 12px; font-weight: bold; color: var(--primary-color); display: flex; align-items: center; gap: 5px;">
-                                            <i class="fa-solid fa-user-lock"></i> بيانات حساب دخول الطالب
-                                        </span>
-                                        <button type="button" class="btn btn-sm btn-outline" onclick="toggleEditStudentAccountForm(true)" style="font-size: 11px; padding: 3px 8px; border-color: var(--primary-color); color: var(--primary-color);">
-                                            تعديل الحساب 🔑
-                                        </button>
-                                    </div>
-                                    <div style="display: flex; justify-content: space-between; align-items: center; font-size: 12px; margin-top: 4px;">
-                                        <span style="color: var(--text-muted);">اسم المستخدم (اليوزر):</span>
-                                        <span id="sd-account-username" style="font-weight: bold; font-family: monospace; color: var(--text-primary); direction: ltr;">-</span>
-                                    </div>
-                                    <div style="display: flex; justify-content: space-between; align-items: center; font-size: 12px;">
-                                        <span style="color: var(--text-muted);">كلمة المرور:</span>
-                                        <span style="font-weight: bold; font-family: monospace; color: var(--text-muted); letter-spacing: 2px;">••••••••</span>
-                                    </div>
-                                </li>
-                            </ul>
-
-                            <!-- Admin Account Quick Edit Box -->
-                            <div id="sd-account-edit-box" style="display: none; background: rgba(79, 70, 229, 0.08); padding: 12px; border-radius: 10px; margin-top: 10px; border: 1px solid var(--primary-color); width: 100%; text-align: right;">
-                                <div style="font-size: 12px; font-weight: bold; color: var(--primary-color); margin-bottom: 8px;">تعديل حساب دخول الطالب (اليوزر والباسورد):</div>
-                                <div class="form-group" style="margin-bottom: 8px;">
-                                    <label style="font-size: 11px; font-weight: bold;">اسم المستخدم الجديد (اليوزر)</label>
-                                    <input type="text" id="sd-edit-username" placeholder="اسم المستخدم بالإنكليزية..." style="width: 100%; padding: 6px 10px; font-size: 12px; border-radius: 6px; border: 1px solid var(--border-color); direction: ltr; background: var(--bg-card); color: var(--text-primary);">
-                                </div>
-                                <div class="form-group" style="margin-bottom: 10px;">
-                                    <label style="font-size: 11px; font-weight: bold;">كلمة المرور الجديدة</label>
-                                    <input type="password" id="sd-edit-password" placeholder="كلمة المرور الجديدة (اتركها فارغة لإبقائها كما هي)" style="width: 100%; padding: 6px 10px; font-size: 12px; border-radius: 6px; border: 1px solid var(--border-color); direction: ltr; background: var(--bg-card); color: var(--text-primary);">
-                                </div>
-                                <div style="display: flex; gap: 6px; justify-content: flex-end;">
-                                    <button type="button" class="btn btn-sm btn-secondary" onclick="toggleEditStudentAccountForm(false)" style="padding: 4px 10px; font-size: 11px;">إلغاء</button>
-                                    <button type="button" class="btn btn-sm btn-primary" onclick="saveStudentAccountEdit()" style="padding: 4px 12px; font-size: 11px;">حفظ الحساب 💾</button>
-                                </div>
+            <div class="modal-body" style="padding: 18px 22px;">
+                <!-- Top Hero Profile Banner -->
+                <div class="sd-hero-card">
+                    <div class="sd-hero-main">
+                        <div class="sd-hero-profile-group">
+                            <div class="sd-hero-avatar" id="sd-avatar-container" title="انقر لتكبير الصورة 🔍" onclick="expandCurrentAvatar('sd-avatar-img')">
+                                <img id="sd-avatar-img" src="" style="width: 100%; height: 100%; object-fit: cover; display: none;">
+                                <span id="sd-avatar-initial">أ</span>
                             </div>
-
-                            <!-- Manager Edit & Delete Buttons (Conditional) -->
-                            <div id="manager-edit-btn-container" style="display: none; margin-top: 15px; flex-wrap: wrap; gap: 8px;">
-                                <button type="button" class="btn btn-outline" onclick="toggleStudentPersonalEdit(true)"
-                                    style="flex: 1; min-width: 140px; padding: 8px; font-size: 13px; color: var(--primary-color); border-color: var(--primary-color);">تعديل
-                                    البيانات الشخصية ✏️</button>
-                                <button type="button" class="btn btn-danger" onclick="deleteStudentFromModal()"
-                                    style="padding: 8px 14px; font-size: 13px;">حذف الطالب إدارياً <i class="fa-solid fa-user-xmark"></i></button>
+                            <div class="sd-hero-info">
+                                <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                                    <h3 class="sd-hero-name" id="sd-name">اسم الطالب</h3>
+                                    <span id="sd-status-badge" class="badge badge-info" style="font-size: 11px;">طالب حالي</span>
+                                    <span class="badge badge-info" id="sd-level" style="font-size: 11px;">المستوى A1</span>
+                                </div>
+                                <div class="sd-hero-meta-row">
+                                    <span class="sd-hero-phone"><i class="fa-solid fa-phone" style="font-size: 11px; margin-left: 4px;"></i> <span id="sd-phone">0770</span></span>
+                                </div>
                             </div>
                         </div>
 
-                        <!-- Edit Container (Manager Only) -->
-                        <div id="student-details-edit-container" style="display: none; width: 100%; text-align: right;">
-                            <form id="edit-student-personal-form" style="margin-top: 15px;">
-                                <div class="form-group" style="margin-bottom: 12px;">
-                                    <label style="font-size:12px; font-weight:bold;">الاسم الكامل للزبون</label>
-                                    <input type="text" id="edit-stu-name" required
-                                        style="width:100%; padding: 8px; font-size:13px; border:1px solid var(--border-color); border-radius:var(--border-radius-sm); background:var(--bg-card); color:var(--text-primary);">
-                                </div>
-                                <div class="form-group" style="margin-bottom: 12px;">
-                                    <label style="font-size:12px; font-weight:bold;">الصورة الشخصية للطالب (اختر ملفاً
-                                        للتحديث)</label>
-                                    <input type="file" id="edit-stu-photo" accept="image/*"
-                                        style="width:100%; padding: 6px; font-size:13px; border:1px solid var(--border-color); border-radius:var(--border-radius-sm); background:var(--bg-card); color:var(--text-primary);">
-                                </div>
-                                <div class="form-group" style="margin-bottom: 12px;">
-                                    <label style="font-size:12px; font-weight:bold;">رقم الهاتف</label>
-                                    <input type="text" id="edit-stu-phone" required
-                                        style="width:100%; padding: 8px; font-size:13px; border:1px solid var(--border-color); border-radius:var(--border-radius-sm); background:var(--bg-card); color:var(--text-primary);">
-                                </div>
-                                <div class="form-group" style="margin-bottom: 12px;">
-                                    <label style="font-size:12px; font-weight:bold;">رقم الهوية الوطنية (12
-                                        رقماً)</label>
-                                    <input type="text" id="edit-stu-national-id" required
-                                        style="width:100%; padding: 8px; font-size:13px; border:1px solid var(--border-color); border-radius:var(--border-radius-sm); background:var(--bg-card); color:var(--text-primary);">
-                                </div>
-                                <div class="form-group" style="margin-bottom: 12px;">
-                                    <label style="font-size:12px; font-weight:bold;">تاريخ الميلاد (يوم/شهر/سنة)</label>
-                                    <input type="text" id="edit-stu-dob" class="custom-date-input" placeholder="DD/MM/YYYY" autocomplete="off" maxlength="10" required
-                                        style="width:100%; padding: 8px; font-size:13px; border:1px solid var(--border-color); border-radius:var(--border-radius-sm); background:var(--bg-card); color:var(--text-primary);">
-                                </div>
-                                <div class="form-group" style="margin-bottom: 12px;">
-                                    <label style="font-size:12px; font-weight:bold;">محل الولادة</label>
-                                    <input type="text" id="edit-stu-pob" required
-                                        style="width:100%; padding: 8px; font-size:13px; border:1px solid var(--border-color); border-radius:var(--border-radius-sm); background:var(--bg-card); color:var(--text-primary);">
-                                </div>
-                                <div class="form-group" style="margin-bottom: 12px;">
-                                    <label style="font-size:12px; font-weight:bold;">التحصيل الدراسي</label>
-                                    <input type="text" id="edit-stu-qualification" required
-                                        style="width:100%; padding: 8px; font-size:13px; border:1px solid var(--border-color); border-radius:var(--border-radius-sm); background:var(--bg-card); color:var(--text-primary);">
-                                </div>
-                                <div class="form-group" style="margin-bottom: 12px;">
-                                    <label style="font-size:12px; font-weight:bold;">العنوان بالتفصيل</label>
-                                    <input type="text" id="edit-stu-address" required
-                                        style="width:100%; padding: 8px; font-size:13px; border:1px solid var(--border-color); border-radius:var(--border-radius-sm); background:var(--bg-card); color:var(--text-primary);">
-                                </div>
-                                <div class="form-group" style="margin-bottom: 12px;">
-                                    <label style="font-size:12px; font-weight:bold;">الغاية من التعلم</label>
-                                    <select id="edit-stu-purpose-select" onchange="handleDropdownCustomToggle(this, 'edit-stu-purpose-custom')" required
-                                        style="width:100%; padding: 8px; font-size:13px; border:1px solid var(--border-color); border-radius:var(--border-radius-sm); background:var(--bg-card); color:var(--text-primary);">
-                                        <option value="">-- اختر الغاية من التعلم --</option>
-                                        <option value="سفر">سفر</option>
-                                        <option value="دراسة">دراسة</option>
-                                        <option value="تطوير ذات">تطوير ذات</option>
-                                        <option value="other">أخرى</option>
-                                    </select>
-                                    <input type="text" id="edit-stu-purpose-custom" placeholder="أدخل الغاية المخصصة..." style="display:none; margin-top:6px; width:100%; padding:8px; font-size:13px; border:1px solid var(--border-color); border-radius:var(--border-radius-sm); background:var(--bg-card); color:var(--text-primary);">
-                                </div>
-                                <div class="form-group" style="margin-bottom: 12px;">
-                                    <label style="font-size:12px; font-weight:bold;">الفترة المناسبة</label>
-                                    <select id="edit-stu-period" required
-                                        style="width:100%; padding: 8px; font-size:13px; border:1px solid var(--border-color); border-radius:var(--border-radius-sm); background:var(--bg-card); color:var(--text-primary);">
-                                        <option value="morning">صباحي</option>
-                                        <option value="afternoon">عصري</option>
-                                        <option value="evening">مسائي</option>
-                                    </select>
-                                </div>
-                                <div class="form-group" style="margin-bottom: 12px;">
-                                    <label style="font-size:12px; font-weight:bold;">نوع الدراسة</label>
-                                    <select id="edit-stu-study-type" required
-                                        style="width:100%; padding: 8px; font-size:13px; border:1px solid var(--border-color); border-radius:var(--border-radius-sm); background:var(--bg-card); color:var(--text-primary);">
-                                        <option value="in_person">حضوري</option>
-                                        <option value="online">إلكتروني</option>
-                                    </select>
-                                </div>
-                                <div class="form-group" style="margin-bottom: 12px;">
-                                    <label style="font-size:12px; font-weight:bold;">كيف عرف النادي</label>
-                                    <select id="edit-stu-referral-select" onchange="handleDropdownCustomToggle(this, 'edit-stu-referral-custom')" required
-                                        style="width:100%; padding: 8px; font-size:13px; border:1px solid var(--border-color); border-radius:var(--border-radius-sm); background:var(--bg-card); color:var(--text-primary);">
-                                        <option value="">-- اختر من القائمة --</option>
-                                        <option value="السوشيل ميديا">السوشيل ميديا</option>
-                                        <option value="الأصدقاء">الأصدقاء</option>
-                                        <option value="الإدارة">الإدارة</option>
-                                        <option value="عقود">عقود</option>
-                                        <option value="other">أخرى</option>
-                                    </select>
-                                    <input type="text" id="edit-stu-referral-custom" placeholder="أدخل التفاصيل المخصصة..." style="display:none; margin-top:6px; width:100%; padding:8px; font-size:13px; border:1px solid var(--border-color); border-radius:var(--border-radius-sm); background:var(--bg-card); color:var(--text-primary);">
-                                </div>
-                                <div style="display:flex; gap:10px; margin-top:15px;">
-                                    <button type="submit" class="btn btn-primary"
-                                        style="flex:1; padding: 8px; font-size: 13px;">حفظ التعديلات</button>
-                                    <button type="button" class="btn btn-outline"
-                                        onclick="toggleStudentPersonalEdit(false)"
-                                        style="flex:1; padding: 8px; font-size: 13px;">إلغاء</button>
-                                </div>
-                            </form>
+                        <!-- Quick Actions for Manager & Admin -->
+                        <div id="manager-edit-btn-container" style="display: none; align-items: center; gap: 8px; flex-wrap: wrap;">
+                            <button type="button" class="btn btn-outline-secondary btn-sm" onclick="openStudentPersonalTabAndEdit()" style="font-size: 12px; padding: 6px 12px; display: flex; align-items: center; gap: 6px;">
+                                <i class="fa-solid fa-user-pen"></i> تعديل البيانات الشخصية
+                            </button>
+                            <button type="button" class="btn btn-outline-danger btn-sm" onclick="deleteStudentFromModal()" title="حذف الطالب إدارياً" style="font-size: 12px; padding: 6px 10px; display: flex; align-items: center; gap: 6px;">
+                                <i class="fa-solid fa-user-xmark"></i> حذف
+                            </button>
                         </div>
                     </div>
 
-                    <!-- Admin Evaluation Form -->
-                    <div class="card-table-wrapper" style="margin-bottom:0; padding:24px;">
-                        <h4
-                            style="margin-bottom:15px; color:var(--primary-color); border-bottom: 2px solid var(--border-color); padding-bottom: 8px;">
-                            التنسيب والتقييم الإداري للطالب</h4>
-                        <form id="admin-evaluation-form">
+                    <!-- Quick Metadata Chips Row -->
+                    <div class="sd-hero-chips-bar">
+                        <span class="sd-hero-chip">
+                            <i class="fa-solid fa-chalkboard-user" style="color: var(--primary-color);"></i>
+                            <span>الكورس الحالي:</span>
+                            <span id="sd-current-course" style="font-weight: 800;">-</span>
+                        </span>
+                        <span class="sd-hero-chip" style="background: rgba(79, 70, 229, 0.06); border-color: rgba(79, 70, 229, 0.2);">
+                            <i class="fa-solid fa-clock-rotate-left" style="color: var(--primary-color);"></i>
+                            <span>رصيد المحاضرات:</span>
+                            <span id="sd-lectures-summary-sidebar" style="font-weight: 800; color: var(--primary-color);">-</span>
+                        </span>
+                        <span id="sd-payment-plan-badge" class="badge badge-info" style="font-size: 11px; padding: 4px 10px;">نظام الدفع: -</span>
+                    </div>
+                </div>
+
+                <!-- Sub-Tabs Navigation Bar -->
+                <div class="sd-tabs-nav">
+                    <button type="button" class="sd-tab-btn active" id="sd-tab-btn-eval" onclick="switchStudentModalTab('eval')">
+                        <i class="fa-solid fa-clipboard-check"></i>
+                        <span>التقييم والتنسيب الإداري</span>
+                    </button>
+                    <button type="button" class="sd-tab-btn" id="sd-tab-btn-financial" onclick="switchStudentModalTab('financial')">
+                        <i class="fa-solid fa-file-invoice-dollar"></i>
+                        <span>الرصيد والوضع المالي والأقساط</span>
+                    </button>
+                    <button type="button" class="sd-tab-btn" id="sd-tab-btn-personal" onclick="switchStudentModalTab('personal')">
+                        <i class="fa-solid fa-id-card"></i>
+                        <span>البيانات الشخصية وحساب الدخول</span>
+                    </button>
+                </div>
+
+                <!-- TAB 1: Evaluation & Academic Placement -->
+                <div id="sd-tab-eval" class="sd-tab-pane">
+                    <div class="cd-action-card" style="margin-bottom: 16px;">
+                        <div class="cd-card-header">
+                            <h4 style="margin: 0; color: var(--primary-color); font-size: 15px;">
+                                <i class="fa-solid fa-user-graduate" style="color: var(--secondary-color); margin-left: 6px;"></i> التنسيب والتقييم الإداري للطالب
+                            </h4>
+                        </div>
+                        <form id="admin-evaluation-form" style="margin-top: 15px;">
                             <input type="hidden" id="sd-student-id">
 
-                            <div class="form-row">
-                                <div class="form-group">
+                            <div class="form-row" style="display: flex; gap: 15px; flex-wrap: wrap;">
+                                <div class="form-group" style="flex: 1; min-width: 220px; margin-bottom: 12px;">
                                     <label for="eval-interviewer">اسم مقدم الاختبار / المقابل</label>
-                                    <select id="eval-interviewer" onchange="toggleCustomInterviewerInput(this.value)"
-                                        required>
+                                    <select id="eval-interviewer" onchange="toggleCustomInterviewerInput(this.value)" required style="width: 100%; padding: 8px 12px; font-size: 13px;">
                                         <option value="" disabled selected>-- اختر اسم المقابل --</option>
                                         <option value="محمد عمار ابراهيم">محمد عمار ابراهيم</option>
                                         <option value="شموع محمد صاحب">شموع محمد صاحب</option>
                                         <option value="Other">مقابل آخر (أدخل الاسم يدوياً)</option>
                                     </select>
-                                    <input type="text" id="eval-interviewer-custom"
-                                        placeholder="اكتب اسم المقابل هنا..." style="display: none; margin-top: 10px;">
+                                    <input type="text" id="eval-interviewer-custom" placeholder="اكتب اسم المقابل هنا..." style="display: none; margin-top: 8px; width: 100%; padding: 8px 12px; font-size: 13px;">
                                 </div>
-                                <div class="form-group">
+                                <div class="form-group" style="flex: 1; min-width: 220px; margin-bottom: 12px;">
                                     <label for="eval-group">المجموعة / الشعبة المناسبة</label>
-                                    <select id="eval-group" required>
+                                    <select id="eval-group" required style="width: 100%; padding: 8px 12px; font-size: 13px;">
                                         <option value="" disabled selected>-- اختر الدورة/الشعبة --</option>
                                     </select>
                                 </div>
                             </div>
-                            <div class="form-group">
+
+                            <div class="form-group" style="margin-bottom: 12px;">
                                 <label for="eval-level">المستوى المعتمد للطالب</label>
-                                <select id="eval-level" required>
+                                <select id="eval-level" required style="width: 100%; padding: 8px 12px; font-size: 13px;">
                                     <option value="غير محدد">غير محدد</option>
                                     <option value="A1">مبتدئ (A1)</option>
                                     <option value="A2">فوق المبتدئ (A2)</option>
@@ -1650,20 +1482,18 @@
                                 </select>
                             </div>
 
-
-
-                            <div class="form-group">
+                            <div class="form-group" style="margin-bottom: 14px;">
                                 <label for="eval-notes">ملاحظات إضافية</label>
-                                <textarea id="eval-notes" placeholder="أية تفاصيل إدارية أخرى حول الطالب..."></textarea>
+                                <textarea id="eval-notes" placeholder="أية تفاصيل إدارية أخرى حول الطالب..." style="width: 100%; padding: 8px 12px; font-size: 13px; min-height: 70px;"></textarea>
                             </div>
 
                             <!-- Freeze Student Switch -->
-                            <div class="form-group" style="margin-bottom: 18px; background: rgba(59, 130, 246, 0.05); border: 1.5px solid var(--border-color); border-radius: 10px; padding: 14px 18px; display: flex; align-items: center; justify-content: space-between; gap: 15px;">
+                            <div class="form-group" style="margin-bottom: 18px; background: rgba(59, 130, 246, 0.05); border: 1.5px solid var(--border-color); border-radius: 10px; padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; gap: 15px;">
                                 <div>
-                                    <label for="eval-is-frozen" style="font-weight: 700; margin: 0; color: var(--text-primary); cursor: pointer; display: flex; align-items: center; gap: 8px; font-size: 14px;">
-                                        <i class="fa-solid fa-snowflake" style="color: #0284c7; font-size: 16px;"></i> تجميد حساب الطالب (حساب مجمد)
+                                    <label for="eval-is-frozen" style="font-weight: 700; margin: 0; color: var(--text-primary); cursor: pointer; display: flex; align-items: center; gap: 8px; font-size: 13.5px;">
+                                        <i class="fa-solid fa-snowflake" style="color: #0284c7; font-size: 15px;"></i> تجميد حساب الطالب (حساب مجمد)
                                     </label>
-                                    <span style="color: var(--text-muted); display: block; margin-top: 4px; font-size: 12px;">عند تفعيل التجميد، يُميّز صف الطالب في الجداول بقناع أزرق ويُقفل تسجيل الحضور والغياب له.</span>
+                                    <span style="color: var(--text-muted); display: block; margin-top: 3px; font-size: 11.5px;">عند تفعيل التجميد، يُميّز صف الطالب في الجداول بقناع أزرق ويُقفل تسجيل الحضور والغياب له.</span>
                                 </div>
                                 <label class="switch" style="flex-shrink: 0;">
                                     <input type="checkbox" id="eval-is-frozen">
@@ -1671,93 +1501,300 @@
                                 </label>
                             </div>
 
-                            <button type="submit" class="btn btn-primary btn-block">تحديث وتثبيت التقييم الإداري <i
-                                    class="fa-solid fa-save"></i></button>
+                            <div style="display: flex; justify-content: flex-end;">
+                                <button type="submit" class="btn btn-primary" style="padding: 10px 24px; font-size: 13.5px; font-weight: 700; display: flex; align-items: center; gap: 8px;">
+                                    <i class="fa-solid fa-floppy-disk"></i> تحديث وتثبيت التقييم الإداري
+                                </button>
+                            </div>
                         </form>
+                    </div>
 
-                        <!-- Student Lectures Balance Summary Box -->
-                        <div style="margin-top: 25px; border-top: 2px solid var(--border-color); padding-top: 15px;">
-                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 8px;">
-                                <h4 style="color: var(--primary-color); margin: 0; display: flex; align-items: center; gap: 6px;">
-                                    <i class="fa-solid fa-graduation-cap" style="color: var(--secondary-color);"></i> رصيد واستهلاك المحاضرات الكلي
-                                </h4>
-                                <span id="sd-payment-plan-badge" class="badge badge-info" style="font-size: 11px;">نظام الدفع: -</span>
-                            </div>
-                            
-                            <div style="background: var(--bg-main); border: 1px solid var(--border-color); border-radius: var(--border-radius-sm); padding: 14px; display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; text-align: center;">
-                                <div style="background: var(--bg-card); padding: 10px 8px; border-radius: 6px; border: 1px solid var(--border-color);">
-                                    <div style="font-size: 11px; color: var(--text-secondary); font-weight: bold; margin-bottom: 4px;">إجمالي الرصيد المشترى</div>
-                                    <div id="sd-lectures-total" style="font-size: 16px; font-weight: 800; color: var(--text-primary);">-</div>
-                                </div>
-                                <div style="background: var(--bg-card); padding: 10px 8px; border-radius: 6px; border: 1px solid var(--border-color);">
-                                    <div style="font-size: 11px; color: var(--text-secondary); font-weight: bold; margin-bottom: 4px;">المستهلكة (المحضورة)</div>
-                                    <div id="sd-lectures-used" style="font-size: 16px; font-weight: 800; color: var(--warning);">-</div>
-                                </div>
-                                <div style="background: var(--bg-card); padding: 10px 8px; border-radius: 6px; border: 1px solid var(--border-color);">
-                                    <div style="font-size: 11px; color: var(--text-secondary); font-weight: bold; margin-bottom: 4px;">الرصيد المتبقي الكلي</div>
-                                    <div id="sd-lectures-remaining" style="font-size: 16px; font-weight: 800; color: var(--success);">-</div>
-                                </div>
-                            </div>
+                    <!-- Manager & Admin Status Lifecycle Management Card -->
+                    <div id="sd-status-item" class="cd-action-card" style="display: none; padding: 14px 18px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 10px; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px;">
+                            <span style="font-size: 13px; font-weight: bold; color: var(--primary-color); display: flex; align-items: center; gap: 6px;">
+                                <i class="fa-solid fa-user-tag"></i> تصنيف ودورة حياة الطالب في المعهد
+                            </span>
+                        </div>
+                        <div style="display: flex; flex-direction: column; gap: 8px;">
+                            <label style="display: flex; align-items: center; justify-content: space-between; font-size: 12.5px; cursor: pointer; padding: 6px 0; margin: 0;">
+                                <span style="display: flex; align-items: center; gap: 6px; color: #16a34a; font-weight: bold;">
+                                    <i class="fa-solid fa-graduation-cap"></i> تحويل إلى خريج 🎓 (إكمال الدورة والانتقال لقائمة الخريجين)
+                                </span>
+                                <input type="checkbox" id="sd-switch-graduated" onchange="handleStudentStatusToggle('graduated', this.checked)" style="width: 18px; height: 18px; cursor: pointer; accent-color: #16a34a;">
+                            </label>
+                            <label style="display: flex; align-items: center; justify-content: space-between; font-size: 12.5px; cursor: pointer; padding: 6px 0; border-top: 1px dashed var(--border-color); margin: 0;">
+                                <span style="display: flex; align-items: center; gap: 6px; color: #dc2626; font-weight: bold;">
+                                    <i class="fa-solid fa-door-open"></i> تحويل إلى منسحب 🚪 (إيقاف الدوام وإلغاء الإنذارات المالية)
+                                </span>
+                                <input type="checkbox" id="sd-switch-withdrawn" onchange="handleStudentStatusToggle('withdrawn', this.checked)" style="width: 18px; height: 18px; cursor: pointer; accent-color: #dc2626;">
+                            </label>
+                        </div>
+                    </div>
+                </div>
 
-                            <!-- Progress bar for lecture consumption -->
-                            <div style="margin-top: 10px; background: rgba(0,0,0,0.06); border-radius: 10px; height: 8px; overflow: hidden; position: relative;">
-                                <div id="sd-lectures-progress-bar" style="height: 100%; width: 0%; background: var(--primary-color); border-radius: 10px; transition: width 0.3s ease;"></div>
+                <!-- TAB 2: Financials, Lecture Balance & Installments -->
+                <div id="sd-tab-financial" class="sd-tab-pane" style="display: none;">
+                    <!-- Lectures Balance Card -->
+                    <div class="cd-action-card" style="margin-bottom: 16px;">
+                        <div class="cd-card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+                            <h4 style="margin: 0; color: var(--primary-color); font-size: 15px; display: flex; align-items: center; gap: 6px;">
+                                <i class="fa-solid fa-clock-rotate-left" style="color: var(--secondary-color);"></i> رصيد واستهلاك المحاضرات الكلي
+                            </h4>
+                        </div>
+
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; text-align: center; margin-top: 14px;">
+                            <div style="background: #f8fafc; padding: 12px 10px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                                <div style="font-size: 11.5px; color: var(--text-secondary); font-weight: bold; margin-bottom: 4px;">إجمالي الرصيد المشترى</div>
+                                <div id="sd-lectures-total" style="font-size: 17px; font-weight: 800; color: var(--text-primary);">-</div>
                             </div>
-                            <div style="display: flex; justify-content: space-between; font-size: 11px; color: var(--text-muted); margin-top: 4px;">
-                                <span id="sd-lectures-progress-label">استهلاك: 0%</span>
-                                <span id="sd-lectures-status-text">الرصيد سارٍ</span>
+                            <div style="background: #fffbeb; padding: 12px 10px; border-radius: 8px; border: 1px solid #fef3c7;">
+                                <div style="font-size: 11.5px; color: #b45309; font-weight: bold; margin-bottom: 4px;">المستهلكة (المحضورة)</div>
+                                <div id="sd-lectures-used" style="font-size: 17px; font-weight: 800; color: #d97706;">-</div>
+                            </div>
+                            <div style="background: #f0fdf4; padding: 12px 10px; border-radius: 8px; border: 1px solid #dcfce7;">
+                                <div style="font-size: 11.5px; color: #15803d; font-weight: bold; margin-bottom: 4px;">الرصيد المتبقي الكلي</div>
+                                <div id="sd-lectures-remaining" style="font-size: 17px; font-weight: 800; color: #16a34a;">-</div>
                             </div>
                         </div>
 
-                        <!-- Student courses and financials summary in details -->
-                        <div style="margin-top: 20px; border-top: 1px dashed var(--border-color); padding-top: 15px;">
-                            <h4 style="color:var(--primary-color); margin-bottom:10px;">الوضع المالي للطالب</h4>
-                            <div
-                                style="display:flex; justify-content:space-between; background-color: var(--bg-main); padding: 12px; border-radius: var(--border-radius-sm);">
-                                <div style="font-size:12px;"><strong>المستحقات الإجمالية:</strong> <span
-                                        id="sd-financial-due">0</span> IQD</div>
-                                <div style="font-size:12px;"><strong>إجمالي المسدد:</strong> <span
-                                        id="sd-financial-paid">0</span> IQD</div>
-                                <div style="font-size:12px;"><strong>المتبقي بذمته:</strong> <span
-                                        id="sd-financial-balance" style="font-weight:700; color:var(--danger);">0</span>
-                                    IQD</div>
+                        <!-- Progress bar -->
+                        <div style="margin-top: 14px; background: rgba(0,0,0,0.06); border-radius: 10px; height: 8px; overflow: hidden; position: relative;">
+                            <div id="sd-lectures-progress-bar" style="height: 100%; width: 0%; background: var(--primary-color); border-radius: 10px; transition: width 0.3s ease;"></div>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; font-size: 11.5px; color: var(--text-muted); margin-top: 6px;">
+                            <span id="sd-lectures-progress-label">استهلاك: 0%</span>
+                            <span id="sd-lectures-status-text" style="font-weight: bold;">الرصيد سارٍ</span>
+                        </div>
+                    </div>
+
+                    <!-- Financial Status Card -->
+                    <div class="cd-action-card" style="margin-bottom: 16px;">
+                        <div class="cd-card-header">
+                            <h4 style="margin: 0; color: var(--primary-color); font-size: 15px;">
+                                <i class="fa-solid fa-coins" style="color: var(--secondary-color); margin-left: 6px;"></i> الوضع المالي العام للطالب
+                            </h4>
+                        </div>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-top: 14px; text-align: center;">
+                            <div style="background: #f8fafc; padding: 12px 10px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                                <div style="font-size: 11px; color: var(--text-secondary); font-weight: bold; margin-bottom: 4px;">المستحقات الإجمالية</div>
+                                <div style="font-size: 15px; font-weight: 800; color: var(--text-primary);"><span id="sd-financial-due">0</span> <small style="font-size: 11px;">IQD</small></div>
                             </div>
-
-                            <!-- Installment Schedule Breakdown in Student Profile -->
-                            <div id="sd-installments-schedule-box" style="margin-top: 15px; display: none;">
-                                <div style="background: rgba(59, 130, 246, 0.06); border: 1px solid rgba(59, 130, 246, 0.2); border-radius: var(--border-radius-sm); padding: 12px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
-                                    <div>
-                                        <span style="font-size: 12px; font-weight: bold; color: var(--text-secondary);">مبلغ القسط القادم:</span>
-                                        <strong id="sd-next-inst-amount" style="font-size: 14px; color: var(--primary-color); margin-right: 4px;">-</strong>
-                                    </div>
-                                    <div>
-                                        <span style="font-size: 12px; font-weight: bold; color: var(--text-secondary);">تاريخ استحقاق القسط:</span>
-                                        <strong id="sd-next-inst-date" style="font-size: 13px; color: var(--text-primary); margin-right: 4px;">-</strong>
-                                    </div>
-                                </div>
-
-                                <div id="sd-installments-alert-container" style="display: none; margin-bottom: 12px;"></div>
-                                
-                                <h5 style="margin: 10px 0 6px 0; font-size: 12px; color: var(--text-secondary);">جدول وتوزيع الأقساط الشهرية:</h5>
-                                <div class="table-responsive">
-                                    <table class="attendance-table" style="width: 100%; font-size: 11px; text-align: center;">
-                                        <thead>
-                                            <tr>
-                                                <th>القسط</th>
-                                                <th>مبلغ القسط</th>
-                                                <th>تاريخ الاستحقاق</th>
-                                                <th>الحالة</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody id="sd-installments-table-body">
-                                            <!-- Dynamic installments list -->
-                                        </tbody>
-                                    </table>
-                                </div>
+                            <div style="background: #f0fdf4; padding: 12px 10px; border-radius: 8px; border: 1px solid #dcfce7;">
+                                <div style="font-size: 11px; color: #15803d; font-weight: bold; margin-bottom: 4px;">إجمالي المسدد</div>
+                                <div style="font-size: 15px; font-weight: 800; color: #16a34a;"><span id="sd-financial-paid">0</span> <small style="font-size: 11px;">IQD</small></div>
+                            </div>
+                            <div style="background: #fef2f2; padding: 12px 10px; border-radius: 8px; border: 1px solid #fee2e2;">
+                                <div style="font-size: 11px; color: #b91c1c; font-weight: bold; margin-bottom: 4px;">المتبقي بذمته</div>
+                                <div style="font-size: 15px; font-weight: 800; color: var(--danger);"><span id="sd-financial-balance">0</span> <small style="font-size: 11px;">IQD</small></div>
                             </div>
                         </div>
                     </div>
 
+                    <!-- Installments Schedule breakdown in student profile -->
+                    <div id="sd-installments-schedule-box" class="cd-action-card" style="display: none;">
+                        <div class="cd-card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+                            <h4 style="margin: 0; color: var(--primary-color); font-size: 15px;">
+                                <i class="fa-solid fa-calendar-check" style="color: var(--secondary-color); margin-left: 6px;"></i> جدول وتوزيع الأقساط الشهرية
+                            </h4>
+                            <div style="display: flex; gap: 12px; align-items: center; font-size: 12px;">
+                                <span>القسط القادم: <strong id="sd-next-inst-amount" style="color: var(--primary-color);">-</strong></span>
+                                <span>الموعد: <strong id="sd-next-inst-date">-</strong></span>
+                            </div>
+                        </div>
+
+                        <div id="sd-installments-alert-container" style="display: none; margin: 12px 0;"></div>
+
+                        <div class="table-responsive" style="margin-top: 12px;">
+                            <table class="attendance-table" style="width: 100%; font-size: 12px; text-align: center;">
+                                <thead>
+                                    <tr>
+                                        <th>القسط</th>
+                                        <th>مبلغ القسط</th>
+                                        <th>تاريخ الاستحقاق</th>
+                                        <th>الحالة</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="sd-installments-table-body">
+                                    <!-- Dynamic installments list -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 3: Personal Information & Account Login -->
+                <div id="sd-tab-personal" class="sd-tab-pane" style="display: none;">
+                    <!-- View Container -->
+                    <div id="student-details-view-container" style="width: 100%;">
+                        <div class="cd-action-card" style="margin-bottom: 16px;">
+                            <div class="cd-card-header" style="display: flex; justify-content: space-between; align-items: center;">
+                                <h4 style="margin: 0; color: var(--primary-color); font-size: 15px;">
+                                    <i class="fa-solid fa-id-card-clip" style="color: var(--secondary-color); margin-left: 6px;"></i> البيانات الشخصية والتسجيلية
+                                </h4>
+                                <button type="button" class="btn btn-outline-secondary btn-sm" onclick="toggleStudentPersonalEdit(true)" style="font-size: 12px; padding: 4px 10px;">
+                                    <i class="fa-solid fa-pen-to-square"></i> تعديل هذه البيانات
+                                </button>
+                            </div>
+
+                            <div class="sd-info-grid" style="margin-top: 14px;">
+                                <div class="sd-info-card">
+                                    <div class="sd-info-card-label"><i class="fa-solid fa-id-card"></i> رقم الهوية الوطنية</div>
+                                    <div class="sd-info-card-value" id="sd-national-id">-</div>
+                                </div>
+                                <div class="sd-info-card">
+                                    <div class="sd-info-card-label"><i class="fa-solid fa-cake-candles"></i> تاريخ ومحل الولادة</div>
+                                    <div class="sd-info-card-value" id="sd-dob-pob">-</div>
+                                </div>
+                                <div class="sd-info-card">
+                                    <div class="sd-info-card-label"><i class="fa-solid fa-user-graduate"></i> التحصيل الدراسي</div>
+                                    <div class="sd-info-card-value" id="sd-qualification">-</div>
+                                </div>
+                                <div class="sd-info-card">
+                                    <div class="sd-info-card-label"><i class="fa-solid fa-location-dot"></i> العنوان بالتفصيل</div>
+                                    <div class="sd-info-card-value" id="sd-address">-</div>
+                                </div>
+                                <div class="sd-info-card">
+                                    <div class="sd-info-card-label"><i class="fa-solid fa-bullseye"></i> الغاية من التعلم</div>
+                                    <div class="sd-info-card-value" id="sd-purpose">-</div>
+                                </div>
+                                <div class="sd-info-card">
+                                    <div class="sd-info-card-label"><i class="fa-solid fa-business-time"></i> الفترة / نوع الدراسة</div>
+                                    <div class="sd-info-card-value" id="sd-period-type">-</div>
+                                </div>
+                                <div class="sd-info-card">
+                                    <div class="sd-info-card-label"><i class="fa-solid fa-compass"></i> كيف عرف النادي</div>
+                                    <div class="sd-info-card-value" id="sd-referral">-</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Admin & Manager Only Account Info Card -->
+                        <div id="sd-account-item" class="cd-action-card" style="display: none; padding: 16px 20px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; border-bottom: 1px solid #f1f5f9; padding-bottom: 10px;">
+                                <span style="font-size: 13px; font-weight: bold; color: var(--primary-color); display: flex; align-items: center; gap: 6px;">
+                                    <i class="fa-solid fa-user-lock"></i> بيانات حساب دخول الطالب للمنصة
+                                </span>
+                                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="toggleEditStudentAccountForm(true)" style="font-size: 11.5px; padding: 4px 10px;">
+                                    تعديل الحساب 🔑
+                                </button>
+                            </div>
+                            <div style="display: flex; gap: 20px; align-items: center; font-size: 13px; margin-top: 10px; flex-wrap: wrap;">
+                                <div>
+                                    <span style="color: var(--text-muted);">اسم المستخدم (اليوزر):</span>
+                                    <strong id="sd-account-username" style="font-family: monospace; color: var(--text-primary); direction: ltr; display: inline-block; margin-right: 6px;">-</strong>
+                                </div>
+                                <div>
+                                    <span style="color: var(--text-muted);">كلمة المرور:</span>
+                                    <strong style="font-family: monospace; color: var(--text-muted); letter-spacing: 2px; margin-right: 6px;">••••••••</strong>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Admin Account Quick Edit Box -->
+                        <div id="sd-account-edit-box" style="display: none; background: rgba(79, 70, 229, 0.08); padding: 14px; border-radius: 10px; margin-top: 10px; border: 1px solid var(--primary-color); width: 100%; text-align: right;">
+                            <div style="font-size: 13px; font-weight: bold; color: var(--primary-color); margin-bottom: 10px;">تعديل حساب دخول الطالب (اليوزر والباسورد):</div>
+                            <div class="form-group" style="margin-bottom: 10px;">
+                                <label style="font-size: 11.5px; font-weight: bold;">اسم المستخدم الجديد (اليوزر)</label>
+                                <input type="text" id="sd-edit-username" placeholder="اسم المستخدم بالإنكليزية..." style="width: 100%; padding: 8px 12px; font-size: 13px; border-radius: 6px; border: 1px solid var(--border-color); direction: ltr; background: var(--bg-card); color: var(--text-primary);">
+                            </div>
+                            <div class="form-group" style="margin-bottom: 12px;">
+                                <label style="font-size: 11.5px; font-weight: bold;">كلمة المرور الجديدة</label>
+                                <input type="password" id="sd-edit-password" placeholder="كلمة المرور الجديدة (اتركها فارغة لإبقائها كما هي)" style="width: 100%; padding: 8px 12px; font-size: 13px; border-radius: 6px; border: 1px solid var(--border-color); direction: ltr; background: var(--bg-card); color: var(--text-primary);">
+                            </div>
+                            <div style="display: flex; gap: 8px; justify-content: flex-end;">
+                                <button type="button" class="btn btn-sm btn-secondary" onclick="toggleEditStudentAccountForm(false)" style="padding: 6px 14px; font-size: 12px;">إلغاء</button>
+                                <button type="button" class="btn btn-sm btn-primary" onclick="saveStudentAccountEdit()" style="padding: 6px 16px; font-size: 12px;">حفظ الحساب 💾</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Edit Container (Manager Only) -->
+                    <div id="student-details-edit-container" class="cd-action-card" style="display: none; width: 100%; text-align: right;">
+                        <div class="cd-card-header">
+                            <h4 style="margin: 0; color: var(--primary-color); font-size: 15px;">
+                                <i class="fa-solid fa-user-pen" style="color: var(--secondary-color); margin-left: 6px;"></i> تعديل البيانات الشخصية والتسجيلية للطالب
+                            </h4>
+                        </div>
+                        <form id="edit-student-personal-form" style="margin-top: 15px;">
+                            <div class="form-row" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px;">
+                                <div class="form-group" style="margin-bottom: 0;">
+                                    <label style="font-size:12px; font-weight:bold;">الاسم الكامل للزبون</label>
+                                    <input type="text" id="edit-stu-name" required style="width:100%; padding: 8px 12px; font-size:13px;">
+                                </div>
+                                <div class="form-group" style="margin-bottom: 0;">
+                                    <label style="font-size:12px; font-weight:bold;">الصورة الشخصية (ملف جديد للتحديث)</label>
+                                    <input type="file" id="edit-stu-photo" accept="image/*" style="width:100%; padding: 6px 10px; font-size:12px;">
+                                </div>
+                                <div class="form-group" style="margin-bottom: 0;">
+                                    <label style="font-size:12px; font-weight:bold;">رقم الهاتف</label>
+                                    <input type="text" id="edit-stu-phone" required style="width:100%; padding: 8px 12px; font-size:13px;">
+                                </div>
+                                <div class="form-group" style="margin-bottom: 0;">
+                                    <label style="font-size:12px; font-weight:bold;">رقم الهوية الوطنية (12 رقماً)</label>
+                                    <input type="text" id="edit-stu-national-id" required style="width:100%; padding: 8px 12px; font-size:13px;">
+                                </div>
+                                <div class="form-group" style="margin-bottom: 0;">
+                                    <label style="font-size:12px; font-weight:bold;">تاريخ الميلاد (يوم/شهر/سنة)</label>
+                                    <input type="text" id="edit-stu-dob" class="custom-date-input" placeholder="DD/MM/YYYY" autocomplete="off" maxlength="10" required style="width:100%; padding: 8px 12px; font-size:13px;">
+                                </div>
+                                <div class="form-group" style="margin-bottom: 0;">
+                                    <label style="font-size:12px; font-weight:bold;">محل الولادة</label>
+                                    <input type="text" id="edit-stu-pob" required style="width:100%; padding: 8px 12px; font-size:13px;">
+                                </div>
+                                <div class="form-group" style="margin-bottom: 0;">
+                                    <label style="font-size:12px; font-weight:bold;">التحصيل الدراسي</label>
+                                    <input type="text" id="edit-stu-qualification" required style="width:100%; padding: 8px 12px; font-size:13px;">
+                                </div>
+                                <div class="form-group" style="margin-bottom: 0;">
+                                    <label style="font-size:12px; font-weight:bold;">العنوان بالتفصيل</label>
+                                    <input type="text" id="edit-stu-address" required style="width:100%; padding: 8px 12px; font-size:13px;">
+                                </div>
+                                <div class="form-group" style="margin-bottom: 0;">
+                                    <label style="font-size:12px; font-weight:bold;">الغاية من التعلم</label>
+                                    <select id="edit-stu-purpose-select" onchange="handleDropdownCustomToggle(this, 'edit-stu-purpose-custom')" required style="width:100%; padding: 8px 12px; font-size:13px;">
+                                        <option value="">-- اختر الغاية من التعلم --</option>
+                                        <option value="سفر">سفر</option>
+                                        <option value="دراسة">دراسة</option>
+                                        <option value="تطوير ذات">تطوير ذات</option>
+                                        <option value="other">أخرى</option>
+                                    </select>
+                                    <input type="text" id="edit-stu-purpose-custom" placeholder="أدخل الغاية المخصصة..." style="display:none; margin-top:6px; width:100%; padding:8px 12px; font-size:13px;">
+                                </div>
+                                <div class="form-group" style="margin-bottom: 0;">
+                                    <label style="font-size:12px; font-weight:bold;">الفترة المناسبة</label>
+                                    <select id="edit-stu-period" required style="width:100%; padding: 8px 12px; font-size:13px;">
+                                        <option value="morning">صباحي</option>
+                                        <option value="afternoon">عصري</option>
+                                        <option value="evening">مسائي</option>
+                                    </select>
+                                </div>
+                                <div class="form-group" style="margin-bottom: 0;">
+                                    <label style="font-size:12px; font-weight:bold;">نوع الدراسة</label>
+                                    <select id="edit-stu-study-type" required style="width:100%; padding: 8px 12px; font-size:13px;">
+                                        <option value="in_person">حضوري</option>
+                                        <option value="online">إلكتروني</option>
+                                    </select>
+                                </div>
+                                <div class="form-group" style="margin-bottom: 0;">
+                                    <label style="font-size:12px; font-weight:bold;">كيف عرف النادي</label>
+                                    <select id="edit-stu-referral-select" onchange="handleDropdownCustomToggle(this, 'edit-stu-referral-custom')" required style="width:100%; padding: 8px 12px; font-size:13px;">
+                                        <option value="">-- اختر من القائمة --</option>
+                                        <option value="السوشيل ميديا">السوشيل ميديا</option>
+                                        <option value="الأصدقاء">الأصدقاء</option>
+                                        <option value="الإدارة">الإدارة</option>
+                                        <option value="عقود">عقود</option>
+                                        <option value="other">أخرى</option>
+                                    </select>
+                                    <input type="text" id="edit-stu-referral-custom" placeholder="أدخل التفاصيل المخصصة..." style="display:none; margin-top:6px; width:100%; padding:8px 12px; font-size:13px;">
+                                </div>
+                            </div>
+                            <div style="display:flex; gap:10px; margin-top:20px; justify-content: flex-end;">
+                                <button type="button" class="btn btn-secondary" onclick="toggleStudentPersonalEdit(false)" style="padding: 8px 20px; font-size: 13px;">إلغاء</button>
+                                <button type="submit" class="btn btn-primary" style="padding: 8px 24px; font-size: 13px; font-weight: 700;">حفظ التعديلات 💾</button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
             </div>
         </div>
