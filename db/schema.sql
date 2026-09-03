@@ -77,7 +77,7 @@ CREATE TABLE attendance (
     course_id INTEGER REFERENCES courses(id) ON DELETE CASCADE,
     student_id INTEGER REFERENCES students(id) ON DELETE CASCADE,
     date DATE NOT NULL,
-    status VARCHAR(10) NOT NULL CHECK (status IN ('present', 'absent')),
+    status VARCHAR(10) NOT NULL CHECK (status IN ('present', 'absent', 'excused')),
     PRIMARY KEY (course_id, student_id, date)
 );
 

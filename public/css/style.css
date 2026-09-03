@@ -717,6 +717,15 @@ tr.tr-removed td.sticky-col-name {
     border: 1px solid var(--danger);
 }
 
+.attendance-excused {
+    background-color: #FEF3C7 !important;
+    color: #92400E !important;
+    border: 1px solid #FCD34D !important;
+}
+.attendance-excused:hover {
+    background-color: #FDE68A !important;
+}
+
 .attendance-none {
     background-color: var(--bg-main);
     color: var(--text-muted);
