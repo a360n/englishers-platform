@@ -622,8 +622,9 @@ tr:hover td {
 }
 
 .attendance-table th.sticky-col-seq {
-    background-color: #F8FAFC;
-    z-index: 13;
+    top: 0;
+    background-color: #F8FAFC !important;
+    z-index: 35 !important;
 }
 
 .attendance-table th.sticky-col-name, 
@@ -640,8 +641,9 @@ tr:hover td {
 }
 
 .attendance-table th.sticky-col-name {
-    background-color: #F8FAFC;
-    z-index: 11;
+    top: 0;
+    background-color: #F8FAFC !important;
+    z-index: 34 !important;
 }
 
 /* Fallback for other generic tables using attendance-table without classes */
@@ -659,8 +661,9 @@ tr:hover td {
 }
 
 .attendance-table:not(:has(.sticky-col-seq)) th:first-child {
-    background-color: #F8FAFC;
-    z-index: 11;
+    top: 0;
+    background-color: #F8FAFC !important;
+    z-index: 35 !important;
 }
 
 /* Maintain background colors on sticky cells for frozen and removed students */
