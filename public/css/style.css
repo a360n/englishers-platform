@@ -590,39 +590,47 @@ tr:hover td {
     position: relative;
     direction: rtl;
     scrollbar-width: auto;
-    scrollbar-color: #94a3b8 #f1f5f9;
+    scrollbar-color: #EE7D52 #F1F5F9; /* Orange capsule & track for Firefox */
 }
 
-/* Prominent, easy-to-grab custom scrollbars for the attendance grid */
+/* Orange Capsule Scrollbars - ONLY for the Attendance Grid (Horizontal & Vertical) */
 .attendance-grid-container::-webkit-scrollbar {
-    width: 14px;
-    height: 14px;
+    width: 16px;  /* Vertical scrollbar width - large, thick, comfortable */
+    height: 16px; /* Horizontal scrollbar height - large, thick, comfortable */
 }
 
 .attendance-grid-container::-webkit-scrollbar-track {
-    background: #f1f5f9;
-    border-radius: 8px;
-    border: 1px solid #e2e8f0;
+    background: #F8FAFC;
+    border-radius: 9999px; /* Capsule track */
+    border: 1px solid #E2E8F0;
+    margin: 4px;
 }
 
 .attendance-grid-container::-webkit-scrollbar-thumb {
-    background: #94a3b8;
-    border-radius: 8px;
-    border: 3px solid #f1f5f9;
-    min-height: 36px;
-    min-width: 36px;
+    background: #EE7D52; /* Coral Orange - matches --secondary-color in UI */
+    background: linear-gradient(135deg, #FF8E66 0%, #EE7D52 100%);
+    border-radius: 9999px; /* Pure capsule shape */
+    border: 3px solid #F8FAFC; /* Floating pill effect inside track */
+    min-height: 50px;
+    min-width: 50px;
+    box-shadow: 0 1px 3px rgba(238, 125, 82, 0.4);
+    cursor: grab;
 }
 
 .attendance-grid-container::-webkit-scrollbar-thumb:hover {
-    background: var(--secondary-color, #ee7d52);
+    background: #E0683A;
+    background: linear-gradient(135deg, #EE7D52 0%, #D96035 100%);
+    box-shadow: 0 2px 6px rgba(238, 125, 82, 0.6);
 }
 
 .attendance-grid-container::-webkit-scrollbar-thumb:active {
-    background: var(--primary-color, #1c213f);
+    background: #C85328;
+    cursor: grabbing;
 }
 
 .attendance-grid-container::-webkit-scrollbar-corner {
-    background: #e2e8f0;
+    background: #F1F5F9;
+    border-radius: 6px;
 }
 
 .attendance-table {
