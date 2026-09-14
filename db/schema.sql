@@ -81,6 +81,17 @@ CREATE TABLE attendance (
     PRIMARY KEY (course_id, student_id, date)
 );
 
+-- Attendance Notes table: stores per-session notes for students
+CREATE TABLE attendance_notes (
+    course_id INTEGER REFERENCES courses(id) ON DELETE CASCADE,
+    student_id INTEGER REFERENCES students(id) ON DELETE CASCADE,
+    date DATE NOT NULL,
+    note TEXT NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (course_id, student_id, date)
+);
+
 -- Payments table: stores payment receipts
 CREATE TABLE payments (
     id SERIAL PRIMARY KEY, -- Receipt Serial Number
