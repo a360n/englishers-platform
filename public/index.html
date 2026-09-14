@@ -1176,9 +1176,32 @@
                         </button>
                     </div>
 
-                    <!-- Attendance Grid -->
-                    <div class="attendance-grid-container" id="attendance-sheet-wrapper">
-                        <!-- Dynamic attendance table will be rendered here -->
+                    <!-- Attendance Grid & Custom Zipper Controls -->
+                    <div class="attendance-zipper-container">
+                        <div class="attendance-zipper-main">
+                            <div class="attendance-grid-container" id="attendance-sheet-wrapper">
+                                <!-- Dynamic attendance table will be rendered here -->
+                            </div>
+                            <!-- Vertical Zipper Track on the Left -->
+                            <div class="zipper-track zipper-v-track" id="zipper-v-track" title="سحّاب التمرير العمودي (قائمة الطلاب)">
+                                <div class="zipper-rail-v"></div>
+                                <div class="zipper-handle zipper-v-handle" id="zipper-v-handle">
+                                    <div class="zipper-grip-lines-v">
+                                        <span></span><span></span><span></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Horizontal Zipper Track at the Bottom -->
+                        <div class="zipper-track zipper-h-track" id="zipper-h-track" title="سحّاب التمرير الأفقي (التواريخ والمحاضرات)">
+                            <div class="zipper-rail-h"></div>
+                            <div class="zipper-handle zipper-h-handle" id="zipper-h-handle">
+                                <div class="zipper-grip-lines-h">
+                                    <span></span><span></span><span></span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
