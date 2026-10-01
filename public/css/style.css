@@ -648,6 +648,21 @@ textarea {
     overflow: hidden;
 }
 
+/* Courses Tab - Specific Container & Boundaries */
+#tab-courses {
+    width: 100%;
+    box-sizing: border-box;
+    transition: padding var(--transition-smooth);
+}
+
+#tab-courses .card-table-wrapper {
+    margin: 0 auto clamp(20px, 2vw, 36px) auto;
+    border: 1.5px solid var(--border-color);
+    border-radius: var(--border-radius-md);
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.04);
+    transition: var(--transition-smooth);
+}
+
 .card-table-header, .card-header {
     padding: clamp(14px, 1.2vh, 20px) clamp(18px, 1.6vw, 30px);
     border-bottom: 1px solid var(--border-color);
@@ -2558,6 +2573,15 @@ tr.tr-removed .btn-attendance {
         grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
         gap: 22px;
     }
+    #tab-courses {
+        padding: 8px clamp(16px, 2vw, 36px);
+    }
+    #tab-courses .card-table-wrapper {
+        max-width: min(100%, 1400px);
+        margin: 0 auto 30px auto;
+        border: 1.5px solid var(--border-color);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+    }
 }
 
 /* Large Screens (1400px - 1799px) - e.g. 24"-27" 1080p/1440p */
@@ -2587,6 +2611,20 @@ tr.tr-removed .btn-attendance {
     }
     .sd-info-grid {
         grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    }
+    /* Courses Section - Generous boundaries & margins on large displays */
+    #tab-courses {
+        padding: 16px clamp(36px, 4.5vw, 84px);
+    }
+    #tab-courses .card-table-wrapper {
+        max-width: min(100%, 1500px);
+        margin: 0 auto 36px auto;
+        border: 2px solid var(--border-color);
+        border-radius: 16px;
+        box-shadow: 0 6px 24px rgba(0, 0, 0, 0.05);
+    }
+    #tab-courses .card-table-header {
+        padding: 20px 28px;
     }
 }
 
@@ -2618,6 +2656,20 @@ tr.tr-removed .btn-attendance {
     th, td {
         padding: 16px 24px;
     }
+    /* Courses Section - Prominent wide boundaries on ultrawide displays */
+    #tab-courses {
+        padding: 24px clamp(60px, 6.5vw, 140px);
+    }
+    #tab-courses .card-table-wrapper {
+        max-width: min(100%, 1650px);
+        margin: 0 auto 48px auto;
+        border: 2px solid var(--border-color);
+        border-radius: 18px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
+    }
+    #tab-courses .card-table-header {
+        padding: 24px 36px;
+    }
 }
 
 /* 4K Ultra HD Screens (2400px+) */
@@ -2635,6 +2687,20 @@ tr.tr-removed .btn-attendance {
     .dashboard-grid {
         grid-template-columns: repeat(6, 1fr);
         gap: 32px;
+    }
+    /* Courses Section - Grand boundaries on 4K displays */
+    #tab-courses {
+        padding: 36px clamp(100px, 9vw, 240px);
+    }
+    #tab-courses .card-table-wrapper {
+        max-width: min(100%, 1850px);
+        margin: 0 auto 60px auto;
+        border: 2.5px solid var(--border-color);
+        border-radius: 22px;
+        box-shadow: 0 12px 42px rgba(0, 0, 0, 0.07);
+    }
+    #tab-courses .card-table-header {
+        padding: 28px 44px;
     }
 }
 
