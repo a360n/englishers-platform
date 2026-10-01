@@ -1,8 +1,12 @@
 -- Database Schema for Englishers Club Management Platform
 
 -- Drop tables if they exist (for reset/seeding purposes)
+DROP TABLE IF EXISTS attendance_notes CASCADE;
 DROP TABLE IF EXISTS attendance CASCADE;
+DROP TABLE IF EXISTS course_dates CASCADE;
 DROP TABLE IF EXISTS course_students CASCADE;
+DROP TABLE IF EXISTS student_installments CASCADE;
+DROP TABLE IF EXISTS student_custom_dues CASCADE;
 DROP TABLE IF EXISTS payments CASCADE;
 DROP TABLE IF EXISTS courses CASCADE;
 DROP TABLE IF EXISTS users CASCADE;
@@ -37,6 +41,9 @@ CREATE TABLE students (
     installment_amount NUMERIC(10, 2) DEFAULT 0.00,
     photo_path VARCHAR(555),
     notes TEXT,
+    is_frozen BOOLEAN DEFAULT FALSE,
+    purchased_lectures INTEGER DEFAULT 12,
+    is_deleted BOOLEAN DEFAULT FALSE,
     is_graduated BOOLEAN DEFAULT FALSE,
     is_withdrawn BOOLEAN DEFAULT FALSE,
     status VARCHAR(20) DEFAULT 'active' CHECK (status IN ('active', 'waiting', 'graduated', 'withdrawn'))
@@ -48,6 +55,7 @@ CREATE TABLE users (
     username VARCHAR(100) UNIQUE NOT NULL,
     password VARCHAR(255) NOT NULL,
     role VARCHAR(20) NOT NULL CHECK (role IN ('manager', 'admin', 'student', 'teacher')),
+    name VARCHAR(255),
     student_id INTEGER REFERENCES students(id) ON DELETE CASCADE
 );
 
@@ -55,13 +63,15 @@ CREATE TABLE users (
 CREATE TABLE courses (
     id SERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
-    teacher VARCHAR(255) NOT NULL,
+    teacher VARCHAR(255) DEFAULT 'غير محدد',
+    teacher_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
     schedule_type VARCHAR(10) NOT NULL CHECK (schedule_type IN ('even', 'odd')), -- even: Sat, Mon, Wed | odd: Sun, Tue, Thu
     time_slot VARCHAR(100) NOT NULL, -- e.g., "10:00 AM - 12:00 PM"
     month_num INTEGER NOT NULL, -- Month 1, 2, etc.
     curriculum VARCHAR(255) NOT NULL,
     start_date DATE NOT NULL DEFAULT CURRENT_DATE,
     course_type VARCHAR(20) DEFAULT 'in_person', -- 'in_person' or 'online'
+    is_active BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -69,6 +79,10 @@ CREATE TABLE courses (
 CREATE TABLE course_students (
     course_id INTEGER REFERENCES courses(id) ON DELETE CASCADE,
     student_id INTEGER REFERENCES students(id) ON DELETE CASCADE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    enrolled_at TIMESTAMP WITH TIME ZONE,
+    is_active BOOLEAN DEFAULT TRUE,
+    removed_at TIMESTAMP WITH TIME ZONE,
     PRIMARY KEY (course_id, student_id)
 );
 
