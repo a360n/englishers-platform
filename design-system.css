@@ -1,0 +1,291 @@
+/* ==========================================================================
+   ENGLISHERS CLUB PLATFORM — DESIGN SYSTEM CSS & DESIGN TOKENS
+   For Figma AI & High-Fidelity UI Prototyping
+   ========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&family=Cairo:wght@400;600;700;800&display=swap');
+
+:root {
+    /* ----------------------------------------------------------------------
+       1. BRAND IDENTITY & COLOR TOKENS
+       ---------------------------------------------------------------------- */
+    --primary-color: #1C213F;          /* Englishers Deep Midnight Navy (65%) */
+    --primary-hover: #151930;
+    --primary-light: #292E52;
+    
+    --secondary-color: #EE7D52;        /* Vibrant Coral Orange / Apricot Accent (35%) */
+    --secondary-hover: #D7693E;
+    --secondary-light: #FFF1EB;
+
+    --brand-amber: #F59E0B;            /* Warm Amber (Zipper Scroll Thumb, Highlights) */
+    --brand-amber-hover: #D97706;
+
+    /* ----------------------------------------------------------------------
+       2. SURFACE & ELEVATION PALETTE (LIGHT-FIRST)
+       ---------------------------------------------------------------------- */
+    --bg-main: #F4F6F9;                /* Canvas Background */
+    --bg-card: #FFFFFF;                /* Elevated Bento Card Surface */
+    --bg-sidebar: #1C213F;             /* Anchor Navy Sidebar */
+    --bg-sidebar-hover: #292E52;
+    --bg-input: #FFFFFF;
+    --bg-hover: #F8FAFC;
+
+    /* ----------------------------------------------------------------------
+       3. TEXT & TYPOGRAPHY PALETTE
+       ---------------------------------------------------------------------- */
+    --text-primary: #1C213F;          /* High contrast primary text */
+    --text-secondary: #5A647A;        /* Descriptive subtitle & meta text */
+    --text-muted: #8A94A6;            /* Placeholder and disabled text */
+    --text-on-dark: #FFFFFF;          /* Pure white text on navy/dark */
+
+    /* ----------------------------------------------------------------------
+       4. SEMANTIC STATUS TOKENS
+       ---------------------------------------------------------------------- */
+    --success: #10B981;                /* Present / Active / Paid */
+    --success-bg: #E6F7F0;
+    --danger: #EF4444;                 /* Absent / Debt / Warning / Frozen */
+    --danger-bg: #FEE2E2;
+    --warning: #F59E0B;                /* Installment Due / Waiting list */
+    --warning-bg: #FEF3C7;
+    --info: #3B82F6;                   /* In-Person / General Info */
+    --info-bg: #EFF6FF;
+    --online-mode: #06B6D4;            /* Online Study Mode */
+    --online-mode-bg: #ECFEFF;
+
+    /* ----------------------------------------------------------------------
+       5. BORDERS, RADII & SHADOWS
+       ---------------------------------------------------------------------- */
+    --border-color: #E2E8F0;
+    --border-subtle: #F1F5F9;
+    --border-radius-xs: 6px;
+    --border-radius-sm: 8px;
+    --border-radius-md: 12px;
+    --border-radius-lg: 18px;
+    --border-radius-pill: 9999px;
+
+    --shadow-sm: 0 2px 4px rgba(28, 33, 63, 0.05);
+    --shadow-md: 0 8px 18px rgba(28, 33, 63, 0.08);
+    --shadow-lg: 0 16px 36px rgba(28, 33, 63, 0.12);
+    --transition-smooth: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+
+    /* ----------------------------------------------------------------------
+       6. FLUID TYPOGRAPHY TOKENS (DYNAMIC DESKTOP SCALING)
+       ---------------------------------------------------------------------- */
+    --font-xs: clamp(11px, 0.72vw, 12.5px);
+    --font-sm: clamp(12.5px, 0.82vw, 14px);
+    --font-base: clamp(14px, 0.92vw, 16px);
+    --font-md: clamp(15.5px, 1.05vw, 18px);
+    --font-lg: clamp(18px, 1.25vw, 22px);
+    --font-xl: clamp(22px, 1.6vw, 28px);
+    --font-2xl: clamp(28px, 2.2vw, 40px);
+
+    /* ----------------------------------------------------------------------
+       7. BUTTON & CONTROL ERGONOMICS
+       ---------------------------------------------------------------------- */
+    --btn-height-sm: clamp(34px, 3.5vh, 38px);
+    --btn-height: clamp(42px, 4.4vh, 48px);
+    --btn-height-lg: clamp(48px, 5.2vh, 56px);
+    --btn-padding-sm: 6px 14px;
+    --btn-padding: 10px 22px;
+    --input-height: clamp(40px, 4.3vh, 48px);
+
+    /* ----------------------------------------------------------------------
+       8. MODAL & WIDESCREEN BOUNDARIES
+       ---------------------------------------------------------------------- */
+    --modal-width-std: min(94vw, 840px);
+    --modal-width-wide: min(96vw, 1720px);
+    --modal-max-height: min(93vh, 93dvh);
+}
+
+/* Base Body Styles */
+body {
+    direction: rtl;
+    background-color: var(--bg-main);
+    color: var(--text-primary);
+    font-family: 'IBM Plex Sans Arabic', 'Cairo', 'Outfit', sans-serif;
+    line-height: 1.6;
+}
+
+/* Tabular figures for financial and code numbers */
+.tabular-nums, .currency, .serial-no, .quota-badge {
+    font-family: 'Outfit', sans-serif;
+    font-variant-numeric: tabular-nums;
+}
+
+/* --------------------------------------------------------------------------
+   9. BUTTON SYSTEM (HIERARCHY & STATES)
+   -------------------------------------------------------------------------- */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-weight: 600;
+    border-radius: var(--border-radius-sm);
+    transition: var(--transition-smooth);
+    cursor: pointer;
+    border: none;
+    text-decoration: none;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--secondary-color) 0%, #E66A3B 100%);
+    color: #FFFFFF;
+    box-shadow: 0 4px 12px rgba(238, 125, 82, 0.28);
+}
+.btn-primary:hover {
+    background: var(--secondary-hover);
+    box-shadow: 0 6px 16px rgba(238, 125, 82, 0.38);
+}
+
+.btn-navy {
+    background: var(--primary-color);
+    color: #FFFFFF;
+}
+.btn-navy:hover {
+    background: var(--primary-hover);
+}
+
+.btn-outline {
+    background: var(--bg-card);
+    border: 1.5px solid var(--border-color);
+    color: var(--text-primary);
+}
+.btn-outline:hover {
+    border-color: var(--secondary-color);
+    color: var(--secondary-color);
+}
+
+.btn-danger {
+    background: var(--danger-bg);
+    border: 1px solid var(--danger);
+    color: var(--danger);
+}
+.btn-danger:hover {
+    background: var(--danger);
+    color: #FFFFFF;
+}
+
+.btn-success {
+    background: var(--success);
+    color: #FFFFFF;
+}
+
+/* Attendance 3-State Buttons */
+.btn-attendance {
+    padding: 4px 10px;
+    font-size: 12px;
+    font-weight: 700;
+    border-radius: var(--border-radius-pill);
+    border: 1px solid var(--border-color);
+    background: var(--bg-main);
+    color: var(--text-secondary);
+}
+.btn-attendance.present {
+    background: var(--success);
+    color: #FFFFFF;
+    border-color: var(--success);
+}
+.btn-attendance.absent {
+    background: var(--danger);
+    color: #FFFFFF;
+    border-color: var(--danger);
+}
+.btn-attendance.excused {
+    background: #E2E8F0;
+    color: var(--text-primary);
+}
+
+/* --------------------------------------------------------------------------
+   10. SIGNATURE ATTENDANCE SHEET & ZIPPER CONTROLLERS
+   -------------------------------------------------------------------------- */
+.attendance-table-container {
+    position: relative;
+    overflow: auto;
+    max-height: 70vh;
+    border: 1.5px solid var(--border-color);
+    border-radius: var(--border-radius-md);
+    background: var(--bg-card);
+}
+
+/* Sticky First Row (Dates) */
+.attendance-table thead tr th {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    background: #F8FAFC;
+    border-bottom: 2px solid var(--border-color);
+}
+
+/* Sticky First Column (Student Names - RTL) */
+.attendance-table tbody tr td:first-child,
+.attendance-table thead tr th:first-child {
+    position: sticky;
+    right: 0;
+    z-index: 25;
+    background: #FFFFFF;
+    border-left: 2px solid var(--border-color);
+    box-shadow: -4px 0 8px rgba(0, 0, 0, 0.04);
+}
+
+/* Intersection of Sticky Header and Sticky First Column */
+.attendance-table thead tr th:first-child {
+    z-index: 30;
+    background: #F1F5F9;
+}
+
+/* Orange Zipper Pull Controllers (سحاب الملابس البرتقالي) */
+.zipper-slider-container {
+    background: rgba(28, 33, 63, 0.04);
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+}
+.zipper-thumb {
+    background: linear-gradient(135deg, var(--secondary-color) 0%, var(--brand-amber) 100%);
+    border: 2px solid #FFFFFF;
+    box-shadow: 0 4px 10px rgba(238, 125, 82, 0.4);
+    border-radius: 12px;
+    cursor: grab;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #FFFFFF;
+}
+
+/* --------------------------------------------------------------------------
+   11. BENTO GRID STAT CARDS & DOSSIER CONTAINERS
+   -------------------------------------------------------------------------- */
+.bento-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: var(--spacing-md);
+}
+
+.bento-card {
+    background: var(--bg-card);
+    border: 1.5px solid var(--border-color);
+    border-radius: var(--border-radius-md);
+    padding: var(--spacing-md);
+    box-shadow: var(--shadow-sm);
+    transition: var(--transition-smooth);
+}
+.bento-card:hover {
+    box-shadow: var(--shadow-md);
+    border-color: rgba(238, 125, 82, 0.4);
+}
+
+/* Status Pill Badges */
+.badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 9px;
+    font-size: 11.5px;
+    font-weight: 700;
+    border-radius: var(--border-radius-pill);
+}
+.badge-success { background: var(--success-bg); color: #065F46; }
+.badge-danger { background: var(--danger-bg); color: #991B1B; }
+.badge-warning { background: var(--warning-bg); color: #92400E; }
+.badge-info { background: var(--info-bg); color: #1E40AF; }
+.badge-secondary { background: #F1F5F9; color: var(--text-secondary); }
